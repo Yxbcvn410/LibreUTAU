@@ -3,13 +3,13 @@
 
     <!--Menu-->
     <Style x:Key="{x:Type Menu}" TargetType="Menu">
-        <Setter Property="OverridesDefaultStyle" Value="True"/>
-        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Menu">
                     <Border Background="White">
-                        <StackPanel ClipToBounds="True" Orientation="Horizontal" IsItemsHost="True"/>
+                        <StackPanel ClipToBounds="True" Orientation="Horizontal" IsItemsHost="True" />
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -25,23 +25,23 @@
                     <Border x:Name="Border" SnapsToDevicePixels="True" Background="White">
                         <Grid x:Name="Grid">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIconColumnGroup"/>
-                                <ColumnDefinition Width="*" SharedSizeGroup="MenuTextColumnGroup"/>
-                                <ColumnDefinition Width="40" SharedSizeGroup="MenuSpaceColumnGroup"/>
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIGTColumnGroup"/>
-                                <ColumnDefinition Width="13" SharedSizeGroup="MenuMarkColumnGroup"/>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIconColumnGroup" />
+                                <ColumnDefinition Width="*" SharedSizeGroup="MenuTextColumnGroup" />
+                                <ColumnDefinition Width="40" SharedSizeGroup="MenuSpaceColumnGroup" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIGTColumnGroup" />
+                                <ColumnDefinition Width="13" SharedSizeGroup="MenuMarkColumnGroup" />
                             </Grid.ColumnDefinitions>
                             <Border Grid.Column="1" Margin="0,2,0,2">
-                                <Rectangle Fill="{StaticResource ScrollBarBrushNormal}" Height="1"/>
+                                <Rectangle Fill="{StaticResource ScrollBarBrushNormal}" Height="1" />
                             </Border>
                             <Border Grid.Column="2" Margin="0,2,0,2">
-                                <Rectangle Fill="{StaticResource ScrollBarBrushNormal}" Height="1"/>
+                                <Rectangle Fill="{StaticResource ScrollBarBrushNormal}" Height="1" />
                             </Border>
                             <Border Grid.Column="3" Margin="0,2,0,2">
-                                <Rectangle Fill="{StaticResource ScrollBarBrushNormal}" Height="1"/>
+                                <Rectangle Fill="{StaticResource ScrollBarBrushNormal}" Height="1" />
                             </Border>
                             <Border Grid.Column="4" Margin="0,2,0,2">
-                                <Rectangle Fill="{StaticResource ScrollBarBrushNormal}" Height="1"/>
+                                <Rectangle Fill="{StaticResource ScrollBarBrushNormal}" Height="1" />
                             </Border>
                         </Grid>
                     </Border>
@@ -54,25 +54,27 @@
     <ControlTemplate x:Key="{x:Static MenuItem.TopLevelHeaderTemplateKey}" TargetType="MenuItem">
         <Border x:Name="Border" SnapsToDevicePixels="True" Background="White">
             <Grid x:Name="Grid">
-                <ContentPresenter Name="HeaderHost" ContentSource="Header" RecognizesAccessKey="True" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                <ContentPresenter Name="HeaderHost" ContentSource="Header" RecognizesAccessKey="True"
+                                  Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
                 <Popup x:Name="SubMenuPopup" Placement="Bottom" Focusable="false"
                        IsOpen="{Binding Path=IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
                        PopupAnimation="{DynamicResource {x:Static SystemParameters.MenuPopupAnimationKey}}">
-                    <Border SnapsToDevicePixels="True" BorderThickness="1" BorderBrush="{StaticResource ScrollBarBrushNormal}" Background="White">
-                        <StackPanel IsItemsHost="True" Margin="2" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                    <Border SnapsToDevicePixels="True" BorderThickness="1"
+                            BorderBrush="{StaticResource ScrollBarBrushNormal}" Background="White">
+                        <StackPanel IsItemsHost="True" Margin="2" KeyboardNavigation.DirectionalNavigation="Cycle" />
                     </Border>
                 </Popup>
             </Grid>
         </Border>
         <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}"/>
+                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}" />
             </Trigger>
             <Trigger Property="IsSubmenuOpen" Value="True">
-                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}"/>
+                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Foreground" Value="Gray"/>
+                <Setter Property="Foreground" Value="Gray" />
             </Trigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>
@@ -81,18 +83,19 @@
     <ControlTemplate x:Key="{x:Static MenuItem.TopLevelItemTemplateKey}" TargetType="MenuItem">
         <Border x:Name="Border" SnapsToDevicePixels="True" Background="White">
             <Grid x:Name="Grid">
-                <ContentPresenter Name="HeaderHost" ContentSource="Header" RecognizesAccessKey="True" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                <ContentPresenter Name="HeaderHost" ContentSource="Header" RecognizesAccessKey="True"
+                                  Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
             </Grid>
         </Border>
         <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}"/>
+                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}" />
             </Trigger>
             <Trigger Property="IsSubmenuOpen" Value="True">
-                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}"/>
+                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Foreground" Value="Gray"/>
+                <Setter Property="Foreground" Value="Gray" />
             </Trigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>
@@ -102,32 +105,37 @@
         <Border x:Name="Border" SnapsToDevicePixels="True" Background="White">
             <Grid x:Name="Grid">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIconColumnGroup"/>
-                    <ColumnDefinition Width="*" SharedSizeGroup="MenuTextColumnGroup"/>
-                    <ColumnDefinition Width="40" SharedSizeGroup="MenuSpaceColumnGroup"/>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIGTColumnGroup"/>
-                    <ColumnDefinition Width="13" SharedSizeGroup="MenuMarkColumnGroup"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIconColumnGroup" />
+                    <ColumnDefinition Width="*" SharedSizeGroup="MenuTextColumnGroup" />
+                    <ColumnDefinition Width="40" SharedSizeGroup="MenuSpaceColumnGroup" />
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIGTColumnGroup" />
+                    <ColumnDefinition Width="13" SharedSizeGroup="MenuMarkColumnGroup" />
                 </Grid.ColumnDefinitions>
-                <ContentPresenter Grid.Column="0" Name="Icon" Margin="6,0,6,0" VerticalAlignment="Center" ContentSource="Icon" />
-                <ContentPresenter Grid.Column="1" Name="HeaderHost" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
-                <TextBlock Grid.Column="3" x:Name="InputGestureText" Text="{TemplateBinding InputGestureText}" Margin="5,2,0,2"/>
-                <Path Grid.Column="4" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M 0 0 L 0 7 L 4 3.5 Z"
-                      Fill="{Binding Path=Foreground, RelativeSource={RelativeSource TemplatedParent}}"/>
+                <ContentPresenter Grid.Column="0" Name="Icon" Margin="6,0,6,0" VerticalAlignment="Center"
+                                  ContentSource="Icon" />
+                <ContentPresenter Grid.Column="1" Name="HeaderHost" ContentSource="Header" VerticalAlignment="Center"
+                                  RecognizesAccessKey="True" />
+                <TextBlock Grid.Column="3" x:Name="InputGestureText" Text="{TemplateBinding InputGestureText}"
+                           Margin="5,2,0,2" />
+                <Path Grid.Column="4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Data="M 0 0 L 0 7 L 4 3.5 Z"
+                      Fill="{Binding Path=Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
                 <Popup x:Name="SubMenuPopup" Placement="Right" Focusable="false" VerticalOffset="-3"
                        IsOpen="{Binding Path=IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
                        PopupAnimation="{DynamicResource {x:Static SystemParameters.MenuPopupAnimationKey}}">
-                    <Border SnapsToDevicePixels="True" BorderThickness="1" BorderBrush="{StaticResource ScrollBarBrushNormal}" Background="White">
-                        <StackPanel IsItemsHost="True" Margin="2" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                    <Border SnapsToDevicePixels="True" BorderThickness="1"
+                            BorderBrush="{StaticResource ScrollBarBrushNormal}" Background="White">
+                        <StackPanel IsItemsHost="True" Margin="2" KeyboardNavigation.DirectionalNavigation="Cycle" />
                     </Border>
                 </Popup>
             </Grid>
         </Border>
         <ControlTemplate.Triggers>
             <Trigger Property="IsHighlighted" Value="True">
-                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}"/>
+                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Foreground" Value="Gray"/>
+                <Setter Property="Foreground" Value="Gray" />
             </Trigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>
@@ -137,29 +145,32 @@
         <Border x:Name="Border" SnapsToDevicePixels="True" Background="White">
             <Grid x:Name="Grid">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIconColumnGroup"/>
-                    <ColumnDefinition Width="*" SharedSizeGroup="MenuTextColumnGroup"/>
-                    <ColumnDefinition Width="40" SharedSizeGroup="MenuSpaceColumnGroup"/>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIGTColumnGroup"/>
-                    <ColumnDefinition Width="13" SharedSizeGroup="MenuMarkColumnGroup"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIconColumnGroup" />
+                    <ColumnDefinition Width="*" SharedSizeGroup="MenuTextColumnGroup" />
+                    <ColumnDefinition Width="40" SharedSizeGroup="MenuSpaceColumnGroup" />
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIGTColumnGroup" />
+                    <ColumnDefinition Width="13" SharedSizeGroup="MenuMarkColumnGroup" />
                 </Grid.ColumnDefinitions>
-                <ContentPresenter Grid.Column="0" Name="Icon" Margin="6,0,6,0" VerticalAlignment="Center" ContentSource="Icon" />
-                <ContentPresenter Grid.Column="1" Name="HeaderHost" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
-                <TextBlock Grid.Column="3" x:Name="InputGestureText" Text="{TemplateBinding InputGestureText}" Margin="5,2,0,2" TextAlignment="Left"/>
+                <ContentPresenter Grid.Column="0" Name="Icon" Margin="6,0,6,0" VerticalAlignment="Center"
+                                  ContentSource="Icon" />
+                <ContentPresenter Grid.Column="1" Name="HeaderHost" ContentSource="Header" VerticalAlignment="Center"
+                                  RecognizesAccessKey="True" />
+                <TextBlock Grid.Column="3" x:Name="InputGestureText" Text="{TemplateBinding InputGestureText}"
+                           Margin="5,2,0,2" TextAlignment="Left" />
             </Grid>
         </Border>
         <ControlTemplate.Triggers>
             <Trigger Property="IsHighlighted" Value="True">
-                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}"/>
+                <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundBrushActive}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Foreground" Value="Gray"/>
+                <Setter Property="Foreground" Value="Gray" />
             </Trigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>
-    
+
     <PopupAnimation x:Key="{x:Static SystemParameters.MenuPopupAnimationKey}">None</PopupAnimation>
-    
+
     <!--ContextMenu-->
     <Style TargetType="{x:Type ContextMenu}">
         <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -169,7 +180,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ContextMenu}">
-                    <Border x:Name="Border" BorderBrush="{StaticResource ScrollBarBrushNormal}" Background="White" BorderThickness="1">
+                    <Border x:Name="Border" BorderBrush="{StaticResource ScrollBarBrushNormal}" Background="White"
+                            BorderThickness="1">
                         <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
                     </Border>
                     <ControlTemplate.Triggers>

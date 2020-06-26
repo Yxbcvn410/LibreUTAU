@@ -12,27 +12,23 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-
 using LibreUtau.UI.Models;
 
-namespace LibreUtau.UI.Controls
-{
+namespace LibreUtau.UI.Controls {
     /// <summary>
     /// Interaction logic for NavigateDrag.xaml
     /// </summary>
-    public class NavDragEventArgs : EventArgs
-    {
+    public class NavDragEventArgs : EventArgs {
         public double X { set; get; }
         public double Y { set; get; }
-        public NavDragEventArgs(double x, double y)
-        {
+
+        public NavDragEventArgs(double x, double y) {
             X = x;
             Y = y;
         }
     }
 
-    public partial class NavigateDrag : UserControl
-    {
+    public partial class NavigateDrag : UserControl {
         public event EventHandler NavDrag;
 
         bool dragging = false;
@@ -42,15 +38,13 @@ namespace LibreUtau.UI.Controls
         const double navigateSpeedX = 0.05;
         const double navigateSpeedY = 0.05;
 
-        public NavigateDrag()
-        {
+        public NavigateDrag() {
             InitializeComponent();
             this.Foreground = ThemeManager.UINeutralBrushNormal;
             this.Background = Brushes.Transparent;
         }
 
-        private void NavigateDrag_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
+        private void NavigateDrag_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             Mouse.OverrideCursor = Cursors.None;
             Control el = (Control)sender;
             el.CaptureMouse();
@@ -59,17 +53,14 @@ namespace LibreUtau.UI.Controls
             dragLastY = e.GetPosition(el).Y;
         }
 
-        private void NavigateDrag_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
+        private void NavigateDrag_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
             dragging = false;
             ((Control)sender).ReleaseMouseCapture();
             Mouse.OverrideCursor = null;
         }
 
-        private void NavigateDrag_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (dragging)
-            {
+        private void NavigateDrag_MouseMove(object sender, MouseEventArgs e) {
+            if (dragging) {
                 bool cursorWarpped = false;
                 Control el = (Control)sender;
 
@@ -80,30 +71,23 @@ namespace LibreUtau.UI.Controls
                 if (handler != null) handler(this, new NavDragEventArgs(deltaX, deltaY));
 
                 // Restrict mouse position
-                if (e.GetPosition(el).X < 0)
-                {
+                if (e.GetPosition(el).X < 0) {
                     cursorWarpped = true;
                     dragLastX += el.ActualWidth;
-                }
-                else if (e.GetPosition(el).X > el.ActualWidth)
-                {
+                } else if (e.GetPosition(el).X > el.ActualWidth) {
                     cursorWarpped = true;
                     dragLastX -= el.ActualWidth;
                 }
 
-                if (e.GetPosition(el).Y < 0)
-                {
+                if (e.GetPosition(el).Y < 0) {
                     cursorWarpped = true;
                     dragLastY += el.ActualHeight;
-                }
-                else if (e.GetPosition(el).Y > el.ActualHeight)
-                {
+                } else if (e.GetPosition(el).Y > el.ActualHeight) {
                     cursorWarpped = true;
                     dragLastY -= el.ActualHeight;
                 }
 
-                if (cursorWarpped)
-                {
+                if (cursorWarpped) {
                     setCursorPos(el.TransformToAncestor(this).Transform(new Point(dragLastX, dragLastY)));
                 }
             }
@@ -112,20 +96,16 @@ namespace LibreUtau.UI.Controls
         [System.Runtime.InteropServices.DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
-        public void setCursorPos(Point point)
-        {
+        public void setCursorPos(Point point) {
             SetCursorPos((int)(PointToScreen(point).X), (int)(PointToScreen(point).Y));
         }
 
-        private void UserControl_MouseEnter(object sender, MouseEventArgs e)
-        {
+        private void UserControl_MouseEnter(object sender, MouseEventArgs e) {
             this.Foreground = ThemeManager.UINeutralBrushActive;
         }
 
-        private void UserControl_MouseLeave(object sender, MouseEventArgs e)
-        {
+        private void UserControl_MouseLeave(object sender, MouseEventArgs e) {
             this.Foreground = ThemeManager.UINeutralBrushNormal;
         }
-
     }
 }

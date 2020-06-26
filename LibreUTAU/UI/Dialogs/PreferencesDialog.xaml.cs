@@ -6,7 +6,6 @@ using System.Windows.Controls;
 using LibreUtau.Core;
 
 namespace LibreUtau.UI.Dialogs {
-
     /// <summary>
     /// Interaction logic for Preferences.xaml
     /// </summary>
@@ -89,7 +88,8 @@ namespace LibreUtau.UI.Dialogs {
         # region Engine selection
 
         private void UpdateEngines() {
-            var enginesInfo = Core.ResamplerDriver.ResamplerDriver.SearchEngines(PathManager.Inst.GetEngineSearchPath());
+            var enginesInfo =
+                Core.ResamplerDriver.ResamplerDriver.SearchEngines(PathManager.Inst.GetEngineSearchPath());
             engines = enginesInfo.Select(x => x.Name).ToList();
             if (engines.Count == 0) {
                 previewEngineCombo.IsEnabled = false;
@@ -97,8 +97,10 @@ namespace LibreUtau.UI.Dialogs {
             } else {
                 previewEngineCombo.ItemsSource = engines;
                 exportEngineCombo.ItemsSource = engines;
-                previewEngineCombo.SelectedIndex = Math.Max(0, engines.IndexOf(Core.Util.Preferences.Default.ExternalPreviewEngine));
-                exportEngineCombo.SelectedIndex = Math.Max(0, engines.IndexOf(Core.Util.Preferences.Default.ExternalExportEngine));
+                previewEngineCombo.SelectedIndex =
+                    Math.Max(0, engines.IndexOf(Core.Util.Preferences.Default.ExternalPreviewEngine));
+                exportEngineCombo.SelectedIndex =
+                    Math.Max(0, engines.IndexOf(Core.Util.Preferences.Default.ExternalExportEngine));
             }
         }
 

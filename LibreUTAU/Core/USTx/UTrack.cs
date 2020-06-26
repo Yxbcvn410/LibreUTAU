@@ -4,15 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibreUtau.Core.USTx
-{
-    public class UTrack
-    {
+namespace LibreUtau.Core.USTx {
+    public class UTrack {
         public string Name = "New Track";
         public string Comment = string.Empty;
         public USinger Singer;
 
-        public string SingerName { get { if (Singer != null) return Singer.DisplayName; else return "[No Signer]"; } }
+        public string SingerName {
+            get {
+                if (Singer != null) return Singer.DisplayName;
+                else return "[No Signer]";
+            }
+        }
+
         public int TrackNo { set; get; }
         public int DisplayTrackNo { get { return TrackNo + 1; } }
         public bool Mute { set; get; }

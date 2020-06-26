@@ -6,21 +6,18 @@ using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interactivity;
 
-namespace LibreUtau.UI.Behaviors
-{
-    class ScrollbarBehavior : Behavior<ScrollBar>
-    {
+namespace LibreUtau.UI.Behaviors {
+    class ScrollbarBehavior : Behavior<ScrollBar> {
         ScrollBar scrollbar;
 
-        protected override void OnAttached()
-        {
+        protected override void OnAttached() {
             scrollbar = (ScrollBar)AssociatedObject;
             scrollbar.MouseWheel += scrollbar_MouseWheel;
         }
 
-        void scrollbar_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
-        {
-            scrollbar.Value = Math.Max(scrollbar.Minimum, Math.Min(scrollbar.Maximum, scrollbar.Value - 0.01 * scrollbar.SmallChange * e.Delta));
+        void scrollbar_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) {
+            scrollbar.Value = Math.Max(scrollbar.Minimum,
+                Math.Min(scrollbar.Maximum, scrollbar.Value - 0.01 * scrollbar.SmallChange * e.Delta));
         }
     }
 }

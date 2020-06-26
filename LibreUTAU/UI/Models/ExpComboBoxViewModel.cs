@@ -13,17 +13,13 @@ using LibreUtau.UI.Controls;
 using LibreUtau.Core;
 using LibreUtau.Core.USTx;
 
-namespace LibreUtau.UI.Models
-{
-    class ExpComboBoxViewModel : INotifyPropertyChanged, ICmdSubscriber
-    {
+namespace LibreUtau.UI.Models {
+    class ExpComboBoxViewModel : INotifyPropertyChanged, ICmdSubscriber {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged(string name)
-        {
+        protected void OnPropertyChanged(string name) {
             PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-            {
+            if (handler != null) {
                 handler(this, new PropertyChangedEventArgs(name));
             }
         }
@@ -31,19 +27,23 @@ namespace LibreUtau.UI.Models
         public int Index;
 
         int _selectedIndex;
-        public int SelectedIndex { set { _selectedIndex = value; OnPropertyChanged("SelectedIndex"); } get { return _selectedIndex; } }
+
+        public int SelectedIndex {
+            set {
+                _selectedIndex = value;
+                OnPropertyChanged("SelectedIndex");
+            }
+            get { return _selectedIndex; }
+        }
 
         ObservableCollection<string> _keys = new ObservableCollection<string>();
         public ObservableCollection<string> Keys { get { return _keys; } }
 
         ExpDisMode _displayMode = ExpDisMode.Hidden;
 
-        public ExpDisMode DisplayMode
-        {
-            set
-            {
-                if (_displayMode != value)
-                {
+        public ExpDisMode DisplayMode {
+            set {
+                if (_displayMode != value) {
                     _displayMode = value;
                     OnPropertyChanged("TagBrush");
                     OnPropertyChanged("Background");
@@ -53,26 +53,24 @@ namespace LibreUtau.UI.Models
             get { return _displayMode; }
         }
 
-        public Brush TagBrush
-        {
-            get
-            {
+        public Brush TagBrush {
+            get {
                 return DisplayMode == ExpDisMode.Visible ? ThemeManager.BlackKeyNameBrushNormal :
-                    DisplayMode == ExpDisMode.Shadow ? ThemeManager.CenterKeyNameBrushNormal : ThemeManager.WhiteKeyNameBrushNormal;
+                    DisplayMode == ExpDisMode.Shadow ? ThemeManager.CenterKeyNameBrushNormal :
+                    ThemeManager.WhiteKeyNameBrushNormal;
             }
         }
-        public Brush Background
-        {
-            get
-            {
+
+        public Brush Background {
+            get {
                 return DisplayMode == ExpDisMode.Visible ? ThemeManager.BlackKeyBrushNormal :
-                    DisplayMode == ExpDisMode.Shadow ? ThemeManager.CenterKeyBrushNormal : ThemeManager.WhiteKeyBrushNormal;
+                    DisplayMode == ExpDisMode.Shadow ? ThemeManager.CenterKeyBrushNormal :
+                    ThemeManager.WhiteKeyBrushNormal;
             }
         }
-        public Brush Highlight
-        {
-            get
-            {
+
+        public Brush Highlight {
+            get {
                 return DisplayMode == ExpDisMode.Visible ? Brushes.Black :
                     DisplayMode == ExpDisMode.Shadow ? Brushes.Black : Brushes.Black;
             }
@@ -80,26 +78,24 @@ namespace LibreUtau.UI.Models
 
         public ExpComboBoxViewModel() { this.Subscribe(DocManager.Inst); }
 
-        public void CreateBindings(ExpComboBox box)
-        {
+        public void CreateBindings(ExpComboBox box) {
             box.DataContext = this;
-            box.SetBinding(ExpComboBox.ItemsSourceProperty, new Binding("Keys") { Source = this });
-            box.SetBinding(ExpComboBox.SelectedIndexProperty, new Binding("SelectedIndex") { Source = this, Mode = BindingMode.TwoWay });
-            box.SetBinding(ExpComboBox.TagBrushProperty, new Binding("TagBrush") { Source = this });
-            box.SetBinding(ExpComboBox.BackgroundProperty, new Binding("Background") { Source = this });
-            box.SetBinding(ExpComboBox.HighlightProperty, new Binding("Highlight") { Source = this });
+            box.SetBinding(ExpComboBox.ItemsSourceProperty, new Binding("Keys") {Source = this});
+            box.SetBinding(ExpComboBox.SelectedIndexProperty,
+                new Binding("SelectedIndex") {Source = this, Mode = BindingMode.TwoWay});
+            box.SetBinding(ExpComboBox.TagBrushProperty, new Binding("TagBrush") {Source = this});
+            box.SetBinding(Control.BackgroundProperty, new Binding("Background") {Source = this});
+            box.SetBinding(ExpComboBox.HighlightProperty, new Binding("Highlight") {Source = this});
             box.Click += box_Click;
             box.SelectionChanged += box_SelectionChanged;
         }
 
-        void box_Click(object sender, EventArgs e)
-        {
+        void box_Click(object sender, EventArgs e) {
             if (DisplayMode != ExpDisMode.Visible)
                 DocManager.Inst.ExecuteCmd(new SelectExpressionNotification(Keys[SelectedIndex], this.Index, true));
         }
 
-        void box_SelectionChanged(object sender, EventArgs e)
-        {
+        void box_SelectionChanged(object sender, EventArgs e) {
             if (DisplayMode != ExpDisMode.Visible)
                 DocManager.Inst.ExecuteCmd(new SelectExpressionNotification(Keys[SelectedIndex], this.Index, true));
             else
@@ -108,36 +104,33 @@ namespace LibreUtau.UI.Models
 
         # region ICmdSubscriber
 
-        public void Subscribe(ICmdPublisher publisher) { if (publisher != null) publisher.Subscribe(this); }
+        public void Subscribe(ICmdPublisher publisher) {
+            if (publisher != null) publisher.Subscribe(this);
+        }
 
-        public void OnNext(UCommand cmd, bool isUndo)
-        {
+        public void OnNext(UCommand cmd, bool isUndo) {
             if (cmd is ChangeExpressionListNotification || cmd is LoadProjectNotification) OnListChange();
-            else if (cmd is LoadPartNotification) { if (_keys.Count == 0) OnListChange(); }
-            else if (cmd is SelectExpressionNotification) OnSelectExp((SelectExpressionNotification)cmd);
+            else if (cmd is LoadPartNotification) {
+                if (_keys.Count == 0) OnListChange();
+            } else if (cmd is SelectExpressionNotification) OnSelectExp((SelectExpressionNotification)cmd);
         }
 
         # endregion
 
         # region Cmd Handling
 
-        private void OnListChange()
-        {
+        private void OnListChange() {
             _keys = new ObservableCollection<string>(DocManager.Inst.Project.ExpressionTable.Keys);
             if (_keys.Count > 0) SelectedIndex = Index % _keys.Count;
             OnPropertyChanged("Keys");
         }
 
-        private void OnSelectExp(SelectExpressionNotification cmd)
-        {
+        private void OnSelectExp(SelectExpressionNotification cmd) {
             if (Keys.Count == 0) return;
-            if (cmd.SelectorIndex == this.Index)
-            {
+            if (cmd.SelectorIndex == this.Index) {
                 if (Keys[SelectedIndex] != cmd.ExpKey) SelectedIndex = Keys.IndexOf(cmd.ExpKey);
                 DisplayMode = ExpDisMode.Visible;
-            }
-            else if (cmd.UpdateShadow)
-            {
+            } else if (cmd.UpdateShadow) {
                 DisplayMode = DisplayMode == ExpDisMode.Visible ? ExpDisMode.Shadow : ExpDisMode.Hidden;
             }
         }

@@ -13,6 +13,8 @@ namespace LibreUtau.Core {
     class PlaybackManager : ICmdSubscriber {
         private WaveOut outDevice;
 
+        #region Singleton
+
         private PlaybackManager() { this.Subscribe(DocManager.Inst); }
 
         private static PlaybackManager _s;
@@ -24,6 +26,8 @@ namespace LibreUtau.Core {
                 return _s;
             }
         }
+
+        #endregion
 
         MixingSampleProvider masterMix;
         List<TrackSampleProvider> trackSources;
@@ -104,23 +108,31 @@ namespace LibreUtau.Core {
 
             pendingParts = project.Parts.Count;
             foreach (UPart part in project.Parts) {
-                if (part is UWavePart) {
-                    lock (lockObject) {
-                        trackSources[part.TrackNo].AddSource(
-                            BuildWavePartAudio(part as UWavePart, project),
-                            TimeSpan.FromMilliseconds(project.TickToMillisecond(part.PosTick))
-                        );
-                        pendingParts--;
+                switch (part) {
+                    case UWavePart wavePart: {
+                        lock (lockObject) {
+                            trackSources[wavePart.TrackNo].AddSource(
+                                BuildWavePartAudio(wavePart, project),
+                                TimeSpan.FromMilliseconds(project.TickToMillisecond(wavePart.PosTick))
+                            );
+                            pendingParts--;
+                        }
+
+                        break;
                     }
-                } else {
-                    var singer = project.Tracks[part.TrackNo].Singer;
-                    if (singer != null && singer.Loaded) {
-                        FileInfo ResamplerFile =
-                            new FileInfo(PathManager.Inst.GetPreviewEnginePath());
-                        IResamplerDriver engine = ResamplerDriver.ResamplerDriver.LoadEngine(ResamplerFile.FullName);
-                        BuildVoicePartAudio(part as UVoicePart, project, engine);
-                    } else
-                        lock (lockObject) { pendingParts--; }
+                    default: {
+                        var singer = project.Tracks[part.TrackNo].Singer;
+                        if (singer != null && singer.Loaded) {
+                            FileInfo ResamplerFile =
+                                new FileInfo(PathManager.Inst.GetPreviewEnginePath());
+                            IResamplerDriver engine =
+                                ResamplerDriver.ResamplerDriver.LoadEngine(ResamplerFile.FullName);
+                            BuildVoicePartAudio(part as UVoicePart, project, engine);
+                        } else
+                            lock (lockObject) { pendingParts--; }
+
+                        break;
+                    }
                 }
             }
 

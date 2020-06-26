@@ -122,9 +122,9 @@
     <Compile Include="Core\Render\RenderDispatcher.cs" />
     <Compile Include="Core\ResamplerDriver\DriverEngine.cs" />
     <Compile Include="Core\ResamplerDriver\DriverModels.cs" />
-    <Compile Include="Core\ResamplerDriver\Factorys\CppDriver.cs" />
-    <Compile Include="Core\ResamplerDriver\Factorys\ExeDriver.cs" />
-    <Compile Include="Core\ResamplerDriver\Factorys\SharpDriver.cs" />
+    <Compile Include="Core\ResamplerDriver\Factories\CppDriver.cs" />
+    <Compile Include="Core\ResamplerDriver\Factories\ExeDriver.cs" />
+    <Compile Include="Core\ResamplerDriver\Factories\SharpDriver.cs" />
     <Compile Include="Core\USTx\UExpression.cs" />
     <Compile Include="Core\Classes\NoteCommands.cs" />
     <Compile Include="ThirdParty\Deque.cs" />

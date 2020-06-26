@@ -2,18 +2,19 @@
 using NAudio.Wave.SampleProviders;
 
 namespace LibreUtau.Core.Render {
-
     internal class RenderItemSampleProvider : ISampleProvider {
         private ISampleProvider signalChain;
 
         public RenderItemSampleProvider(RenderItem renderItem) {
             RenderItem = renderItem;
             var cachedSampleProvider = RenderItem.Sound;
-            var offsetSampleProvider = new OffsetSampleProvider(new EnvelopeSampleProvider(cachedSampleProvider, RenderItem.Envelope, RenderItem.SkipOver)) {
-                DelayBySamples = (int)(RenderItem.PosMs * cachedSampleProvider.WaveFormat.SampleRate / 1000),
-                TakeSamples = (int)(RenderItem.DurMs * cachedSampleProvider.WaveFormat.SampleRate / 1000),
-                SkipOverSamples = (int)(RenderItem.SkipOver * cachedSampleProvider.WaveFormat.SampleRate / 1000)
-            };
+            var offsetSampleProvider =
+                new OffsetSampleProvider(new EnvelopeSampleProvider(cachedSampleProvider, RenderItem.Envelope,
+                    RenderItem.SkipOver)) {
+                    DelayBySamples = (int)(RenderItem.PosMs * cachedSampleProvider.WaveFormat.SampleRate / 1000),
+                    TakeSamples = (int)(RenderItem.DurMs * cachedSampleProvider.WaveFormat.SampleRate / 1000),
+                    SkipOverSamples = (int)(RenderItem.SkipOver * cachedSampleProvider.WaveFormat.SampleRate / 1000)
+                };
             signalChain = offsetSampleProvider;
             FirstSample = offsetSampleProvider.DelayBySamples + offsetSampleProvider.SkipOverSamples;
             LastSample = FirstSample + offsetSampleProvider.TakeSamples;

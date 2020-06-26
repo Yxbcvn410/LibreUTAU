@@ -4,13 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibreUtau.Core.USTx
-{
+namespace LibreUtau.Core.USTx {
     /// <summary>
     /// Music note.
     /// </summary>
-    public class UNote : IComparable
-    {
+    public class UNote : IComparable {
         public int PosTick;
         public int DurTick;
         public int NoteNum;
@@ -27,14 +25,13 @@ namespace LibreUtau.Core.USTx
         private UNote() {
             PitchBend = new PitchBendExpression(this);
             Vibrato = new VibratoExpression(this);
-            Phonemes.Add(new UPhoneme() { Parent = this, PosTick = 0 });
+            Phonemes.Add(new UPhoneme() {Parent = this, PosTick = 0});
         }
 
         public static UNote Create() { return new UNote(); }
 
         public UNote Clone() {
-            UNote _note = new UNote()
-            {
+            UNote _note = new UNote() {
                 PosTick = PosTick,
                 DurTick = DurTick,
                 NoteNum = NoteNum,
@@ -48,12 +45,10 @@ namespace LibreUtau.Core.USTx
 
         public string GetResamplerFlags() { return "Y0H0F0"; }
 
-        public int CompareTo(object obj)
-        {
+        public int CompareTo(object obj) {
             if (obj == null) return 1;
 
-            UNote other = obj as UNote;
-            if (other == null)
+            if (!(obj is UNote other))
                 throw new ArgumentException("CompareTo object is not a Note");
 
             if (other.PosTick < this.PosTick)
@@ -68,9 +63,9 @@ namespace LibreUtau.Core.USTx
                 return 0;
         }
 
-        public override string ToString()
-        {
-            return $"\"{Lyric}\" Pos:{PosTick} Dur:{DurTick} Note:{NoteNum}{(Error ? " Error" : string.Empty)}{(Selected ? " Selected" : string.Empty)}";
+        public override string ToString() {
+            return
+                $"\"{Lyric}\" Pos:{PosTick} Dur:{DurTick} Note:{NoteNum}{(Error ? " Error" : string.Empty)}{(Selected ? " Selected" : string.Empty)}";
         }
     }
 }

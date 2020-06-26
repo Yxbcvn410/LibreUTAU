@@ -4,13 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibreUtau.Core.USTx
-{
+namespace LibreUtau.Core.USTx {
     /// <summary>
     /// The basic unit of synthesis.
     /// </summary>
-    public class UPhoneme
-    {
+    public class UPhoneme {
         public UNote Parent;
         public int PosTick;
         public int DurTick;
@@ -32,7 +30,11 @@ namespace LibreUtau.Core.USTx
 
         public bool PhonemeError = false;
 
-        public UPhoneme() { Envelope = new EnvelopeExpression(this.Parent) { ParentPhoneme = this }; }
-        public UPhoneme Clone(UNote newParent) { var p = new UPhoneme() { Parent = newParent }; return p; }
+        public UPhoneme() { Envelope = new EnvelopeExpression(this.Parent) {ParentPhoneme = this}; }
+
+        public UPhoneme Clone(UNote newParent) {
+            var p = new UPhoneme() {Parent = newParent};
+            return p;
+        }
     }
 }

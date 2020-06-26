@@ -232,6 +232,7 @@ namespace LibreUtau.UI.Controls {
                         _pt0 = _pt1;
                     }
                 }
+
                 cxt.DrawEllipse(null, penPit, pt1, 2.5, 2.5);
 
                 pt0 = pt1;

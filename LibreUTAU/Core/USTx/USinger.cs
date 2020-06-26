@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibreUtau.Core.USTx
-{
-    public struct UOto
-    {
+namespace LibreUtau.Core.USTx {
+    public struct UOto {
         public string Alias { set; get; }
         public string File { set; get; }
         public double Offset { set; get; }
@@ -16,8 +14,7 @@ namespace LibreUtau.Core.USTx
         public double Overlap { set; get; }
     }
 
-    public class USinger
-    {
+    public class USinger {
         public string Name = string.Empty;
         public string DisplayName { get { return Loaded ? Name : $"{Name}[Unloaded]"; } }
         public string Path = string.Empty;

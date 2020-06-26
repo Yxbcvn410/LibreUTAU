@@ -12,25 +12,21 @@ using LibreUtau.Core;
 using LibreUtau.UI.Controls;
 using LibreUtau.Core.USTx;
 
-namespace LibreUtau.UI.Models
-{
-    class MidiViewModel : INotifyPropertyChanged, ICmdSubscriber
-    {
+namespace LibreUtau.UI.Models {
+    class MidiViewModel : INotifyPropertyChanged, ICmdSubscriber {
         # region Properties
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged(string name)
-        {
+        protected void OnPropertyChanged(string name) {
             PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-            {
+            if (handler != null) {
                 handler(this, new PropertyChangedEventArgs(name));
             }
         }
 
         public UProject Project { get { return DocManager.Inst.Project; } }
-        
+
         UVoicePart _part;
         public UVoicePart Part { get { return _part; } }
 
@@ -60,49 +56,157 @@ namespace LibreUtau.UI.Models
         bool _showPitch = true;
         bool _snap = true;
 
-        public string Title { set { _title = value; OnPropertyChanged("Title"); } get { return "Midi Editor - " + _title; } }
+        public string Title {
+            set {
+                _title = value;
+                OnPropertyChanged("Title");
+            }
+            get { return "Midi Editor - " + _title; }
+        }
+
         public double TotalHeight { get { return UIConstants.MaxNoteNum * _trackHeight - _viewHeight; } }
         public double TotalWidth { get { return _quarterCount * _quarterWidth - _viewWidth; } }
-        public double QuarterCount { set { _quarterCount = value; HorizontalPropertiesChanged(); } get { return _quarterCount; } }
-        public double TrackHeight
-        {
-            set
-            {
-                _trackHeight = Math.Max(ViewHeight / UIConstants.MaxNoteNum, Math.Max(UIConstants.NoteMinHeight, Math.Min(UIConstants.NoteMaxHeight, value)));
+
+        public double QuarterCount {
+            set {
+                _quarterCount = value;
+                HorizontalPropertiesChanged();
+            }
+            get { return _quarterCount; }
+        }
+
+        public double TrackHeight {
+            set {
+                _trackHeight = Math.Max(ViewHeight / UIConstants.MaxNoteNum,
+                    Math.Max(UIConstants.NoteMinHeight, Math.Min(UIConstants.NoteMaxHeight, value)));
                 VerticalPropertiesChanged();
             }
             get { return _trackHeight; }
         }
 
-        public double QuarterWidth
-        {
-            set
-            {
-                _quarterWidth = Math.Max(ViewWidth / QuarterCount, Math.Max(UIConstants.MidiQuarterMinWidth, Math.Min(UIConstants.MidiQuarterMaxWidth, value)));
+        public double QuarterWidth {
+            set {
+                _quarterWidth = Math.Max(ViewWidth / QuarterCount,
+                    Math.Max(UIConstants.MidiQuarterMinWidth, Math.Min(UIConstants.MidiQuarterMaxWidth, value)));
                 HorizontalPropertiesChanged();
             }
             get { return _quarterWidth; }
         }
 
-        public double ViewWidth { set { _viewWidth = value; HorizontalPropertiesChanged(); QuarterWidth = QuarterWidth; OffsetX = OffsetX; } get { return _viewWidth; } }
-        public double ViewHeight { set { _viewHeight = value; VerticalPropertiesChanged(); TrackHeight = TrackHeight; OffsetY = OffsetY; } get { return _viewHeight; } }
-        public double OffsetX { set { _offsetX = Math.Min(TotalWidth, Math.Max(0, value)); HorizontalPropertiesChanged(); } get { return _offsetX; } }
-        public double OffsetY { set { _offsetY = Math.Min(TotalHeight, Math.Max(0, value)); VerticalPropertiesChanged(); } get { return _offsetY; } }
-        public double ViewportSizeX { get { if (TotalWidth < 1) return 10000; else return ViewWidth * (TotalWidth + ViewWidth) / TotalWidth; } }
-        public double ViewportSizeY { get { if (TotalHeight < 1) return 10000; else return ViewHeight * (TotalHeight + ViewHeight) / TotalHeight; } }
+        public double ViewWidth {
+            set {
+                _viewWidth = value;
+                HorizontalPropertiesChanged();
+                QuarterWidth = QuarterWidth;
+                OffsetX = OffsetX;
+            }
+            get { return _viewWidth; }
+        }
+
+        public double ViewHeight {
+            set {
+                _viewHeight = value;
+                VerticalPropertiesChanged();
+                TrackHeight = TrackHeight;
+                OffsetY = OffsetY;
+            }
+            get { return _viewHeight; }
+        }
+
+        public double OffsetX {
+            set {
+                _offsetX = Math.Min(TotalWidth, Math.Max(0, value));
+                HorizontalPropertiesChanged();
+            }
+            get { return _offsetX; }
+        }
+
+        public double OffsetY {
+            set {
+                _offsetY = Math.Min(TotalHeight, Math.Max(0, value));
+                VerticalPropertiesChanged();
+            }
+            get { return _offsetY; }
+        }
+
+        public double ViewportSizeX {
+            get {
+                if (TotalWidth < 1) return 10000;
+                else return ViewWidth * (TotalWidth + ViewWidth) / TotalWidth;
+            }
+        }
+
+        public double ViewportSizeY {
+            get {
+                if (TotalHeight < 1) return 10000;
+                else return ViewHeight * (TotalHeight + ViewHeight) / TotalHeight;
+            }
+        }
+
         public double SmallChangeX { get { return ViewportSizeX / 10; } }
         public double SmallChangeY { get { return ViewportSizeY / 10; } }
-        public double QuarterOffset { set { _quarterOffset = value; HorizontalPropertiesChanged(); } get { return _quarterOffset; } }
-        public double MinTickWidth { set { _minTickWidth = value; HorizontalPropertiesChanged(); } get { return _minTickWidth; } }
-        public int BeatPerBar { set { _beatPerBar = value; HorizontalPropertiesChanged(); } get { return _beatPerBar; } }
-        public int BeatUnit { set { _beatUnit = value; HorizontalPropertiesChanged(); } get { return _beatUnit; } }
-        public bool ShowPitch { set { _showPitch = value; notesElement.ShowPitch = value; OnPropertyChanged("ShowPitch"); } get { return _showPitch; } }
-        public bool ShowPhoneme { set { _showPhoneme = value; OnPropertyChanged("PhonemeVisibility"); OnPropertyChanged("ShowPhoneme"); } get { return _showPhoneme; } }
-        public Visibility PhonemeVisibility { get { return _showPhoneme ? Visibility.Visible : Visibility.Collapsed; } }
-        public bool Snap { set { _snap = value; OnPropertyChanged("Snap"); } get { return _snap; } }
 
-        public void HorizontalPropertiesChanged()
-        {
+        public double QuarterOffset {
+            set {
+                _quarterOffset = value;
+                HorizontalPropertiesChanged();
+            }
+            get { return _quarterOffset; }
+        }
+
+        public double MinTickWidth {
+            set {
+                _minTickWidth = value;
+                HorizontalPropertiesChanged();
+            }
+            get { return _minTickWidth; }
+        }
+
+        public int BeatPerBar {
+            set {
+                _beatPerBar = value;
+                HorizontalPropertiesChanged();
+            }
+            get { return _beatPerBar; }
+        }
+
+        public int BeatUnit {
+            set {
+                _beatUnit = value;
+                HorizontalPropertiesChanged();
+            }
+            get { return _beatUnit; }
+        }
+
+        public bool ShowPitch {
+            set {
+                _showPitch = value;
+                notesElement.ShowPitch = value;
+                OnPropertyChanged("ShowPitch");
+            }
+            get { return _showPitch; }
+        }
+
+        public bool ShowPhoneme {
+            set {
+                _showPhoneme = value;
+                OnPropertyChanged("PhonemeVisibility");
+                OnPropertyChanged("ShowPhoneme");
+            }
+            get { return _showPhoneme; }
+        }
+
+        public Visibility PhonemeVisibility { get { return _showPhoneme ? Visibility.Visible : Visibility.Collapsed; } }
+
+        public bool Snap {
+            set {
+                _snap = value;
+                OnPropertyChanged("Snap");
+            }
+            get { return _snap; }
+        }
+
+        public void HorizontalPropertiesChanged() {
             OnPropertyChanged("QuarterWidth");
             OnPropertyChanged("TotalWidth");
             OnPropertyChanged("OffsetX");
@@ -116,8 +220,7 @@ namespace LibreUtau.UI.Models
             MarkUpdate();
         }
 
-        public void VerticalPropertiesChanged()
-        {
+        public void VerticalPropertiesChanged() {
             OnPropertyChanged("TrackHeight");
             OnPropertyChanged("TotalHeight");
             OnPropertyChanged("OffsetY");
@@ -135,37 +238,36 @@ namespace LibreUtau.UI.Models
 
         public MidiViewModel() { }
 
-        public void RedrawIfUpdated()
-        {
-            if (_updated)
-            {
-                if (visibleExpElement != null)
-                {
+        public void RedrawIfUpdated() {
+            if (_updated) {
+                if (visibleExpElement != null) {
                     visibleExpElement.X = -OffsetX;
                     visibleExpElement.ScaleX = QuarterWidth / Project.Resolution;
                     visibleExpElement.VisualHeight = ExpCanvas.ActualHeight;
                 }
-                if (shadowExpElement != null)
-                {
+
+                if (shadowExpElement != null) {
                     shadowExpElement.X = -OffsetX;
                     shadowExpElement.ScaleX = QuarterWidth / Project.Resolution;
                     shadowExpElement.VisualHeight = ExpCanvas.ActualHeight;
                 }
-                if (notesElement != null)
-                {
+
+                if (notesElement != null) {
                     notesElement.X = -OffsetX;
                     notesElement.Y = -OffsetY;
                     notesElement.VisualHeight = MidiCanvas.ActualHeight;
                     notesElement.TrackHeight = TrackHeight;
                     notesElement.QuarterWidth = QuarterWidth;
                 }
-                if (phonemesElement != null)
-                {
+
+                if (phonemesElement != null) {
                     phonemesElement.X = -OffsetX;
                     phonemesElement.QuarterWidth = QuarterWidth;
                 }
+
                 updatePlayPosMarker();
             }
+
             _updated = false;
             foreach (var pair in expElements) pair.Value.RedrawIfUpdated();
             if (notesElement != null) notesElement.RedrawIfUpdated();
@@ -178,31 +280,26 @@ namespace LibreUtau.UI.Models
         Path playPosMarker;
         Rectangle playPosMarkerHighlight;
 
-        private void initPlayPosMarker()
-        {
+        private void initPlayPosMarker() {
             playPosTick = DocManager.Inst.playPosTick;
-            if (playPosMarker == null)
-            {
-                playPosMarker = new Path()
-                {
+            if (playPosMarker == null) {
+                playPosMarker = new Path() {
                     Fill = ThemeManager.TickLineBrushDark,
                     Data = Geometry.Parse("M 0 0 L 13 0 L 13 3 L 6.5 9 L 0 3 Z")
                 };
                 TimelineCanvas.Children.Add(playPosMarker);
 
-                playPosMarkerHighlight = new Rectangle()
-                {
+                playPosMarkerHighlight = new Rectangle() {
                     Fill = ThemeManager.TickLineBrushDark,
                     Opacity = 0.25,
                     Width = 32
                 };
                 MidiCanvas.Children.Add(playPosMarkerHighlight);
-                Canvas.SetZIndex(playPosMarkerHighlight, UIConstants.PosMarkerHightlighZIndex);
+                Panel.SetZIndex(playPosMarkerHighlight, UIConstants.PosMarkerHightlighZIndex);
             }
         }
 
-        public void updatePlayPosMarker()
-        {
+        public void updatePlayPosMarker() {
             double quarter = (double)(playPosTick - Part.PosTick) / DocManager.Inst.Project.Resolution;
             int playPosMarkerOffset = (int)Math.Round(QuarterToCanvas(quarter) + 0.5);
             Canvas.SetLeft(playPosMarker, playPosMarkerOffset - 6);
@@ -221,31 +318,67 @@ namespace LibreUtau.UI.Models
         public List<UNote> SelectedNotes = new List<UNote>();
         public List<UNote> TempSelectedNotes = new List<UNote>();
 
-        public void SelectAll() { SelectedNotes.Clear(); foreach (UNote note in Part.Notes) { SelectedNotes.Add(note); note.Selected = true; } DocManager.Inst.ExecuteCmd(new RedrawNotesNotification()); }
-        public void DeselectAll() { SelectedNotes.Clear(); foreach (UNote note in Part.Notes) note.Selected = false; DocManager.Inst.ExecuteCmd(new RedrawNotesNotification()); }
+        public void SelectAll() {
+            SelectedNotes.Clear();
+            foreach (UNote note in Part.Notes) {
+                SelectedNotes.Add(note);
+                note.Selected = true;
+            }
 
-        public void SelectNote(UNote note) { if (!SelectedNotes.Contains(note)) { SelectedNotes.Add(note); note.Selected = true; DocManager.Inst.ExecuteCmd(new RedrawNotesNotification()); } }
-        public void DeselectNote(UNote note) { SelectedNotes.Remove(note); note.Selected = false; DocManager.Inst.ExecuteCmd(new RedrawNotesNotification()); }
+            DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+        }
 
-        public void SelectTempNote(UNote note) { TempSelectedNotes.Add(note); note.Selected = true; }
-        public void TempSelectInBox(double quarter1, double quarter2, int noteNum1, int noteNum2)
-        {
-            if (quarter2 < quarter1) { double temp = quarter1; quarter1 = quarter2; quarter2 = temp; }
-            if (noteNum2 < noteNum1) { int temp = noteNum1; noteNum1 = noteNum2; noteNum2 = temp; }
+        public void DeselectAll() {
+            SelectedNotes.Clear();
+            foreach (UNote note in Part.Notes) note.Selected = false;
+            DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+        }
+
+        public void SelectNote(UNote note) {
+            if (!SelectedNotes.Contains(note)) {
+                SelectedNotes.Add(note);
+                note.Selected = true;
+                DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+            }
+        }
+
+        public void DeselectNote(UNote note) {
+            SelectedNotes.Remove(note);
+            note.Selected = false;
+            DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+        }
+
+        public void SelectTempNote(UNote note) {
+            TempSelectedNotes.Add(note);
+            note.Selected = true;
+        }
+
+        public void TempSelectInBox(double quarter1, double quarter2, int noteNum1, int noteNum2) {
+            if (quarter2 < quarter1) {
+                double temp = quarter1;
+                quarter1 = quarter2;
+                quarter2 = temp;
+            }
+
+            if (noteNum2 < noteNum1) {
+                int temp = noteNum1;
+                noteNum1 = noteNum2;
+                noteNum2 = temp;
+            }
+
             int tick1 = (int)(quarter1 * Project.Resolution);
             int tick2 = (int)(quarter2 * Project.Resolution);
             foreach (UNote note in TempSelectedNotes) note.Selected = false;
             TempSelectedNotes.Clear();
-            foreach (UNote note in Part.Notes)
-            {
+            foreach (UNote note in Part.Notes) {
                 if (note.PosTick <= tick2 && note.PosTick + note.DurTick >= tick1 &&
                     note.NoteNum >= noteNum1 && note.NoteNum <= noteNum2) SelectTempNote(note);
             }
+
             DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
         }
 
-        public void DoneTempSelect()
-        {
+        public void DoneTempSelect() {
             foreach (UNote note in TempSelectedNotes) SelectNote(note);
             TempSelectedNotes.Clear();
         }
@@ -254,34 +387,44 @@ namespace LibreUtau.UI.Models
 
         # region Calculation
 
-        public double GetSnapUnit() { return Snap ? MusicMath.getZoomRatio(QuarterWidth, BeatPerBar, BeatUnit, MinTickWidth) : 1.0 / 96; }
+        public double GetSnapUnit() {
+            return Snap ? MusicMath.getZoomRatio(QuarterWidth, BeatPerBar, BeatUnit, MinTickWidth) : 1.0 / 96;
+        }
+
         public double CanvasToQuarter(double X) { return (X + OffsetX) / QuarterWidth; }
         public double QuarterToCanvas(double X) { return X * QuarterWidth - OffsetX; }
-        public double CanvasToSnappedQuarter(double X)
-        {
+
+        public double CanvasToSnappedQuarter(double X) {
             double quater = CanvasToQuarter(X);
             double snapUnit = GetSnapUnit();
             return (int)(quater / snapUnit) * snapUnit;
         }
-        public double CanvasToNextSnappedQuarter(double X)
-        {
+
+        public double CanvasToNextSnappedQuarter(double X) {
             double quater = CanvasToQuarter(X);
             double snapUnit = GetSnapUnit();
             return (int)(quater / snapUnit) * snapUnit + snapUnit;
         }
-        public double CanvasRoundToSnappedQuarter(double X)
-        {
+
+        public double CanvasRoundToSnappedQuarter(double X) {
             double quater = CanvasToQuarter(X);
             double snapUnit = GetSnapUnit();
             return Math.Round(quater / snapUnit) * snapUnit;
         }
+
         public int CanvasToSnappedTick(double X) { return (int)(CanvasToSnappedQuarter(X) * Project.Resolution); }
         public double TickToCanvas(int tick) { return (int)(QuarterToCanvas((double)tick / Project.Resolution)); }
 
         public int CanvasToNoteNum(double Y) { return UIConstants.MaxNoteNum - 1 - (int)((Y + OffsetY) / TrackHeight); }
         public double CanvasToPitch(double Y) { return UIConstants.MaxNoteNum - 1 - (Y + OffsetY) / TrackHeight + 0.5; }
-        public double NoteNumToCanvas(int noteNum) { return TrackHeight * (UIConstants.MaxNoteNum - 1 - noteNum) - OffsetY; }
-        public double NoteNumToCanvas(double noteNum) { return TrackHeight * (UIConstants.MaxNoteNum - 1 - noteNum) - OffsetY; }
+
+        public double NoteNumToCanvas(int noteNum) {
+            return TrackHeight * (UIConstants.MaxNoteNum - 1 - noteNum) - OffsetY;
+        }
+
+        public double NoteNumToCanvas(double noteNum) {
+            return TrackHeight * (UIConstants.MaxNoteNum - 1 - noteNum) - OffsetY;
+        }
 
         public bool NoteIsInView(UNote note) // FIXME : improve performance
         {
@@ -294,26 +437,27 @@ namespace LibreUtau.UI.Models
 
         # region Cmd Handling
 
-        private void UnloadPart()
-        {
+        private void UnloadPart() {
             SelectedNotes.Clear();
             Title = "";
             _part = null;
 
-            if (notesElement != null)
-            {
+            if (notesElement != null) {
                 notesElement.Part = null;
             }
-            if (phonemesElement != null)
-            {
+
+            if (phonemesElement != null) {
                 phonemesElement.Part = null;
             }
 
-            foreach (var pair in expElements) { pair.Value.Part = null; pair.Value.MarkUpdate(); pair.Value.RedrawIfUpdated(); }
+            foreach (var pair in expElements) {
+                pair.Value.Part = null;
+                pair.Value.MarkUpdate();
+                pair.Value.RedrawIfUpdated();
+            }
         }
 
-        private void LoadPart(UPart part, UProject project)
-        {
+        private void LoadPart(UPart part, UProject project) {
             if (part == Part) return;
             if (!(part is UVoicePart)) return;
             UnloadPart();
@@ -321,31 +465,29 @@ namespace LibreUtau.UI.Models
 
             OnPartModified();
 
-            if (notesElement == null)
-            {
-                notesElement = new NotesElement() { Key = "pitchbend", Part = this.Part, midiVM = this };
+            if (notesElement == null) {
+                notesElement = new NotesElement() {Key = "pitchbend", Part = this.Part, midiVM = this};
                 MidiCanvas.Children.Add(notesElement);
-            }
-            else
-            {
+            } else {
                 notesElement.Part = this.Part;
             }
 
-            if (phonemesElement == null)
-            {
-                phonemesElement = new PhonemesElement() { Part = this.Part, midiVM = this };
+            if (phonemesElement == null) {
+                phonemesElement = new PhonemesElement() {Part = this.Part, midiVM = this};
                 PhonemeCanvas.Children.Add(phonemesElement);
-            }else
-            {
+            } else {
                 phonemesElement.Part = this.Part;
             }
 
-            foreach (var pair in expElements) { pair.Value.Part = this.Part; pair.Value.MarkUpdate(); }
+            foreach (var pair in expElements) {
+                pair.Value.Part = this.Part;
+                pair.Value.MarkUpdate();
+            }
+
             initPlayPosMarker();
         }
 
-        private void OnPartModified()
-        {
+        private void OnPartModified() {
             Title = Part.Name;
             QuarterOffset = (double)Part.PosTick / Project.Resolution;
             QuarterCount = (double)Part.DurTick / Project.Resolution;
@@ -356,12 +498,10 @@ namespace LibreUtau.UI.Models
             _visualDurTick = Part.DurTick;
         }
 
-        private void OnSelectExpression(UNotification cmd)
-        {
+        private void OnSelectExpression(UNotification cmd) {
             var _cmd = cmd as SelectExpressionNotification;
-            if (!expElements.ContainsKey(_cmd.ExpKey))
-            {
-                var expEl = new FloatExpElement() { Key = _cmd.ExpKey, Part = this.Part, midiVM = this };
+            if (!expElements.ContainsKey(_cmd.ExpKey)) {
+                var expEl = new FloatExpElement() {Key = _cmd.ExpKey, Part = this.Part, midiVM = this};
                 expElements.Add(_cmd.ExpKey, expEl);
                 ExpCanvas.Children.Add(expEl);
             }
@@ -376,8 +516,7 @@ namespace LibreUtau.UI.Models
             visibleExpElement.DisplayMode = ExpDisMode.Visible;
         }
 
-        private void OnPlayPosSet(int playPosTick)
-        {
+        private void OnPlayPosSet(int playPosTick) {
             this.playPosTick = playPosTick;
             double playPosPix = TickToCanvas(playPosTick);
             if (playPosPix > MidiCanvas.ActualWidth * UIConstants.PlayPosMarkerMargin)
@@ -385,8 +524,7 @@ namespace LibreUtau.UI.Models
             MarkUpdate();
         }
 
-        private void OnPitchModified()
-        {
+        private void OnPitchModified() {
             MarkUpdate();
             notesElement.MarkUpdate();
         }
@@ -395,46 +533,39 @@ namespace LibreUtau.UI.Models
 
         # region ICmdSubscriber
 
-        public void Subscribe(ICmdPublisher publisher) { if (publisher != null) publisher.Subscribe(this); }
+        public void Subscribe(ICmdPublisher publisher) {
+            if (publisher != null) publisher.Subscribe(this);
+        }
 
-        public void OnNext(UCommand cmd, bool isUndo)
-        {
-            if (cmd is NoteCommand)
-            {
+        public void OnNext(UCommand cmd, bool isUndo) {
+            if (cmd is NoteCommand) {
                 notesElement.MarkUpdate();
                 phonemesElement.MarkUpdate();
-            }
-            else if (cmd is PartCommand)
-            {
+            } else if (cmd is PartCommand) {
                 var _cmd = cmd as PartCommand;
                 if (_cmd.part != this.Part) return;
                 else if (_cmd is RemovePartCommand) UnloadPart();
                 else if (_cmd is ResizePartCommand) OnPartModified();
                 else if (_cmd is MovePartCommand) OnPartModified();
-            }
-            else if (cmd is ExpCommand)
-            {
+            } else if (cmd is ExpCommand) {
                 var _cmd = cmd as ExpCommand;
                 if (_cmd is SetIntExpCommand) expElements[_cmd.Key].MarkUpdate();
                 else if (_cmd is PitchExpCommand) OnPitchModified();
-            }
-            else if (cmd is UNotification)
-            {
+            } else if (cmd is UNotification) {
                 var _cmd = cmd as UNotification;
                 if (_cmd is LoadPartNotification) LoadPart(_cmd.part, _cmd.project);
                 else if (_cmd is LoadProjectNotification) UnloadPart();
                 else if (_cmd is SelectExpressionNotification) OnSelectExpression(_cmd);
-                else if (_cmd is ShowPitchExpNotification) { }
-                else if (_cmd is HidePitchExpNotification) { }
-                else if (_cmd is RedrawNotesNotification) {
+                else if (_cmd is ShowPitchExpNotification) { } else if (_cmd is HidePitchExpNotification) { } else if (
+                    _cmd is RedrawNotesNotification) {
                     if (notesElement != null) notesElement.MarkUpdate();
                     if (phonemesElement != null) phonemesElement.MarkUpdate();
+                } else if (_cmd is SetPlayPosTickNotification) {
+                    OnPlayPosSet(((SetPlayPosTickNotification)_cmd).playPosTick);
                 }
-                else if (_cmd is SetPlayPosTickNotification) { OnPlayPosSet(((SetPlayPosTickNotification)_cmd).playPosTick); }
             }
         }
 
         # endregion
-
     }
 }

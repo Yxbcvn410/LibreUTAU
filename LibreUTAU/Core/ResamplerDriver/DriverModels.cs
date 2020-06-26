@@ -1,4 +1,5 @@
 ﻿#region
+
 /*
     Resample引擎IO模型类
     引擎输入输出对象应严格按照这3个结构体进行定义。
@@ -63,6 +64,7 @@
      若开发语言为其他高级语言，可以参考C++导出格式
      若引擎为exe，那么系统默认认为该引擎可调用并作为resampler引擎使用
  */
+
 #endregion
 
 using System;
@@ -71,14 +73,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 using LibreUtau.Core.Render;
 
-namespace LibreUtau.Core.ResamplerDriver
-{
-    public class DriverModels
-    {
+namespace LibreUtau.Core.ResamplerDriver {
+    public class DriverModels {
         #region 信息模型
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct EngineFlagItem
-        {
+        public struct EngineFlagItem {
             public string flagStr;
             public string ThreeLetterName;
             public double Max;
@@ -87,8 +87,7 @@ namespace LibreUtau.Core.ResamplerDriver
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct EngineInfo
-        {
+        public struct EngineInfo {
             public string Name;
             public string Version;
             public string Author;
@@ -97,37 +96,37 @@ namespace LibreUtau.Core.ResamplerDriver
             public EngineFlagItem[] FlagItem;
             public override string ToString() { return $"{Name} {Version}"; }
         }
+
         #endregion
 
         #region 输入模型
+
         /// <summary>
         /// 参数输入模型
         /// </summary>
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct EngineInput
-        {
-            public string inputWaveFile;//1
-            public string NoteString;//noteID;//3
-            public double Velocity;//fixSpeed;//4
-            public string StrFlags;//5
-            public double Offset;//6
-            public double RequiredLength;//fixedLength;//7
-            public double Consonant;//startBlank;//9
-            public double Cutoff;//endBlank;//10
-            public double Volume;//11
-            public double Modulation;//12
-            public double Tempo;//13
-            public int nPitchBend;//13
-            public int[] pitchBend;//13
+        public struct EngineInput {
+            public string inputWaveFile; //1
+            public string NoteString; //noteID;//3
+            public double Velocity; //fixSpeed;//4
+            public string StrFlags; //5
+            public double Offset; //6
+            public double RequiredLength; //fixedLength;//7
+            public double Consonant; //startBlank;//9
+            public double Cutoff; //endBlank;//10
+            public double Volume; //11
+            public double Modulation; //12
+            public double Tempo; //13
+            public int nPitchBend; //13
+            public int[] pitchBend; //13
         }
+
         /// <summary>
         /// 参数初始化过程
         /// </summary>
         /// <returns></returns>
-        public static EngineInput CreateInputModel()
-        {
-            EngineInput Input = new EngineInput
-            {
+        public static EngineInput CreateInputModel() {
+            EngineInput Input = new EngineInput {
                 inputWaveFile = string.Empty,
                 NoteString = string.Empty,
                 Velocity = 100,
@@ -144,14 +143,13 @@ namespace LibreUtau.Core.ResamplerDriver
             };
             return Input;
         }
+
         /// <summary>
         /// 从RenderItem初始化过程
         /// </summary>
         /// <returns></returns>
-        internal static EngineInput CreateInputModel(RenderItem renderItem,double Modulation)
-        {
-            EngineInput Ret = new EngineInput
-            {
+        internal static EngineInput CreateInputModel(RenderItem renderItem, double Modulation) {
+            EngineInput Ret = new EngineInput {
                 inputWaveFile = renderItem.SourceFile,
                 NoteString = MusicMath.GetNoteString(renderItem.NoteNum),
                 Velocity = renderItem.Velocity,
@@ -168,19 +166,20 @@ namespace LibreUtau.Core.ResamplerDriver
             };
             return Ret;
         }
+
         #endregion
 
         #region 输出模型
+
         /// <summary>
         /// 真实输出模型
         /// </summary>
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        protected struct EngineOutput
-        {
+        protected struct EngineOutput {
             public int nWavData;
             public byte[] wavData;
         }
-        #endregion
 
+        #endregion
     }
 }

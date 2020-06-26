@@ -9,11 +9,11 @@ using LibreUtau.Core.USTx;
 using Serilog;
 
 namespace LibreUtau.Core.Render {
-
     internal class ResamplerInterface {
         private Action<SequencingSampleProvider> resampleDoneCallback;
 
-        public void ResamplePart(UVoicePart part, UProject project, IResamplerDriver engine, Action<SequencingSampleProvider> resampleDoneCallback) {
+        public void ResamplePart(UVoicePart part, UProject project, IResamplerDriver engine,
+            Action<SequencingSampleProvider> resampleDoneCallback) {
             this.resampleDoneCallback = resampleDoneCallback;
             var worker = new BackgroundWorker {
                 WorkerReportsProgress = true
@@ -43,6 +43,7 @@ namespace LibreUtau.Core.Render {
                 foreach (var item in renderItems) {
                     renderItemSampleProviders.Add(new RenderItemSampleProvider(item));
                 }
+
                 DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Format(string.Empty)));
                 resampleDoneCallback(new SequencingSampleProvider(renderItemSampleProviders));
             } catch (Exception ex) {
@@ -51,7 +52,8 @@ namespace LibreUtau.Core.Render {
             }
         }
 
-        private List<RenderItem> RenderAsync(UVoicePart part, UProject project, IResamplerDriver engine, BackgroundWorker worker) {
+        private List<RenderItem> RenderAsync(UVoicePart part, UProject project, IResamplerDriver engine,
+            BackgroundWorker worker) {
             var renderItems = new List<RenderItem>();
             var watch = new Stopwatch();
             watch.Start();
@@ -59,7 +61,7 @@ namespace LibreUtau.Core.Render {
             lock (part) {
                 var cacheDir = PathManager.Inst.GetCachePath(project.FilePath);
                 var cacheFiles = Directory.EnumerateFiles(cacheDir).ToArray();
-                int count = 0, i = 0;
+                int count = 0, phonemeProgress = 0;
                 foreach (var note in part.Notes) {
                     foreach (var phoneme in note.Phonemes) {
                         count++;
@@ -74,17 +76,19 @@ namespace LibreUtau.Core.Render {
                         }
 
                         var item = new RenderItem(phoneme, part, project);
-
-                        // System.Diagnostics.Debug.WriteLine("Sound {0:x} resampling {1}", item.HashParameters(), item.GetResamplerExeArgs());
                         var engineArgs = DriverModels.CreateInputModel(item, 0);
                         var output = engine.DoResampler(engineArgs);
                         item.Sound = MemorySampleProvider.FromStream(output);
                         output.Dispose();
                         renderItems.Add(item);
-                        worker.ReportProgress(100 * ++i / count, $"Resampling \"{phoneme.Phoneme}\" {i}/{count}");
+
+                        phonemeProgress++;
+                        worker.ReportProgress(100 * phonemeProgress / count,
+                            $"Resampling \"{phoneme.Phoneme}\" {phonemeProgress}/{count}");
                     }
                 }
             }
+
             watch.Stop();
             Log.Information($"Resampling end, total time {watch.Elapsed}");
             return renderItems;

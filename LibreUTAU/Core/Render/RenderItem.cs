@@ -85,8 +85,8 @@ namespace LibreUtau.Core.Render {
             };
         }
 
-        public DriverModels.EngineInput ToEngineInput() {
-            return new DriverModels.EngineInput {
+        public EngineInput ToEngineInput() {
+            return new EngineInput {
                 inputWaveFile = SourceFile,
                 NoteString = MusicMath.GetNoteString(NoteNum),
                 Velocity = Velocity,

@@ -4,7 +4,6 @@ using System.IO;
 using Newtonsoft.Json;
 
 namespace LibreUtau.Core.Util {
-
     internal static class Preferences {
         public static SerializablePreferences Default;
         private const string filename = "prefs.json";

@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LibreUtau.Core {
-
     internal static class UpdateChecker {
         private const string VersionUrl = "https://ci.appveyor.com/api/projects/stakira/openutau";
 

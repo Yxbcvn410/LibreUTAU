@@ -7,11 +7,11 @@
     <Color x:Key="BackgroundColorActive">#F0F0F0</Color>
     <Color x:Key="WindowButtonColorNormal">#ADA1B3</Color>
     <Color x:Key="WindowButtonColorActive">#000000</Color>
-    
+
     <Color x:Key="BlackKeyNoteColorNormal">#FFFFFF</Color>
-    
+
     <Color x:Key="WhiteKeyNoteColorNormal">#FF347c</Color>
-    
+
     <Color x:Key="CenterKeyNoteColorNormal">#FF347C</Color>
 
     <Color x:Key="BlackKeyTrackColorNormal">#F0F0F0</Color>
@@ -45,7 +45,7 @@
     <Color x:Key="UIBackgroundColorActive">#F0F0F0</Color>
     <Color x:Key="UINeutralColorNormal">#ADA1B3</Color>
     <Color x:Key="UINeutralColorActive">#948A99</Color>
-    
+
     <!--Midi notes-->
     <Color x:Key="NoteFillSelectedColorA">#ff7aa9</Color>
     <Color x:Key="NoteFillSelectedColorB">#ff679d</Color>
@@ -65,34 +65,34 @@
 
     <Color x:Key="PlayPosMarkerHighlightColor">#ebdaf3</Color>
 
-    <SolidColorBrush x:Key="ScrollBarBrushNormal" Color="{StaticResource ScrollBarColorNormal}"/>
-    <SolidColorBrush x:Key="ScrollBarBrushActive" Color="{StaticResource ScrollBarColorActive}"/>
-    <SolidColorBrush x:Key="BackgroundBrushNormal" Color="{StaticResource BackgroundColorNormal}"/>
-    <SolidColorBrush x:Key="BackgroundBrushActive" Color="{StaticResource BackgroundColorActive}"/>
-    <SolidColorBrush x:Key="WindowButtonBrushNormal" Color="{StaticResource WindowButtonColorNormal}"/>
-    <SolidColorBrush x:Key="WindowButtonBrushActive" Color="{StaticResource WindowButtonColorActive}"/>
+    <SolidColorBrush x:Key="ScrollBarBrushNormal" Color="{StaticResource ScrollBarColorNormal}" />
+    <SolidColorBrush x:Key="ScrollBarBrushActive" Color="{StaticResource ScrollBarColorActive}" />
+    <SolidColorBrush x:Key="BackgroundBrushNormal" Color="{StaticResource BackgroundColorNormal}" />
+    <SolidColorBrush x:Key="BackgroundBrushActive" Color="{StaticResource BackgroundColorActive}" />
+    <SolidColorBrush x:Key="WindowButtonBrushNormal" Color="{StaticResource WindowButtonColorNormal}" />
+    <SolidColorBrush x:Key="WindowButtonBrushActive" Color="{StaticResource WindowButtonColorActive}" />
 
     <LinearGradientBrush x:Key="BlackKeyBrushNormal" EndPoint="1,0.5" StartPoint="0,0.5">
-        <GradientStop Color="{StaticResource BlackKeyColorNormalLeft}" Offset="0"/>
-        <GradientStop Color="{StaticResource BlackKeyColorNormalRight}" Offset="1"/>
+        <GradientStop Color="{StaticResource BlackKeyColorNormalLeft}" Offset="0" />
+        <GradientStop Color="{StaticResource BlackKeyColorNormalRight}" Offset="1" />
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="BlackKeyNoteBrushNormal" Color="{StaticResource BlackKeyNoteColorNormal}"/>
+    <SolidColorBrush x:Key="BlackKeyNoteBrushNormal" Color="{StaticResource BlackKeyNoteColorNormal}" />
 
     <LinearGradientBrush x:Key="WhiteKeyBrushNormal" EndPoint="1,0.5" StartPoint="0,0.5">
-        <GradientStop Color="{StaticResource WhiteKeyColorNormalLeft}" Offset="0"/>
-        <GradientStop Color="{StaticResource WhiteKeyColorNormalRight}" Offset="1"/>
+        <GradientStop Color="{StaticResource WhiteKeyColorNormalLeft}" Offset="0" />
+        <GradientStop Color="{StaticResource WhiteKeyColorNormalRight}" Offset="1" />
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="WhiteKeyNoteBrushNormal" Color="{StaticResource WhiteKeyNoteColorNormal}"/>
+    <SolidColorBrush x:Key="WhiteKeyNoteBrushNormal" Color="{StaticResource WhiteKeyNoteColorNormal}" />
 
     <LinearGradientBrush x:Key="CenterKeyBrushNormal" EndPoint="1,0.5" StartPoint="0,0.5">
-        <GradientStop Color="{StaticResource CenterKeyColorNormalLeft}" Offset="0"/>
-        <GradientStop Color="{StaticResource CenterKeyColorNormalRight}" Offset="1"/>
+        <GradientStop Color="{StaticResource CenterKeyColorNormalLeft}" Offset="0" />
+        <GradientStop Color="{StaticResource CenterKeyColorNormalRight}" Offset="1" />
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="CenterKeyNoteBrushNormal" Color="{StaticResource CenterKeyNoteColorNormal}"/>
+    <SolidColorBrush x:Key="CenterKeyNoteBrushNormal" Color="{StaticResource CenterKeyNoteColorNormal}" />
 
-    <SolidColorBrush x:Key="BlackKeyTrackBrushNormal" Color="{StaticResource BlackKeyTrackColorNormal}"/>
-    <SolidColorBrush x:Key="WhiteKeyTrackBrushNormal" Color="{StaticResource WhiteKeyTrackColorNormal}"/>
+    <SolidColorBrush x:Key="BlackKeyTrackBrushNormal" Color="{StaticResource BlackKeyTrackColorNormal}" />
+    <SolidColorBrush x:Key="WhiteKeyTrackBrushNormal" Color="{StaticResource WhiteKeyTrackColorNormal}" />
 
-    <SolidColorBrush x:Key="TimelineBrushNormal" Color="{StaticResource TimelineColorNormal}"/>
-    
+    <SolidColorBrush x:Key="TimelineBrushNormal" Color="{StaticResource TimelineColorNormal}" />
+
 </ResourceDictionary>

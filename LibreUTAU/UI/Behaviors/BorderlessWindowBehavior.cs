@@ -6,69 +6,58 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interactivity;
-
 using WinInterop = System.Windows.Interop;
 using System.Runtime.InteropServices;
 
-namespace LibreUtau.UI.Behaviors
-{
+namespace LibreUtau.UI.Behaviors {
     /// <summary>
     /// BorderlessWindowBehavior
     /// Hide default window chrome. Fix maximizing problem. Disable window context menu.
     /// </summary>
-    class BorderlessWindowBehavior : Behavior<Window>
-    {
-        protected override void OnAttached()
-        {
+    class BorderlessWindowBehavior : Behavior<Window> {
+        protected override void OnAttached() {
             AddHwndSourceHook();
             base.OnAttached();
         }
 
-        void AddHwndSourceHook()
-        {
-            System.IntPtr handle = (new WinInterop.WindowInteropHelper((Window)AssociatedObject)).EnsureHandle();
+        void AddHwndSourceHook() {
+            IntPtr handle = (new WinInterop.WindowInteropHelper((Window)AssociatedObject)).EnsureHandle();
             WinInterop.HwndSource.FromHwnd(handle).AddHook(new WinInterop.HwndSourceHook(WindowProc));
         }
 
-        private static System.IntPtr WindowProc(
-              System.IntPtr hwnd,
-              int msg,
-              System.IntPtr wParam,
-              System.IntPtr lParam,
-              ref bool handled)
-        {
-            switch (msg)
-            {
-                case 0x0024:/* WM_GETMINMAXINFO */
+        private static IntPtr WindowProc(
+            IntPtr hwnd,
+            int msg,
+            IntPtr wParam,
+            IntPtr lParam,
+            ref bool handled) {
+            switch (msg) {
+                case 0x0024: /* WM_GETMINMAXINFO */
                     WmGetMinMaxInfo(hwnd, lParam);
                     handled = true;
                     break;
-                case 0x0084:/* WM_NCHITTEST */
-                    if (HitCaptionTest(hwnd, lParam))
-                    {
+                case 0x0084: /* WM_NCHITTEST */
+                    if (HitCaptionTest(hwnd, lParam)) {
                         handled = true;
-                        return (System.IntPtr)2; /*HTCAPTION*/
+                        return (IntPtr)2; /*HTCAPTION*/
                     }
+
                     break;
             }
 
-            return (System.IntPtr)0;
+            return (IntPtr)0;
         }
 
         #region Avoid hiding task bar upon maximization
 
-        private static void WmGetMinMaxInfo(System.IntPtr hwnd, System.IntPtr lParam)
-        {
-
+        private static void WmGetMinMaxInfo(IntPtr hwnd, IntPtr lParam) {
             MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO));
 
             // Adjust the maximized size and position to fit the work area of the correct monitor
             int MONITOR_DEFAULTTONEAREST = 0x00000002;
-            System.IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
 
-            if (monitor != System.IntPtr.Zero)
-            {
-
+            if (monitor != IntPtr.Zero) {
                 MONITORINFO monitorInfo = new MONITORINFO();
                 GetMonitorInfo(monitor, monitorInfo);
                 RECT rcWorkArea = monitorInfo.rcWork;
@@ -85,12 +74,12 @@ namespace LibreUtau.UI.Behaviors
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
-        {
+        public struct POINT {
             /// <summary>
             /// x coordinate of point.
             /// </summary>
             public int x;
+
             /// <summary>
             /// y coordinate of point.
             /// </summary>
@@ -99,16 +88,14 @@ namespace LibreUtau.UI.Behaviors
             /// <summary>
             /// Construct a point of coordinates (x,y).
             /// </summary>
-            public POINT(int x, int y)
-            {
+            public POINT(int x, int y) {
                 this.x = x;
                 this.y = y;
             }
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct MINMAXINFO
-        {
+        public struct MINMAXINFO {
             public POINT ptReserved;
             public POINT ptMaxSize;
             public POINT ptMaxPosition;
@@ -117,8 +104,7 @@ namespace LibreUtau.UI.Behaviors
         };
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public class MONITORINFO
-        {
+        public class MONITORINFO {
             public int cbSize = Marshal.SizeOf(typeof(MONITORINFO));
             public RECT rcMonitor = new RECT();
             public RECT rcWork = new RECT();
@@ -126,14 +112,16 @@ namespace LibreUtau.UI.Behaviors
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 0)]
-        public struct RECT
-        {
+        public struct RECT {
             /// <summary> Win32 </summary>
             public int left;
+
             /// <summary> Win32 </summary>
             public int top;
+
             /// <summary> Win32 </summary>
             public int right;
+
             /// <summary> Win32 </summary>
             public int bottom;
 
@@ -141,19 +129,17 @@ namespace LibreUtau.UI.Behaviors
             public static readonly RECT Empty = new RECT();
 
             /// <summary> Win32 </summary>
-            public int Width
-            {
-                get { return Math.Abs(right - left); }  // Abs needed for BIDI OS
+            public int Width {
+                get { return Math.Abs(right - left); } // Abs needed for BIDI OS
             }
+
             /// <summary> Win32 </summary>
-            public int Height
-            {
+            public int Height {
                 get { return bottom - top; }
             }
 
             /// <summary> Win32 </summary>
-            public RECT(int left, int top, int right, int bottom)
-            {
+            public RECT(int left, int top, int right, int bottom) {
                 this.left = left;
                 this.top = top;
                 this.right = right;
@@ -161,8 +147,7 @@ namespace LibreUtau.UI.Behaviors
             }
 
             /// <summary> Win32 </summary>
-            public RECT(RECT rcSrc)
-            {
+            public RECT(RECT rcSrc) {
                 this.left = rcSrc.left;
                 this.top = rcSrc.top;
                 this.right = rcSrc.right;
@@ -170,44 +155,42 @@ namespace LibreUtau.UI.Behaviors
             }
 
             /// <summary> Win32 </summary>
-            public bool IsEmpty
-            {
-                get
-                {
+            public bool IsEmpty {
+                get {
                     // BUGBUG : On Bidi OS (hebrew arabic) left > right
                     return left >= right || top >= bottom;
                 }
             }
+
             /// <summary> Return a user friendly representation of this struct </summary>
-            public override string ToString()
-            {
-                if (this == RECT.Empty) { return "RECT {Empty}"; }
-                return "RECT { left : " + left + " / top : " + top + " / right : " + right + " / bottom : " + bottom + " }";
+            public override string ToString() {
+                if (this == Empty) { return "RECT {Empty}"; }
+
+                return "RECT { left : " + left + " / top : " + top + " / right : " + right + " / bottom : " + bottom +
+                       " }";
             }
 
             /// <summary> Determine if 2 RECT are equal (deep compare) </summary>
-            public override bool Equals(object obj)
-            {
+            public override bool Equals(object obj) {
                 if (!(obj is Rect)) { return false; }
+
                 return (this == (RECT)obj);
             }
 
             /// <summary>Return the HashCode for this struct (not garanteed to be unique)</summary>
-            public override int GetHashCode()
-            {
+            public override int GetHashCode() {
                 return left.GetHashCode() + top.GetHashCode() + right.GetHashCode() + bottom.GetHashCode();
             }
 
 
             /// <summary> Determine if 2 RECT are equal (deep compare)</summary>
-            public static bool operator ==(RECT rect1, RECT rect2)
-            {
-                return (rect1.left == rect2.left && rect1.top == rect2.top && rect1.right == rect2.right && rect1.bottom == rect2.bottom);
+            public static bool operator ==(RECT rect1, RECT rect2) {
+                return (rect1.left == rect2.left && rect1.top == rect2.top && rect1.right == rect2.right &&
+                        rect1.bottom == rect2.bottom);
             }
 
             /// <summary> Determine if 2 RECT are different(deep compare)</summary>
-            public static bool operator !=(RECT rect1, RECT rect2)
-            {
+            public static bool operator !=(RECT rect1, RECT rect2) {
                 return !(rect1 == rect2);
             }
         }
@@ -225,8 +208,7 @@ namespace LibreUtau.UI.Behaviors
 
         #region Hit caption test
 
-        private static bool HitCaptionTest(System.IntPtr hwnd, System.IntPtr lParam)
-        {
+        private static bool HitCaptionTest(IntPtr hwnd, IntPtr lParam) {
             Window window = (Window)WinInterop.HwndSource.FromHwnd(hwnd).RootVisual;
             int x = lParam.ToInt32() << 16 >> 16, y = lParam.ToInt32() >> 16;
             var point = window.PointFromScreen(new Point(x, y));

@@ -5,7 +5,6 @@ using LibreUtau.Core.Util;
 using Serilog;
 
 namespace LibreUtau.Core {
-
     public class PathManager {
         public const string UtauVoicePath = "%VOICE%";
         public const string DefaultSingerPath = "Singers";
@@ -20,7 +19,14 @@ namespace LibreUtau.Core {
             Log.Logger.Information($"Home path = {HomePath}");
         }
 
-        public static PathManager Inst { get { if (_inst == null) { _inst = new PathManager(); } return _inst; } }
+        public static PathManager Inst {
+            get {
+                if (_inst == null) { _inst = new PathManager(); }
+
+                return _inst;
+            }
+        }
+
         public string HomePath { get; private set; }
 
         public string TryMakeRelative(string path) {
@@ -28,6 +34,7 @@ namespace LibreUtau.Core {
                 path = path.Replace(HomePath, "");
                 return path.TrimStart(Path.DirectorySeparatorChar);
             }
+
             return path;
         }
 
@@ -37,11 +44,13 @@ namespace LibreUtau.Core {
                 if (!Directory.Exists(searchPath)) {
                     continue;
                 }
+
                 var absPath = Path.Combine(searchPath, path);
                 if (Directory.Exists(absPath)) {
                     return absPath;
                 }
             }
+
             if (Directory.Exists(path)) {
                 return path;
             }
@@ -90,11 +99,11 @@ namespace LibreUtau.Core {
         }
 
         public string GetPreviewEnginePath() {
-            return Path.Combine(GetEngineSearchPath(), Util.Preferences.Default.ExternalPreviewEngine);
+            return Path.Combine(GetEngineSearchPath(), Preferences.Default.ExternalPreviewEngine);
         }
 
         public string GetExportEnginePath() {
-            return Path.Combine(GetEngineSearchPath(), Util.Preferences.Default.ExternalExportEngine);
+            return Path.Combine(GetEngineSearchPath(), Preferences.Default.ExternalExportEngine);
         }
     }
 }

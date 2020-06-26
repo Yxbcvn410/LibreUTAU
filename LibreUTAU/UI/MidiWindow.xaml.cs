@@ -93,9 +93,9 @@ namespace LibreUtau.UI {
                     DocManager.Inst.EndUndoGroup();
                 } else {
                     PitchPointShape shape =
-                        o == pitchCxtMenu.Items[0] ? PitchPointShape.io :
-                        o == pitchCxtMenu.Items[2] ? PitchPointShape.i :
-                        o == pitchCxtMenu.Items[3] ? PitchPointShape.o : PitchPointShape.l;
+                        o == pitchCxtMenu.Items[0] ? PitchPointShape.SINE_IN_OUT :
+                        o == pitchCxtMenu.Items[2] ? PitchPointShape.SINE_IN :
+                        o == pitchCxtMenu.Items[3] ? PitchPointShape.SINE_OUT : PitchPointShape.LINEAR;
                     DocManager.Inst.StartUndoGroup();
                     DocManager.Inst.ExecuteCmd(
                         new ChangePitchPointShapeCommand(pitHit.Note.PitchBend.Points[pitHit.Index], shape));

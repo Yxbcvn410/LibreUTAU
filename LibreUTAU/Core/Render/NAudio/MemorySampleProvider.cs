@@ -7,7 +7,6 @@ using NAudio.Wave.SampleProviders;
 using Serilog;
 
 namespace LibreUtau.Core.Render {
-
     internal class MemorySampleProvider : ISampleProvider {
         private float[] data;
         private int position;
@@ -41,6 +40,7 @@ namespace LibreUtau.Core.Render {
                 while ((n = sampleProvider.Read(buffer, 0, buffer.Length)) > 0) {
                     samples.AddRange(buffer.Take(n));
                 }
+
                 var data = samples.ToArray();
                 return new MemorySampleProvider() {
                     WaveFormat = format,

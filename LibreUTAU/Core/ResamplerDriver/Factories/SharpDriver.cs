@@ -5,22 +5,20 @@ using System.Runtime.InteropServices;
 using System.Text;
 using LibreUtau.Core.ResamplerDriver;
 
-namespace LibreUtau.Core.ResamplerDriver.Factorys
-{
-    internal class SharpDriver:DriverModels,IResamplerDriver
-    {
+namespace LibreUtau.Core.ResamplerDriver.Factories {
+    internal class SharpDriver : DriverModels, IResamplerDriver {
         static Dictionary<string, Assembly> LoadTable = new Dictionary<string, Assembly>();
         bool _isLegalPlugin = false;
 
         #region 对象转换接口
+
         /// <summary>
         /// 格式转换过程，用于强制转换结构体而不需要引用公关类
         /// </summary>
         /// <param name="SourceStruct"></param>
         /// <param name="t"></param>
         /// <returns></returns>
-        protected static object CopyObjectToNewType(object SourceStruct, Type t)
-        {
+        protected static object CopyObjectToNewType(object SourceStruct, Type t) {
             int StructSize = Marshal.SizeOf(SourceStruct);
             IntPtr structPtr = Marshal.AllocHGlobal(StructSize);
             Marshal.StructureToPtr(SourceStruct, structPtr, false);
@@ -28,91 +26,77 @@ namespace LibreUtau.Core.ResamplerDriver.Factorys
             Marshal.FreeHGlobal(structPtr);
             return ret;
         }
+
         #endregion
 
         Assembly asm = null;
         MethodInfo DoResamplerMethod = null;
         MethodInfo GetInformationMethod = null;
-        public SharpDriver(string DllPath)
-        {
-            if (LoadTable.ContainsKey(DllPath))
-            {
-                asm = LoadTable[DllPath];
-            }
-            else
-            {
-                try
-                {
-                    asm = Assembly.LoadFrom(DllPath);
-                }
-                catch
-                {
 
+        public SharpDriver(string DllPath) {
+            if (LoadTable.ContainsKey(DllPath)) {
+                asm = LoadTable[DllPath];
+            } else {
+                try {
+                    asm = Assembly.LoadFrom(DllPath);
+                } catch {
                 }
-                LoadTable.Add(DllPath,asm);
+
+                LoadTable.Add(DllPath, asm);
             }
+
             if (asm == null) _isLegalPlugin = false;
-            else
-            {
-                foreach (Type t in asm.GetExportedTypes())
-                {
-                    if (DoResamplerMethod == null)
-                    {
+            else {
+                foreach (Type t in asm.GetExportedTypes()) {
+                    if (DoResamplerMethod == null) {
                         MethodInfo m = t.GetMethod("DoResampler");
-                        if (m != null && m.IsStatic && m.GetParameters().Length == 1)
-                        {
+                        if (m != null && m.IsStatic && m.GetParameters().Length == 1) {
                             DoResamplerMethod = m;
                         }
                     }
-                    if (GetInformationMethod == null)
-                    {
+
+                    if (GetInformationMethod == null) {
                         MethodInfo m = t.GetMethod("GetInformation");
-                        if (m != null && m.IsStatic && m.GetParameters().Length == 0)
-                        {
+                        if (m != null && m.IsStatic && m.GetParameters().Length == 0) {
                             GetInformationMethod = m;
                         }
                     }
-                    if ((GetInformationMethod != null) && (DoResamplerMethod != null))
-                    {
+
+                    if ((GetInformationMethod != null) && (DoResamplerMethod != null)) {
                         _isLegalPlugin = true;
                         break;
                     }
                 }
             }
         }
-        public bool isLegalPlugin
-        {
-            get
-            {
+
+        public bool isLegalPlugin {
+            get {
                 return _isLegalPlugin;
             }
         }
 
-        public System.IO.Stream DoResampler(DriverModels.EngineInput Args)
-        {
+        public System.IO.Stream DoResampler(EngineInput Args) {
             System.IO.MemoryStream ms = new System.IO.MemoryStream();
             if (!_isLegalPlugin) return ms;
-            if (DoResamplerMethod != null)
-            {
-                object inputarg = CopyObjectToNewType(Args,DoResamplerMethod.GetParameters()[0].ParameterType);
-                object ret = DoResamplerMethod.Invoke(null, new object[1] { inputarg });
-                DriverModels.EngineOutput Out = (DriverModels.EngineOutput)CopyObjectToNewType(ret, typeof(DriverModels.EngineOutput));
+            if (DoResamplerMethod != null) {
+                object inputarg = CopyObjectToNewType(Args, DoResamplerMethod.GetParameters()[0].ParameterType);
+                object ret = DoResamplerMethod.Invoke(null, new object[1] {inputarg});
+                EngineOutput Out = (EngineOutput)CopyObjectToNewType(ret, typeof(EngineOutput));
                 ms = new System.IO.MemoryStream(Out.wavData);
             }
+
             return ms;
         }
-        public DriverModels.EngineInfo GetInfo()
-        {
-            EngineInfo ret = new EngineInfo
-            {
+
+        public EngineInfo GetInfo() {
+            EngineInfo ret = new EngineInfo {
                 Version = "Error"
             };
             if (!_isLegalPlugin) return ret;
-            if (GetInformationMethod != null)
-            {
+            if (GetInformationMethod != null) {
                 object Ret = GetInformationMethod.Invoke(null, new object[0]);
-                if (Ret != null)
-                {
+                if (Ret != null) {
                     ret.Author = (string)Ret.GetType().GetField("Author").GetValue(Ret);
                     ret.Name = (string)Ret.GetType().GetField("Name").GetValue(Ret);
                     ret.Usuage = (string)Ret.GetType().GetField("Usuage").GetValue(Ret);
@@ -121,12 +105,13 @@ namespace LibreUtau.Core.ResamplerDriver.Factorys
                     ret.FlagItemCount = (int)Ret.GetType().GetField("FlagItemCount").GetValue(Ret);
                     Array ItemArray = (Ret.GetType().GetField("FlagItem").GetValue(Ret)) as Array;
                     ret.FlagItem = new EngineFlagItem[ret.FlagItemCount];
-                    for (int i = 0; i < ret.FlagItemCount; i++)
-                    {
-                        ret.FlagItem[i] = (EngineFlagItem)CopyObjectToNewType(ItemArray.GetValue(i), typeof(EngineFlagItem));
+                    for (int i = 0; i < ret.FlagItemCount; i++) {
+                        ret.FlagItem[i] =
+                            (EngineFlagItem)CopyObjectToNewType(ItemArray.GetValue(i), typeof(EngineFlagItem));
                     }
                 }
             }
+
             return ret;
         }
     }

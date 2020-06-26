@@ -8,12 +8,10 @@ using System.Windows;
 using Serilog;
 
 namespace LibreUtau {
-
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
     public partial class App : Application {
-
         private App() {
             InitializeComponent();
             SelectCulture(CultureInfo.InstalledUICulture.Name);
@@ -23,14 +21,15 @@ namespace LibreUtau {
             if (string.IsNullOrEmpty(culture)) {
                 return;
             }
+
             var dictionaryList = Current.Resources.MergedDictionaries.ToList();
             var resDictName = string.Format(@"UI\Strings.{0}.xaml", culture);
-            var resDict = dictionaryList.
-                FirstOrDefault(d => d.Source.OriginalString == resDictName);
+            var resDict = dictionaryList.FirstOrDefault(d => d.Source.OriginalString == resDictName);
             if (resDict != null) {
                 Current.Resources.MergedDictionaries.Remove(resDict);
                 Current.Resources.MergedDictionaries.Add(resDict);
             }
+
             Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
             Thread.CurrentThread.CurrentUICulture = new CultureInfo(culture);
         }
@@ -54,6 +53,7 @@ namespace LibreUtau {
                 AppDomain.CurrentDomain.UnhandledException += NBug.Handler.UnhandledException;
                 app.DispatcherUnhandledException += NBug.Handler.DispatcherUnhandledException;
             }
+
             var window = new UI.MainWindow();
             app.Run(window);
         }

@@ -2,15 +2,15 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Style x:Key="WindowButton" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource BackgroundBrushNormal}"/>
-        <Setter Property="Foreground" Value="{StaticResource WindowButtonBrushNormal}"/>
-        <Setter Property="FontFamily" Value="Marlett"/>
-        <Setter Property="IsTabStop" Value="False"/>
-        <Setter Property="Focusable" Value="False"/>
-        <Setter Property="Width" Value="24"/>
-        <Setter Property="Height" Value="24"/>
-        <Setter Property="HorizontalAlignment" Value="Right"/>
-        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundBrushNormal}" />
+        <Setter Property="Foreground" Value="{StaticResource WindowButtonBrushNormal}" />
+        <Setter Property="FontFamily" Value="Marlett" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
 
     <Style x:Key="MinimizeButton" BasedOn="{StaticResource WindowButton}" TargetType="Button">
@@ -18,13 +18,14 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border Background="{TemplateBinding Background}">
-                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="1,0,0,0"/>
+                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" Margin="1,0,0,0" />
                     </Border>
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{StaticResource BackgroundBrushActive}"/>
-                            <Setter Property="Foreground" Value="{StaticResource WindowButtonBrushActive}"/>
+                            <Setter Property="Background" Value="{StaticResource BackgroundBrushActive}" />
+                            <Setter Property="Foreground" Value="{StaticResource WindowButtonBrushActive}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -37,13 +38,14 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border Background="{TemplateBinding Background}">
-                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="1,0,0,0"/>
+                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" Margin="1,0,0,0" />
                     </Border>
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{StaticResource BackgroundBrushActive}"/>
-                            <Setter Property="Foreground" Value="{StaticResource WindowButtonBrushActive}"/>
+                            <Setter Property="Background" Value="{StaticResource BackgroundBrushActive}" />
+                            <Setter Property="Foreground" Value="{StaticResource WindowButtonBrushActive}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -56,13 +58,14 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border Background="{TemplateBinding Background}">
-                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="1,0,0,0"/>
+                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" Margin="1,0,0,0" />
                     </Border>
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="Red"/>
-                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Background" Value="Red" />
+                            <Setter Property="Foreground" Value="White" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -71,12 +74,12 @@
     </Style>
 
     <Style x:Key="MidiWindowMainButton" TargetType="Button">
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="IsTabStop" Value="False"/>
-        <Setter Property="Focusable" Value="False"/>
-        <Setter Property="FontFamily" Value="Marlett"/>
-        <Setter Property="Content" Value="6"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="White" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="FontFamily" Value="Marlett" />
+        <Setter Property="Content" Value="6" />
+        <Setter Property="Foreground" Value="White" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -84,17 +87,18 @@
                         <Ellipse x:Name="ellipseBackground">
                             <Ellipse.Fill>
                                 <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
-                                    <GradientStop Color="#61B3F2" Offset="0.0"/>
-                                    <GradientStop Color="#4EA6EA" Offset="1.0"/>
+                                    <GradientStop Color="#61B3F2" Offset="0.0" />
+                                    <GradientStop Color="#4EA6EA" Offset="1.0" />
                                 </LinearGradientBrush>
                             </Ellipse.Fill>
                         </Ellipse>
-                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="1,0,0,0"/>
+                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" Margin="1,0,0,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="#4EA6EA"/>
-                            <Setter TargetName="ellipseBackground" Property="Fill" Value="White"/>
+                            <Setter Property="Foreground" Value="#4EA6EA" />
+                            <Setter TargetName="ellipseBackground" Property="Fill" Value="White" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -104,57 +108,59 @@
 
     <ControlTemplate x:Key="NavigateDrag" TargetType="Control">
         <StackPanel Background="{TemplateBinding Background}">
-            <Path Name="Path" Stretch="None" Margin="2,2,2,2" Fill="{StaticResource WindowButtonBrushNormal}" Data="M 0 8 L 3 11 L 3 5 Z M 8 0 L 5 3 L 11 3 Z M 16 8 L 13 11 L 13 5 Z M 8 16 L 5 13 L 11 13 Z" />
+            <Path Name="Path" Stretch="None" Margin="2,2,2,2" Fill="{StaticResource WindowButtonBrushNormal}"
+                  Data="M 0 8 L 3 11 L 3 5 Z M 8 0 L 5 3 L 11 3 Z M 16 8 L 13 11 L 13 5 Z M 8 16 L 5 13 L 11 13 Z" />
         </StackPanel>
         <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="true">
-                <Setter TargetName="Path" Property="Fill" Value="{StaticResource ScrollBarBrushActive}"/>
+                <Setter TargetName="Path" Property="Fill" Value="{StaticResource ScrollBarBrushActive}" />
             </Trigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>
 
     <Style x:Key="WhiteKeyStyle" TargetType="Rectangle">
-        <Setter Property="Fill" Value="{StaticResource WhiteKeyBrushNormal}"></Setter>
+        <Setter Property="Fill" Value="{StaticResource WhiteKeyBrushNormal}" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="true">
-                <Setter Property="Fill" Value="{StaticResource CenterKeyBrushNormal}"></Setter>
+                <Setter Property="Fill" Value="{StaticResource CenterKeyBrushNormal}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="BlackKeyStyle" TargetType="Rectangle">
-        <Setter Property="Fill" Value="{StaticResource BlackKeyBrushNormal}"></Setter>
+        <Setter Property="Fill" Value="{StaticResource BlackKeyBrushNormal}" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="true">
-                <Setter Property="Fill" Value="{StaticResource CenterKeyBrushNormal}"></Setter>
+                <Setter Property="Fill" Value="{StaticResource CenterKeyBrushNormal}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="CenterKeyStyle" TargetType="Rectangle">
-        <Setter Property="Fill" Value="{StaticResource CenterKeyBrushNormal}"></Setter>
+        <Setter Property="Fill" Value="{StaticResource CenterKeyBrushNormal}" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="true">
-                <Setter Property="Fill" Value="{StaticResource BlackKeyBrushNormal}"></Setter>
+                <Setter Property="Fill" Value="{StaticResource BlackKeyBrushNormal}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="PlayButtonStyle" TargetType="{x:Type Button}">
-        <Setter Property="SnapsToDevicePixels" Value="True"/>
-        <Setter Property="Width" Value="20"/>
-        <Setter Property="Height" Value="20"/>
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
                     <Grid>
-                        <Rectangle x:Name="rect" Fill="White" Width="20" Height="20"/>
-                        <Path x:Name="path" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                               Data="M 0 0 L 7 6.5 L 0 13 Z"/>
+                        <Rectangle x:Name="rect" Fill="White" Width="20" Height="20" />
+                        <Path x:Name="path" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              Data="M 0 0 L 7 6.5 L 0 13 Z" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="rect" Property="Fill" Value="LightGray"/>
+                            <Setter TargetName="rect" Property="Fill" Value="LightGray" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -163,20 +169,21 @@
     </Style>
 
     <Style x:Key="PauseButtonStyle" TargetType="{x:Type Button}">
-        <Setter Property="SnapsToDevicePixels" Value="True"/>
-        <Setter Property="Width" Value="20"/>
-        <Setter Property="Height" Value="20"/>
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
                     <Grid>
-                        <Rectangle x:Name="rect" Fill="White" Width="20" Height="20"/>
-                        <Path x:Name="path" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                              Data="M 0 0 L 2 0 L 2 9 L 0 9 Z M 4 0 L 6 0 L 6 9 L 4 9 Z"/>
+                        <Rectangle x:Name="rect" Fill="White" Width="20" Height="20" />
+                        <Path x:Name="path" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              Data="M 0 0 L 2 0 L 2 9 L 0 9 Z M 4 0 L 6 0 L 6 9 L 4 9 Z" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="rect" Property="Fill" Value="LightGray"/>
+                            <Setter TargetName="rect" Property="Fill" Value="LightGray" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -185,20 +192,21 @@
     </Style>
 
     <Style x:Key="SeekHomeButtonStyle" TargetType="{x:Type Button}">
-        <Setter Property="SnapsToDevicePixels" Value="True"/>
-        <Setter Property="Width" Value="20"/>
-        <Setter Property="Height" Value="20"/>
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
                     <Grid>
-                        <Rectangle x:Name="rect" Fill="White" Width="20" Height="20"/>
-                        <Path x:Name="path" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                              Data="M 0 0 L 2 0 L 2 9 L 0 9 Z M 2 4.5 L 7 0 L 7 9 Z"/>
+                        <Rectangle x:Name="rect" Fill="White" Width="20" Height="20" />
+                        <Path x:Name="path" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              Data="M 0 0 L 2 0 L 2 9 L 0 9 Z M 2 4.5 L 7 0 L 7 9 Z" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="rect" Property="Fill" Value="LightGray"/>
+                            <Setter TargetName="rect" Property="Fill" Value="LightGray" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -207,20 +215,21 @@
     </Style>
 
     <Style x:Key="SeekEndButtonStyle" TargetType="{x:Type Button}">
-        <Setter Property="SnapsToDevicePixels" Value="True"/>
-        <Setter Property="Width" Value="20"/>
-        <Setter Property="Height" Value="20"/>
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
                     <Grid>
-                        <Rectangle x:Name="rect" Fill="White" Width="20" Height="20"/>
-                        <Path x:Name="path" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                        Data="M 0 0 L 5 4.5 L 0 9 Z M 5 0 L 7 0 L 7 9 L 5 9 Z"/>
+                        <Rectangle x:Name="rect" Fill="White" Width="20" Height="20" />
+                        <Path x:Name="path" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              Data="M 0 0 L 5 4.5 L 0 9 Z M 5 0 L 7 0 L 7 9 L 5 9 Z" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="rect" Property="Fill" Value="LightGray"/>
+                            <Setter TargetName="rect" Property="Fill" Value="LightGray" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -229,21 +238,22 @@
     </Style>
 
     <Style x:Key="ShowPitchToggleButtonStyle" TargetType="ToggleButton">
-        <Setter Property="IsTabStop" Value="False"/>
-        <Setter Property="Focusable" Value="False"/>
-        <Setter Property="Background" Value="White"/>
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Background" Value="White" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Border Background="{TemplateBinding Background}">
-                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0"/>
+                        <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" Margin="0" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="LightGray"/>
+                            <Setter Property="Background" Value="LightGray" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="False">
-                            <Setter Property="Foreground" Value="Gray"/>
+                            <Setter Property="Foreground" Value="Gray" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace LibreUtau.Core.Render
-{
-    class TrackSampleProvider : ISampleProvider
-    {
+namespace LibreUtau.Core.Render {
+    public class TrackSampleProvider : ISampleProvider {
         private PanningSampleProvider pan;
         private VolumeSampleProvider volume;
         private MixingSampleProvider mix;
@@ -25,33 +22,30 @@ namespace LibreUtau.Core.Render
         /// </summary>
         public float Volume { set { volume.Volume = value; } get { return volume.Volume; } }
 
-        public TrackSampleProvider()
-        {
+        public TrackSampleProvider() {
             mix = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
             //pan = new PanningSampleProvider(mix);
             volume = new VolumeSampleProvider(mix);
         }
 
-        public int Read(float[] buffer, int offset, int count)
-        {
+        public int Read(float[] buffer, int offset, int count) {
             return volume.Read(buffer, offset, count);
         }
 
-        public WaveFormat WaveFormat
-        {
+        public WaveFormat WaveFormat {
             get { return volume.WaveFormat; }
         }
 
-        public void AddSource(ISampleProvider source, TimeSpan delayBy)
-        {
+        public void AddSource(ISampleProvider source, TimeSpan delayBy) {
             ISampleProvider _source;
             if (source == null || source.WaveFormat == null) {
                 return;
             }
+
             if (source.WaveFormat.Channels == 1) _source = new MonoToStereoSampleProvider(source);
             else if (source.WaveFormat.Channels == 2) _source = source;
             else return;
-            mix.AddMixerInput(new OffsetSampleProvider(_source) { DelayBy = delayBy });
+            mix.AddMixerInput(new OffsetSampleProvider(_source) {DelayBy = delayBy});
         }
     }
 }

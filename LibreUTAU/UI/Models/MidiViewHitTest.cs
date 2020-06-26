@@ -60,7 +60,7 @@ namespace LibreUtau.UI.Models {
                 {
                     if (note.Error) continue;
                     Point last = new Point(0, 0);
-                    PitchPointShape lastShape = PitchPointShape.l;
+                    PitchPointShape lastShape = PitchPointShape.LINEAR;
                     for (int i = 0; i < note.PitchBend.Points.Count; i++) {
                         var pit = note.PitchBend.Points[i];
                         int posTick = note.PosTick + Project.MillisecondToTick(pit.X);
