@@ -1,4 +1,3 @@
-
 # LibreUTAU
 
 LibreUTAU aims to be an open source editing environment for UTAU community, with modern user experience and intelligent phonological support.

@@ -56,7 +56,7 @@
     <system:String x:Key="dialogs.noresampler.message">No resampler! Put your favourite resampler exe or dll in the Resamplers folder!</system:String>
     <system:String x:Key="dialogs.about.caption">About LibreUTAU</system:String>
     <system:String x:Key="dialogs.about.message">
-        LibreUtau aims to be an open source editing environment for UTAU community, with a modern user experience and intelligent phonological support. Visit us on Github.
+        LibreUTAU aims to be an open source editing environment for UTAU community, with a modern user experience and intelligent phonological support. Based on OpenUtau.
     </system:String>
 
 </ResourceDictionary>
