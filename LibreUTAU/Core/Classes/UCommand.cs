@@ -19,13 +19,19 @@ namespace LibreUtau.Core {
         public override string ToString() { return Commands.Count == 0 ? "No op" : Commands.First().ToString(); }
     }
 
-    public interface ICmdPublisher {
-        void Subscribe(ICmdSubscriber subscriber);
-        void Publish(UCommand cmd, bool isUndo);
+    public class ICmdPublisher {
+        private List<ICmdSubscriber> subscribers = new List<ICmdSubscriber>();
+        public void Subscribe(ICmdSubscriber subscriber) {
+            if (!subscribers.Contains(subscriber)) subscribers.Add(subscriber);
+        }
+
+        protected void Publish(UCommand cmd, bool isUndo = false) {
+            foreach (var sub in subscribers) sub.OnCommandExecuted(cmd, isUndo);
+        }
     }
 
     public interface ICmdSubscriber {
         void Subscribe(ICmdPublisher publisher);
-        void OnNext(UCommand cmd, bool isUndo);
+        void OnCommandExecuted(UCommand cmd, bool isUndo);
     }
 }

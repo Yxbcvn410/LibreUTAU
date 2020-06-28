@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Threading;
 using LibreUtau.Core.USTx;
 using LibreUtau.SimpleHelpers;
 
@@ -162,7 +164,8 @@ namespace LibreUtau.Core.Formats {
 
         static UNote NoteFromUst(UNote note, List<string> lines, UstVersion version) {
             string pbs = "", pbw = "", pby = "", pbm = "";
-
+            var _c = Thread.CurrentThread.CurrentCulture;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             foreach (string line in lines) {
                 if (line.StartsWith("Lyric=")) {
                     note.Phonemes[0].Phoneme = note.Lyric = line.Trim().Replace("Lyric=", string.Empty);
@@ -237,12 +240,13 @@ namespace LibreUtau.Core.Formats {
                 }
             }
 
+            Thread.CurrentThread.CurrentCulture = _c;
             return note;
         }
 
         static void VibratoFromUst(VibratoExpression vibrato, string ust) {
-            var args = ust.Split(new[] {','}).Select(double.Parse).ToList();
-            if (args.Count() >= 7) {
+            var args = ust.Split(',').Select(o => double.Parse(o, CultureInfo.InvariantCulture)).ToList();
+            if (args.Count >= 7) {
                 vibrato.Length = args[0];
                 vibrato.Period = args[1];
                 vibrato.Depth = args[2];

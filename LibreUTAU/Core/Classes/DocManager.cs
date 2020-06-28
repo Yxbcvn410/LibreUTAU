@@ -8,6 +8,14 @@ using LibreUtau.Core.USTx;
 using LibreUtau.Core;
 
 namespace LibreUtau.Core {
+    /// <summary>
+    /// DocManager class
+    /// Controls actions performed on the project
+    /// TODO:
+    /// Why singer info is contained here?
+    /// Why play position is also here?
+    /// Maybe, rename to CommandDispatcher?
+    /// </summary>
     class DocManager : ICmdPublisher {
         DocManager() {
             _project = new UProject();
@@ -124,20 +132,6 @@ namespace LibreUtau.Core {
             }
 
             undoQueue.AddToBack(cmdg);
-        }
-
-        # endregion
-
-        # region ICmdPublisher
-
-        private List<ICmdSubscriber> subscribers = new List<ICmdSubscriber>();
-
-        public void Subscribe(ICmdSubscriber sub) {
-            if (!subscribers.Contains(sub)) subscribers.Add(sub);
-        }
-
-        public void Publish(UCommand cmd, bool isUndo = false) {
-            foreach (var sub in subscribers) sub.OnNext(cmd, isUndo);
         }
 
         # endregion

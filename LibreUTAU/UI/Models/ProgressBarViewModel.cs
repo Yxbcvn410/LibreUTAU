@@ -46,7 +46,7 @@ namespace LibreUtau.UI.Models {
             if (publisher != null) publisher.Subscribe(this);
         }
 
-        public void OnNext(UCommand cmd, bool isUndo) {
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
             if (cmd is ProgressBarNotification) Update((ProgressBarNotification)cmd);
         }
     }

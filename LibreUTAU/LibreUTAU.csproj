@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\Classes\PlaybackManager.cs" />
+    <Compile Include="Core\Classes\ProjectBuilder.cs" />
     <Compile Include="Core\Classes\TrackCommands.cs" />
     <Compile Include="Core\Formats\Midi.cs" />
     <Compile Include="Core\Formats\USTx.cs">
@@ -117,7 +118,6 @@
     <Compile Include="Core\Render\NAudio\SequencingSampleProvider.cs" />
     <Compile Include="Core\Render\RenderItem.cs" />
     <Compile Include="Core\Render\NAudio\RenderItemSampleProvider.cs" />
-    <Compile Include="Core\Render\ResamplerInterface.cs" />
     <Compile Include="Core\Classes\ExpCommands.cs" />
     <Compile Include="Core\Render\RenderDispatcher.cs" />
     <Compile Include="Core\ResamplerDriver\DriverEngine.cs" />

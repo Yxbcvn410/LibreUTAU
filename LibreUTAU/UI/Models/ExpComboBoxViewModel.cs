@@ -108,7 +108,7 @@ namespace LibreUtau.UI.Models {
             if (publisher != null) publisher.Subscribe(this);
         }
 
-        public void OnNext(UCommand cmd, bool isUndo) {
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
             if (cmd is ChangeExpressionListNotification || cmd is LoadProjectNotification) OnListChange();
             else if (cmd is LoadPartNotification) {
                 if (_keys.Count == 0) OnListChange();

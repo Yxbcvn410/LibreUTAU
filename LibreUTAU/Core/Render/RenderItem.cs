@@ -58,7 +58,7 @@ namespace LibreUtau.Core.Render {
             Tempo = project.BPM;
 
             SkipOver = phoneme.Oto.Preutter * strechRatio - phoneme.Preutter;
-            PosMs = project.TickToMillisecond(part.PosTick + phoneme.Parent.PosTick + phoneme.PosTick) -
+            PosMs = project.TickToMillisecond(phoneme.Parent.PosTick + phoneme.PosTick) -
                     phoneme.Preutter;
             DurMs = project.TickToMillisecond(phoneme.DurTick) + lengthAdjustment;
             Envelope = phoneme.Envelope.Points;

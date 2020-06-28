@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using LibreUtau.Core.Util;
@@ -108,10 +109,13 @@ namespace LibreUtau.Core.ResamplerDriver.Factories {
                         for (int i = 1; i <= ret.FlagItemCount; i++) {
                             try {
                                 EngineFlagItem I = new EngineFlagItem {
-                                    Default = double.Parse(IniFile.getKeyValue($"Flag{i}", "Default")),
+                                    Default = double.Parse(IniFile.getKeyValue($"Flag{i}", "Default"),
+                                        CultureInfo.InvariantCulture),
                                     flagStr = IniFile.getKeyValue($"Flag{i}", "Flag"),
-                                    Max = double.Parse(IniFile.getKeyValue($"Flag{i}", "Max")),
-                                    Min = double.Parse(IniFile.getKeyValue($"Flag{i}", "Min")),
+                                    Max = double.Parse(IniFile.getKeyValue($"Flag{i}", "Max"),
+                                        CultureInfo.InvariantCulture),
+                                    Min = double.Parse(IniFile.getKeyValue($"Flag{i}", "Min"),
+                                        CultureInfo.InvariantCulture),
                                     ThreeLetterName = IniFile.getKeyValue($"Flag{i}", "ThreeLetterName")
                                 };
                                 Items.Add(I);

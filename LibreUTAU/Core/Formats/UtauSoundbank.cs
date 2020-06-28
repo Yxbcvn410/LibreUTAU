@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.IO;
@@ -142,14 +143,14 @@ namespace LibreUtau.Core.Formats {
                     var args = s[1].Split(new[] {','});
                     if (singer.AliasMap.ContainsKey(args[0])) continue;
                     try {
-                        singer.AliasMap.Add(args[0], new UOto() {
+                        singer.AliasMap.Add(args[0], new UOto {
                             File = Path.Combine(relativeDir, wavfile),
                             Alias = args[0],
-                            Offset = double.Parse(args[1]),
-                            Consonant = double.Parse(args[2]),
-                            Cutoff = double.Parse(args[3]),
-                            Preutter = double.Parse(args[4]),
-                            Overlap = double.Parse(args[5])
+                            Offset = double.Parse(args[1], CultureInfo.InvariantCulture),
+                            Consonant = double.Parse(args[2], CultureInfo.InvariantCulture),
+                            Cutoff = double.Parse(args[3], CultureInfo.InvariantCulture),
+                            Preutter = double.Parse(args[4], CultureInfo.InvariantCulture),
+                            Overlap = double.Parse(args[5], CultureInfo.InvariantCulture)
                         });
                     } catch {
                         errorLines.Add(line);

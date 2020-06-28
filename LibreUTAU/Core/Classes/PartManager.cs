@@ -12,26 +12,17 @@ namespace LibreUtau.Core {
             public UVoicePart Part = null;
         }
 
-        Timer timer;
-
         UProject _project;
-        PartContainer _partContainer;
+        UVoicePart _part;
 
         public PartManager() {
-            _partContainer = new PartContainer();
+            _part = null;
             this.Subscribe(DocManager.Inst);
-            timer = new Timer(Update, _partContainer, 0, 100);
-        }
-
-        private void Update(Object state) {
-            var partContainer = state as PartContainer;
-            if (partContainer.Part == null) return;
-            UpdatePart(partContainer.Part);
         }
 
         public void UpdatePart(UVoicePart part) {
+            if (part == null) return;
             lock (part) {
-                if (part == null) return;
                 CheckOverlappedNotes(part);
                 UpdatePhonemeDurTick(part);
                 UpdatePhonemeOto(part);
@@ -217,18 +208,23 @@ namespace LibreUtau.Core {
             if (publisher != null) publisher.Subscribe(this);
         }
 
-        public void OnNext(UCommand cmd, bool isUndo) {
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
             if (cmd is PartCommand) {
                 var _cmd = cmd as PartCommand;
-                if (_cmd.part != _partContainer.Part) return;
-                else if (_cmd is RemovePartCommand) _partContainer.Part = null;
+                if (_cmd.part != _part) return;
+                else if (_cmd is RemovePartCommand) _part = null;
             } else if (cmd is UNotification) {
                 var _cmd = cmd as UNotification;
                 if (_cmd is LoadPartNotification) {
                     if (!(_cmd.part is UVoicePart)) return;
-                    _partContainer.Part = (UVoicePart)_cmd.part;
+                    _part = (UVoicePart)_cmd.part;
                     _project = _cmd.project;
                 } else if (_cmd is LoadProjectNotification) OnProjectLoad(_cmd);
+            } else if (cmd is NoteCommand || cmd is ExpCommand || cmd is TrackChangeSingerCommand) {
+                if (_part != null) {
+                    UpdatePart(_part);
+                    _part.RequireRebuild();
+                }
             }
         }
 

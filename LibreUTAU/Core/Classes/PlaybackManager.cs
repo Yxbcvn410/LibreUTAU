@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Threading;
 using LibreUtau.Core.Render;
 using LibreUtau.Core.ResamplerDriver;
 using LibreUtau.Core.USTx;
@@ -11,25 +11,10 @@ using NAudio.Wave.SampleProviders;
 
 namespace LibreUtau.Core {
     class PlaybackManager : ICmdSubscriber {
-        private WaveOut outDevice;
-
-        #region Singleton
-
-        private PlaybackManager() { this.Subscribe(DocManager.Inst); }
-
-        private static PlaybackManager _s;
-
-        public static PlaybackManager Inst {
-            get {
-                if (_s == null) { _s = new PlaybackManager(); }
-
-                return _s;
-            }
-        }
-
-        #endregion
 
         MixingSampleProvider masterMix;
+        private WaveOut outDevice;
+
         List<TrackSampleProvider> trackSources;
 
         public bool CheckResampler() {
@@ -39,18 +24,17 @@ namespace LibreUtau.Core {
         }
 
         public void Play(UProject project) {
-            if (pendingParts > 0) return;
             if (outDevice != null) {
                 if (outDevice.PlaybackState == PlaybackState.Playing) return;
                 if (outDevice.PlaybackState == PlaybackState.Paused) {
                     outDevice.Play();
                     return;
                 }
-
                 outDevice.Dispose();
             }
 
-            BuildAudio(project);
+            ProjectBuilder builder = new ProjectBuilder(project);
+            builder.Start(StartPlayback);
         }
 
         public void StopPlayback() {
@@ -61,82 +45,13 @@ namespace LibreUtau.Core {
             if (outDevice != null) outDevice.Pause();
         }
 
-        private void StartPlayback() {
+        private void StartPlayback(List<TrackSampleProvider> trackSources) {
             masterMix = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
             foreach (var source in trackSources)
                 masterMix.AddMixerInput(source);
             outDevice = new WaveOut();
             outDevice.Init(masterMix);
             outDevice.Play();
-        }
-
-        private ISampleProvider BuildWavePartAudio(UWavePart part, UProject project) {
-            AudioFileReader stream;
-            try { stream = new AudioFileReader(part.FilePath); } catch { return null; }
-
-            return new WaveToSampleProvider(stream);
-        }
-
-        private void BuildVoicePartAudio(UVoicePart part, UProject project, IResamplerDriver engine) {
-            ResamplerInterface ri = new ResamplerInterface();
-            ri.ResamplePart(part, project, engine, (o) => { this.BuildVoicePartDone(o, part, project); });
-        }
-
-        private void BuildVoicePartDone(SequencingSampleProvider source, UPart part, UProject project) {
-            lock (lockObject) {
-                if (source != null) {
-                    trackSources[part.TrackNo].AddSource(
-                        source,
-                        TimeSpan.FromMilliseconds(project.TickToMillisecond(part.PosTick))
-                    );
-                }
-
-                pendingParts--;
-            }
-
-            if (pendingParts == 0) StartPlayback();
-        }
-
-        int pendingParts = 0;
-        private readonly object lockObject = new object();
-
-        private void BuildAudio(UProject project) {
-            trackSources = new List<TrackSampleProvider>();
-            foreach (UTrack track in project.Tracks) {
-                trackSources.Add(new TrackSampleProvider() {Volume = DecibelToVolume(track.Volume)});
-            }
-
-            pendingParts = project.Parts.Count;
-            foreach (UPart part in project.Parts) {
-                switch (part) {
-                    case UWavePart wavePart: {
-                        lock (lockObject) {
-                            trackSources[wavePart.TrackNo].AddSource(
-                                BuildWavePartAudio(wavePart, project),
-                                TimeSpan.FromMilliseconds(project.TickToMillisecond(wavePart.PosTick))
-                            );
-                            pendingParts--;
-                        }
-
-                        break;
-                    }
-                    default: {
-                        var singer = project.Tracks[part.TrackNo].Singer;
-                        if (singer != null && singer.Loaded) {
-                            FileInfo ResamplerFile =
-                                new FileInfo(PathManager.Inst.GetPreviewEnginePath());
-                            IResamplerDriver engine =
-                                ResamplerDriver.ResamplerDriver.LoadEngine(ResamplerFile.FullName);
-                            BuildVoicePartAudio(part as UVoicePart, project, engine);
-                        } else
-                            lock (lockObject) { pendingParts--; }
-
-                        break;
-                    }
-                }
-            }
-
-            if (pendingParts == 0) StartPlayback();
         }
 
         public void UpdatePlayPos() {
@@ -155,13 +70,29 @@ namespace LibreUtau.Core {
             //TODO Что за костыль?
         }
 
+        #region Singleton
+
+        private PlaybackManager() { this.Subscribe(DocManager.Inst); }
+
+        private static PlaybackManager _s;
+
+        public static PlaybackManager Inst {
+            get {
+                if (_s == null) { _s = new PlaybackManager(); }
+
+                return _s;
+            }
+        }
+
+        #endregion
+
         # region ICmdSubscriber
 
         public void Subscribe(ICmdPublisher publisher) {
             if (publisher != null) publisher.Subscribe(this);
         }
 
-        public void OnNext(UCommand cmd, bool isUndo) {
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
             if (cmd is SeekPlayPosTickNotification) {
                 StopPlayback();
                 int tick = ((SeekPlayPosTickNotification)cmd).playPosTick;

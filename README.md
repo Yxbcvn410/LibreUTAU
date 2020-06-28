@@ -2,7 +2,7 @@
 
 LibreUTAU aims to be an open source editing environment for UTAU community, with modern user experience and intelligent phonological support.
 
-Forked from <a href="https://github.com/stakira/OpenUtau">OpenUtau</a>.
+Forked from [OpenUtau](https://github.com/stakira/OpenUtau).
 
 Current status: Does not work
 
@@ -11,7 +11,8 @@ Current status: Does not work
 * Sampling issues
     * Vocal part is not played if it has a note in the very beginning of the project timeline
     * Sound not updated when editing note lyrics
-    * Vocal part playback start time does not always match its timeline position
+    * Sometimes sound is not played at all
+    * Sound glitches if there is more than one voice part in the project
 * Wacky playback controls
     * Project beat properties and BPM are not editable
     * Timeline not updated when Go To Beginning/Go To End buttons are pressed

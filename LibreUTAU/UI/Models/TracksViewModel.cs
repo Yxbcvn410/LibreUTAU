@@ -498,7 +498,7 @@ namespace LibreUtau.UI.Models {
             if (publisher != null) publisher.Subscribe(this);
         }
 
-        public void OnNext(UCommand cmd, bool isUndo) {
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
             if (cmd is NoteCommand) {
                 var _cmd = cmd as NoteCommand;
                 GetPartElement(_cmd.Part).Modified = true;
