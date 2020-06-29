@@ -75,24 +75,22 @@ namespace LibreUtau.Core.USTx {
             lock (this) {
                 var cacheDir = PathManager.Inst.GetCachePath(context.Project.FilePath);
                 var cacheFiles = Directory.EnumerateFiles(cacheDir).ToArray();
-                int count = Notes.Sum(note => note.Phonemes.Count), phonemeProgress = 0;
+                int count = Notes.Count, phonemeProgress = 0;
 
                 foreach (var note in Notes) {
-                    foreach (var phoneme in note.Phonemes) {
-                        if (string.IsNullOrEmpty(phoneme.Oto.File)) {
-                            Log.Warning($"Cannot find phoneme in note {note.Lyric}");
-                            continue;
-                        }
-
-                        var item = new RenderItem(phoneme, this, context.Project);
-                        var engineArgs = DriverModels.CreateInputModel(item, 0);
-                        var output = context.Driver.DoResampler(engineArgs);
-                        item.Sound = MemorySampleProvider.FromStream(output);
-                        _builtState.Add(item, output);
-
-                        phonemeProgress++;
-                        ProgressChangedCallback(phonemeProgress / (double)count);
+                    if (string.IsNullOrEmpty(note.Phoneme.Oto.File)) {
+                        Log.Warning($"Cannot find phoneme in note {note.Lyric}");
+                        continue;
                     }
+
+                    var item = new RenderItem(note.Phoneme, this, context.Project);
+                    var engineArgs = DriverModels.CreateInputModel(item, 0);
+                    var output = context.Driver.DoResampler(engineArgs);
+                    item.Sound = MemorySampleProvider.FromStream(output);
+                    _builtState.Add(item, output);
+
+                    phonemeProgress++;
+                    ProgressChangedCallback(phonemeProgress / (double)count);
                 }
             }
 

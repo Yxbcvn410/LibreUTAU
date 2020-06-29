@@ -121,7 +121,7 @@ namespace LibreUtau.Core.Formats {
                         unote.DurTick = int.Parse(note.SelectSingleNode(durtickPath, nsmanager).InnerText);
                         unote.NoteNum = int.Parse(note.SelectSingleNode(notenumPath, nsmanager).InnerText);
                         unote.Lyric = note.SelectSingleNode(lyricPath, nsmanager).InnerText;
-                        unote.Phonemes[0].Phoneme = note.SelectSingleNode(phonemePath, nsmanager).InnerText;
+                        unote.Phoneme.PhonemeString = note.SelectSingleNode(phonemePath, nsmanager).InnerText;
 
                         unote.Expressions["velocity"].Data =
                             int.Parse(note.SelectSingleNode(velocityPath, nsmanager).InnerText);

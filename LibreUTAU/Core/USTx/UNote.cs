@@ -13,7 +13,7 @@ namespace LibreUtau.Core.USTx {
         public int DurTick;
         public int NoteNum;
         public string Lyric = "a";
-        public List<UPhoneme> Phonemes = new List<UPhoneme>();
+        public UPhoneme Phoneme { get; private set; }
         public Dictionary<string, UExpression> Expressions = new Dictionary<string, UExpression>();
         public PitchBendExpression PitchBend;
         public VibratoExpression Vibrato;
@@ -25,7 +25,7 @@ namespace LibreUtau.Core.USTx {
         private UNote() {
             PitchBend = new PitchBendExpression(this);
             Vibrato = new VibratoExpression(this);
-            Phonemes.Add(new UPhoneme() {Parent = this, PosTick = 0});
+            Phoneme = new UPhoneme {Parent = this};
         }
 
         public static UNote Create() { return new UNote(); }
@@ -37,7 +37,7 @@ namespace LibreUtau.Core.USTx {
                 NoteNum = NoteNum,
                 Lyric = Lyric
             };
-            foreach (var phoneme in this.Phonemes) _note.Phonemes.Add(phoneme.Clone(_note));
+            _note.Phoneme = Phoneme.Clone(_note);
             foreach (var pair in this.Expressions) _note.Expressions.Add(pair.Key, pair.Value.Clone(_note));
             _note.PitchBend = (PitchBendExpression)this.PitchBend.Clone(_note);
             return _note;

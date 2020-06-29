@@ -58,7 +58,7 @@ namespace LibreUtau.Core.Render {
             Tempo = project.BPM;
 
             SkipOver = phoneme.Oto.Preutter * strechRatio - phoneme.Preutter;
-            PosMs = project.TickToMillisecond(phoneme.Parent.PosTick + phoneme.PosTick) -
+            PosMs = project.TickToMillisecond(phoneme.Parent.PosTick) -
                     phoneme.Preutter;
             DurMs = project.TickToMillisecond(phoneme.DurTick) + lengthAdjustment;
             Envelope = phoneme.Envelope.Points;
@@ -112,7 +112,7 @@ namespace LibreUtau.Core.Render {
             var pps = new List<PitchPoint>();
 
             var lastNoteInvolved = lastNote != null && phoneme.Overlapped;
-            var nextNoteInvolved = nextNote != null && nextNote.Phonemes[0].Overlapped;
+            var nextNoteInvolved = nextNote != null && nextNote.Phoneme.Overlapped;
 
             double lastVibratoStartMs = 0;
             double lastVibratoEndMs = 0;
@@ -154,10 +154,10 @@ namespace LibreUtau.Core.Render {
                 }
             }
 
-            var startMs = DocManager.Inst.Project.TickToMillisecond(phoneme.PosTick) - phoneme.Oto.Preutter;
+            var startMs = -phoneme.Oto.Preutter;
             var endMs = DocManager.Inst.Project.TickToMillisecond(phoneme.DurTick) -
-                        (nextNote != null && nextNote.Phonemes[0].Overlapped
-                            ? nextNote.Phonemes[0].Preutter - nextNote.Phonemes[0].Overlap
+                        (nextNote != null && nextNote.Phoneme.Overlapped
+                            ? nextNote.Phoneme.Preutter - nextNote.Phoneme.Overlap
                             : 0);
             if (pps.Count > 0) {
                 if (pps.First().X > startMs) {

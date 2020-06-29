@@ -10,11 +10,9 @@ namespace LibreUtau.Core.USTx {
     /// </summary>
     public class UPhoneme {
         public UNote Parent;
-        public int PosTick;
         public int DurTick;
-        public int EndTick { get { return PosTick + DurTick; } }
-        public string Phoneme = "a";
-        public string PhonemeRemapped { get { return AutoRemapped ? Phoneme + RemappedBank : Phoneme; } }
+        public string PhonemeString = "a";
+        public string PhonemeRemapped { get { return AutoRemapped ? PhonemeString + RemappedBank : PhonemeString; } }
         public string RemappedBank = string.Empty;
         public bool AutoEnvelope = true;
         public bool AutoRemapped = true;

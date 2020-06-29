@@ -65,7 +65,7 @@ namespace LibreUtau.Core.Formats {
                 return null;
             }
 
-            UProject project = new UProject() {Resolution = 480, FilePath = file, Saved = false};
+            UProject project = new UProject {Resolution = 480, FilePath = file, Saved = false};
             project.RegisterExpression(new IntExpression(null, "velocity", "VEL") {Data = 100, Min = 0, Max = 200});
             project.RegisterExpression(new IntExpression(null, "volume", "VOL") {Data = 100, Min = 0, Max = 200});
             project.RegisterExpression(new IntExpression(null, "gender", "GEN") {Data = 0, Min = -100, Max = 100});
@@ -168,10 +168,10 @@ namespace LibreUtau.Core.Formats {
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             foreach (string line in lines) {
                 if (line.StartsWith("Lyric=")) {
-                    note.Phonemes[0].Phoneme = note.Lyric = line.Trim().Replace("Lyric=", string.Empty);
-                    if (note.Phonemes[0].Phoneme.StartsWith("?")) {
-                        note.Phonemes[0].Phoneme = note.Phonemes[0].Phoneme.Substring(1);
-                        note.Phonemes[0].AutoRemapped = false;
+                    note.Phoneme.PhonemeString = note.Lyric = line.Trim().Replace("Lyric=", string.Empty);
+                    if (note.Phoneme.PhonemeString.StartsWith("?")) {
+                        note.Phoneme.PhonemeString = note.Phoneme.PhonemeString.Substring(1);
+                        note.Phoneme.AutoRemapped = false;
                     }
                 }
 
@@ -183,18 +183,18 @@ namespace LibreUtau.Core.Formats {
                 if (line.StartsWith("Intensity="))
                     note.Expressions["volume"].Data = int.Parse(line.Trim().Replace("Intensity=", string.Empty));
                 if (line.StartsWith("PreUtterance=")) {
-                    if (line.Trim() == "PreUtterance=") note.Phonemes[0].AutoEnvelope = true;
+                    if (line.Trim() == "PreUtterance=") note.Phoneme.AutoEnvelope = true;
                     else {
-                        note.Phonemes[0].AutoEnvelope = false;
-                        note.Phonemes[0].Preutter = double.Parse(line.Trim().Replace("PreUtterance=", ""));
+                        note.Phoneme.AutoEnvelope = false;
+                        note.Phoneme.Preutter = double.Parse(line.Trim().Replace("PreUtterance=", ""));
                     }
                 }
 
                 if (line.StartsWith("VoiceOverlap="))
-                    note.Phonemes[0].Overlap = double.Parse(line.Trim().Replace("VoiceOverlap=", string.Empty));
+                    note.Phoneme.Overlap = double.Parse(line.Trim().Replace("VoiceOverlap=", string.Empty));
                 if (line.StartsWith("Envelope=")) {
-                    var pts = line.Trim().Replace("Envelope=", string.Empty).Split(new[] {','});
-                    if (pts.Count() > 5) note.Expressions["decay"].Data = 100 - (int)double.Parse(pts[5]);
+                    var pts = line.Trim().Replace("Envelope=", string.Empty).Split(',');
+                    if (pts.Length > 5) note.Expressions["decay"].Data = 100 - (int)double.Parse(pts[5]);
                 }
 
                 if (line.StartsWith("VBR=")) VibratoFromUst(note.Vibrato, line.Trim().Replace("VBR=", string.Empty));
@@ -209,8 +209,8 @@ namespace LibreUtau.Core.Formats {
                 pts.Clear();
                 // PBS
                 if (pbs.Contains(';')) {
-                    pts.Add(new PitchPoint(double.Parse(pbs.Split(new[] {';'})[0]),
-                        double.Parse(pbs.Split(new[] {';'})[1])));
+                    pts.Add(new PitchPoint(double.Parse(pbs.Split(';')[0]),
+                        double.Parse(pbs.Split(';')[1])));
                     note.PitchBend.SnapFirst = false;
                 } else {
                     pts.Add(new PitchPoint(double.Parse(pbs), 0));
@@ -219,19 +219,19 @@ namespace LibreUtau.Core.Formats {
 
                 double x = pts.First().X;
                 if (pbw != string.Empty) {
-                    string[] w = pbw.Split(new[] {','});
+                    string[] w = pbw.Split(',');
                     string[] y = null;
-                    if (w.Count() > 1) y = pby.Split(new[] {','});
+                    if (w.Count() > 1) y = pby.Split(',');
                     for (int i = 0; i < w.Count() - 1; i++) {
                         x += string.IsNullOrEmpty(w[i]) ? 0 : float.Parse(w[i]);
                         pts.Add(new PitchPoint(x, string.IsNullOrEmpty(y[i]) ? 0 : double.Parse(y[i])));
                     }
 
-                    pts.Add(new PitchPoint(x + double.Parse(w[w.Count() - 1]), 0));
+                    pts.Add(new PitchPoint(x + double.Parse(w[w.Length - 1]), 0));
                 }
 
                 if (pbm != string.Empty) {
-                    string[] m = pbw.Split(new[] {','});
+                    string[] m = pbw.Split(',');
                     for (int i = 0; i < m.Count() - 1; i++) {
                         pts[i].Shape = m[i] == "r" ? PitchPointShape.SINE_OUT :
                             m[i] == "s" ? PitchPointShape.LINEAR :
@@ -258,7 +258,7 @@ namespace LibreUtau.Core.Formats {
         }
 
         static String VibratoToUst(VibratoExpression vibrato) {
-            List<double> args = new List<double>() {
+            List<double> args = new List<double> {
                 vibrato.Length,
                 vibrato.Period,
                 vibrato.Depth,

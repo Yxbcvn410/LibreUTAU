@@ -149,11 +149,17 @@ namespace LibreUtau.Core {
         public override string ToString() { return "Change notes lyric"; }
 
         public override void Execute() {
-            lock (Part) { Note.Lyric = NewLyric; }
+            lock (Part) {
+                Note.Lyric = NewLyric;
+                Note.Phoneme.PhonemeString = NewLyric; // FIXME
+            }
         }
 
         public override void Unexecute() {
-            lock (Part) { Note.Lyric = OldLyric; }
+            lock (Part) {
+                Note.Lyric = OldLyric;
+                Note.Phoneme.PhonemeString = OldLyric; // FIXME
+            }
         }
     }
 }

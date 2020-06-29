@@ -25,13 +25,7 @@ namespace LibreUtau.Core.Formats {
                 result.DurTick = Convert.ToInt32(dictionary["dur"]);
                 result.PitchBend.SnapFirst = Convert.ToBoolean(dictionary["pitsnap"]);
 
-                var pho = dictionary["pho"] as ArrayList;
-                result.Phonemes.Clear();
-                foreach (var p in pho) {
-                    var _p = serializer.ConvertToType<UPhoneme>(p);
-                    _p.Parent = result;
-                    result.Phonemes.Add(_p);
-                }
+                var pho =  serializer.ConvertToType<UPhoneme>(dictionary["pho"]);
 
                 result.PitchBend.SnapFirst = Convert.ToBoolean(dictionary["pitsnap"]);
                 var pit = dictionary["pit"] as ArrayList;
@@ -75,7 +69,7 @@ namespace LibreUtau.Core.Formats {
                 result.Add("n", _obj.NoteNum);
                 result.Add("pos", _obj.PosTick);
                 result.Add("dur", _obj.DurTick);
-                result.Add("pho", _obj.Phonemes);
+                result.Add("pho", _obj.Phoneme);
 
                 var pit = new List<double>();
                 var pitshape = new List<string>();
@@ -122,9 +116,8 @@ namespace LibreUtau.Core.Formats {
         class UPhonemeConverter : JavaScriptConverter {
             public override object Deserialize(IDictionary<string, object> dictionary, Type type,
                 JavaScriptSerializer serializer) {
-                UPhoneme result = new UPhoneme() {
-                    PosTick = Convert.ToInt32(dictionary["pos"]),
-                    Phoneme = dictionary["pho"] as string,
+                UPhoneme result = new UPhoneme {
+                    PhonemeString = dictionary["pho"] as string,
                     AutoEnvelope = Convert.ToBoolean(dictionary["autoenv"]),
                     AutoRemapped = Convert.ToBoolean(dictionary["remap"])
                 };
@@ -146,9 +139,8 @@ namespace LibreUtau.Core.Formats {
                 Dictionary<string, object> result = new Dictionary<string, object>();
                 var _obj = obj as UPhoneme;
                 if (_obj == null) return result;
-
-                result.Add("pos", _obj.PosTick);
-                result.Add("pho", _obj.Phoneme);
+                
+                result.Add("pho", _obj.PhonemeString);
                 result.Add("autoenv", _obj.AutoEnvelope);
                 result.Add("remap", _obj.AutoRemapped);
 
