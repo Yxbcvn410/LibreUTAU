@@ -10,7 +10,7 @@ namespace LibreUtau.Core {
         public UProject project;
         public UPart part;
         public override void Execute() { }
-        public override void Unexecute() { }
+        public override void Rollback() { }
         public override string ToString() { return "Notification"; }
     }
 

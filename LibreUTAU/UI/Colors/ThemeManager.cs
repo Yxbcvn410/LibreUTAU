@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,13 +48,17 @@ namespace LibreUtau.UI {
 
         // Midi notes
         public static SolidColorBrush NoteFillSelectedBrush = new SolidColorBrush();
-        public static SolidColorBrush NoteFillSelectedErrorBrushes = new SolidColorBrush();
+        public static SolidColorBrush NoteFillSelectedErrorBrush = new SolidColorBrush();
         public static SolidColorBrush NoteStrokeSelectedBrush = new SolidColorBrush();
         public static SolidColorBrush NoteStrokeErrorBrush = new SolidColorBrush();
 
         public static List<SolidColorBrush> NoteFillBrushes = new List<SolidColorBrush>();
         public static List<SolidColorBrush> NoteStrokeBrushes = new List<SolidColorBrush>();
         public static List<SolidColorBrush> NoteFillErrorBrushes = new List<SolidColorBrush>();
+        
+        // Midi phonemes
+        public static SolidColorBrush PhonemeBrush = new SolidColorBrush();
+        public static SolidColorBrush PhonemeErrorBrush = new SolidColorBrush();
 
         public static bool LoadTheme() {
             const int NumberOfChannel = 1;
@@ -86,7 +91,7 @@ namespace LibreUtau.UI {
 
             // Midi notes
             NoteFillSelectedBrush.Color = GetColor("NoteFillSelectedColorB");
-            NoteFillSelectedErrorBrushes.Color = GetColorVariationAlpha(NoteFillSelectedBrush.Color, 127);
+            NoteFillSelectedErrorBrush.Color = GetColorVariationAlpha(NoteFillSelectedBrush.Color, 127);
 
             NoteStrokeSelectedBrush.Color = GetColor("NoteStrokeSelectedColor");
             NoteStrokeErrorBrush.Color = GetColor("NoteStrokeErrorColor");
@@ -100,6 +105,10 @@ namespace LibreUtau.UI {
                 NoteFillErrorBrushes[i].Color = GetColorVariationAlpha(NoteFillBrushes[i].Color, 127);
                 NoteStrokeBrushes[i].Color = GetColor("NoteStrokeColorCh" + i);
             }
+            
+            // Midi Phonemes
+            PhonemeBrush.Color = GetColorVariationAlpha(GetColor("PhonemeColor"), 127);
+            PhonemeErrorBrush.Color = GetColorVariationAlpha(GetColor("PhonemeErrorColor"), 127);
 
             return true;
         }

@@ -43,6 +43,38 @@ namespace LibreUtau.Core.USTx {
             return _note;
         }
 
+        public void UpdatePhoneme(USinger singer) {
+            Phoneme.PhonemeString = Lyric;
+
+            if (Phoneme.AutoRemapped) {
+                if (Phoneme.PhonemeString.StartsWith("?")) {
+                    Phoneme.PhonemeString = Phoneme.PhonemeString.Substring(1);
+                    Phoneme.AutoRemapped = false;
+                } else {
+                    string noteString = MusicMath.GetNoteString(NoteNum);
+                    if (singer.PitchMap.ContainsKey(noteString))
+                        Phoneme.RemappedBank = singer.PitchMap[noteString];
+                }
+            }
+
+            if (singer.AliasMap.ContainsKey(Phoneme.PhonemeRemapped)) {
+                Phoneme.Oto = singer.AliasMap[Phoneme.PhonemeRemapped];
+                Phoneme.PhonemeError = false;
+                Phoneme.Overlap = Phoneme.Oto.Overlap;
+                Phoneme.Preutter = Phoneme.Oto.Preutter;
+                int vel = (int)Phoneme.Parent.Expressions["velocity"].Data;
+                if (vel != 100) {
+                    double stretchRatio = Math.Pow(2, 1.0 - (double)vel / 100);
+                    Phoneme.Overlap *= stretchRatio;
+                    Phoneme.Preutter *= stretchRatio;
+                }
+            } else {
+                Phoneme.PhonemeError = true;
+                Phoneme.Overlap = 0;
+                Phoneme.Preutter = 0;
+            }
+        }
+
         public string GetResamplerFlags() { return "Y0H0F0"; }
 
         public int CompareTo(object obj) {
@@ -53,14 +85,13 @@ namespace LibreUtau.Core.USTx {
 
             if (other.PosTick < this.PosTick)
                 return 1;
-            else if (other.PosTick > this.PosTick)
+            if (other.PosTick > this.PosTick)
                 return -1;
-            else if (other.GetHashCode() < this.GetHashCode())
+            if (other.GetHashCode() < this.GetHashCode())
                 return 1;
-            else if (other.GetHashCode() > this.GetHashCode())
+            if (other.GetHashCode() > this.GetHashCode())
                 return -1;
-            else
-                return 0;
+            return 0;
         }
 
         public override string ToString() {

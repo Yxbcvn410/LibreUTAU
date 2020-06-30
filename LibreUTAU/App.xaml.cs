@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Windows;
+using LibreUtau.Core.Formats;
 using Serilog;
 
 namespace LibreUtau {
@@ -45,7 +46,7 @@ namespace LibreUtau {
             NBug.Settings.StoragePath = NBug.Enums.StoragePath.CurrentDirectory;
             NBug.Settings.UIMode = NBug.Enums.UIMode.Full;
 
-            Core.DocManager.Inst.SearchAllSingers();
+            UtauSoundbank.FindAllSingers();
             var pm = new Core.PartManager();
 
             var app = new App();

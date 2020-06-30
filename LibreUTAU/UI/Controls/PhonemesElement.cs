@@ -87,12 +87,12 @@ namespace LibreUtau.UI.Controls {
             double y4 = (1 - phoneme.Envelope.Points[4].Y / 100) * height;
 
             Pen pen = note.Selected ? penEnvSel : penEnv;
-            Brush brush = note.Selected
-                ? ThemeManager.NoteFillSelectedErrorBrushes
-                : ThemeManager.NoteFillErrorBrushes[0];
+            Brush brush = phoneme.PhonemeError
+                ? ThemeManager.PhonemeErrorBrush
+                : ThemeManager.PhonemeBrush;
 
             StreamGeometry g = new StreamGeometry();
-            List<Point> poly = new List<Point>() {
+            List<Point> poly = new List<Point> {
                 new Point(x1, y + y1),
                 new Point(x2, y + y2),
                 new Point(x3, y + y3),

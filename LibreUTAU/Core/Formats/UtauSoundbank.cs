@@ -9,8 +9,8 @@ using LibreUtau.SimpleHelpers;
 
 namespace LibreUtau.Core.Formats {
     public static class UtauSoundbank {
-        public static Dictionary<string, USinger> FindAllSingers() {
-            Dictionary<string, USinger> singers = new Dictionary<string, USinger>();
+        private static Dictionary<string, USinger> allSingers = new Dictionary<string, USinger>();
+        public static void FindAllSingers() {
             var singerSearchPaths = Util.Preferences.GetSingerSearchPaths();
             foreach (string searchPath in singerSearchPaths) {
                 if (!Directory.Exists(searchPath)) continue;
@@ -22,22 +22,22 @@ namespace LibreUtau.Core.Formats {
                             singer = LoadSinger(dirpath);
                             if (singer == null) {
                                 System.Diagnostics.Debug.WriteLine($"Error: Unable to load singer from '{dirpath}'");
-                            } else singers.Add(singer.Path, singer);
+                            } else allSingers.Add(singer.Path, singer);
                         } catch (Exception e) { throw e; }
                     }
                 }
             }
-
-            return singers;
         }
 
-        public static USinger GetSinger(string path, Encoding ustEncoding, Dictionary<string, USinger> loadedSingers) {
+        public static Dictionary<string, USinger> GetAllSingers() => allSingers;
+
+        public static USinger GetSinger(string path, Encoding ustEncoding) {
             var absPath = DetectSingerPath(path, ustEncoding);
             if (absPath == "") return null;
-            else if (loadedSingers.ContainsKey(absPath)) return loadedSingers[absPath];
+            else if (allSingers.ContainsKey(absPath)) return allSingers[absPath];
             else {
                 var singer = LoadSinger(absPath);
-                loadedSingers.Add(absPath, singer);
+                allSingers.Add(absPath, singer);
                 return singer;
             }
         }

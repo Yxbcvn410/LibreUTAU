@@ -9,6 +9,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Linq;
 using LibreUtau.Core.USTx;
 using LibreUtau.Core;
+using LibreUtau.SimpleHelpers;
 
 namespace LibreUtau.Core.Formats {
     class USTx {
@@ -25,7 +26,7 @@ namespace LibreUtau.Core.Formats {
                 result.DurTick = Convert.ToInt32(dictionary["dur"]);
                 result.PitchBend.SnapFirst = Convert.ToBoolean(dictionary["pitsnap"]);
 
-                var pho =  serializer.ConvertToType<UPhoneme>(dictionary["pho"]);
+                var pho = serializer.ConvertToType<UPhoneme>(dictionary["pho"]);
 
                 result.PitchBend.SnapFirst = Convert.ToBoolean(dictionary["pitsnap"]);
                 var pit = dictionary["pit"] as ArrayList;
@@ -139,7 +140,7 @@ namespace LibreUtau.Core.Formats {
                 Dictionary<string, object> result = new Dictionary<string, object>();
                 var _obj = obj as UPhoneme;
                 if (_obj == null) return result;
-                
+
                 result.Add("pho", _obj.PhonemeString);
                 result.Add("autoenv", _obj.AutoEnvelope);
                 result.Add("remap", _obj.AutoRemapped);
@@ -180,7 +181,7 @@ namespace LibreUtau.Core.Formats {
                 if (result != null) {
                     result.Name = dictionary["name"] as string;
                     result.Comment = dictionary["comment"] as string;
-                    result.TrackNo = Convert.ToInt32(dictionary["trackno"]);
+                    result.TrackNo = Convert.ToInt32(dictionary["track_no"]);
                     result.PosTick = Convert.ToInt32(dictionary["pos"]);
                     result.DurTick = Convert.ToInt32(dictionary["dur"]);
                 }
@@ -195,7 +196,7 @@ namespace LibreUtau.Core.Formats {
 
                 result.Add("name", _part.Name);
                 result.Add("comment", _part.Comment);
-                result.Add("trackno", _part.TrackNo);
+                result.Add("track_no", _part.TrackNo);
                 result.Add("pos", _part.PosTick);
                 result.Add("dur", _part.DurTick);
 
@@ -240,13 +241,9 @@ namespace LibreUtau.Core.Formats {
                     result.ExpressionTable.Add(pair.Key, _exp);
                 }
 
-                var singers = dictionary["singers"] as ArrayList;
-                foreach (var singer in singers)
-                    result.Singers.Add(serializer.ConvertToType(singer, typeof(USinger)) as USinger);
-
                 foreach (var track in dictionary["tracks"] as ArrayList) {
-                    var _tarck = serializer.ConvertToType(track, typeof(UTrack)) as UTrack;
-                    result.Tracks.Add(_tarck);
+                    var _track = serializer.ConvertToType(track, typeof(UTrack)) as UTrack;
+                    result.Tracks.Add(_track);
                 }
 
                 foreach (var part in dictionary["parts"] as ArrayList)
@@ -270,7 +267,6 @@ namespace LibreUtau.Core.Formats {
                     result.Add("bpbar", _obj.BeatPerBar);
                     result.Add("bunit", _obj.BeatUnit);
                     result.Add("res", _obj.Resolution);
-                    result.Add("singers", _obj.Singers);
                     result.Add("tracks", _obj.Tracks.ToArray());
                     result.Add("parts", _obj.Parts);
                     result.Add("exptable", _obj.ExpressionTable);
@@ -298,8 +294,8 @@ namespace LibreUtau.Core.Formats {
                     UTrack result = new UTrack() {
                         Name = dictionary["name"] as string,
                         Comment = dictionary["comment"] as string,
-                        TrackNo = Convert.ToInt32(dictionary["trackno"]),
-                        Singer = new USinger() {Name = dictionary["singer"] as string}
+                        TrackNo = Convert.ToInt32(dictionary["track_no"]),
+                        Singer = serializer.ConvertToType(dictionary["singer"], typeof(USinger)) as USinger
                     };
                     return result;
                 } else if (type == typeof(USinger)) {
@@ -314,28 +310,28 @@ namespace LibreUtau.Core.Formats {
             public override IDictionary<string, object> Serialize(object obj, JavaScriptSerializer serializer) {
                 Dictionary<string, object> result = new Dictionary<string, object>();
 
-                if (obj is UTrack) {
-                    var _obj = obj as UTrack;
-                    if (_obj != null) {
-                        result.Add("trackno", _obj.TrackNo);
-                        result.Add("name", _obj.Name);
-                        result.Add("comment", _obj.Comment);
-                        result.Add("singer", _obj.Singer == null ? "" : _obj.Singer.Name);
+                switch (obj) {
+                    case UTrack track: {
+                        result.Add("track_no", track.TrackNo);
+                        result.Add("name", track.Name);
+                        result.Add("comment", track.Comment);
+                        result.Add("singer", track.Singer ?? new USinger {Name = "", Path = ""});
+                        break;
                     }
-                } else if (obj is USinger) {
-                    var _obj = obj as USinger;
-                    if (_obj != null) {
-                        result.Add("name", _obj.Name);
-                        result.Add("path", _obj.Path);
+                    case USinger singer: {
+                        result.Add("name", singer.Name);
+                        result.Add("path", singer.Path);
+
+                        break;
                     }
-                } else if (obj is IntExpression) {
-                    var _obj = obj as IntExpression;
-                    if (_obj != null) {
-                        result.Add("abbr", _obj.Abbr);
-                        result.Add("type", _obj.Type);
-                        result.Add("min", _obj.Min);
-                        result.Add("max", _obj.Max);
-                        result.Add("data", _obj.Data);
+                    case IntExpression expression: {
+                        result.Add("abbr", expression.Abbr);
+                        result.Add("type", expression.Type);
+                        result.Add("min", expression.Min);
+                        result.Add("max", expression.Max);
+                        result.Add("data", expression.Data);
+
+                        break;
                     }
                 }
 
@@ -344,7 +340,7 @@ namespace LibreUtau.Core.Formats {
 
             public override IEnumerable<Type> SupportedTypes {
                 get {
-                    return new List<Type>(new Type[] {
+                    return new List<Type>(new[] {
                         typeof(IntExpression),
                         typeof(UTrack),
                         typeof(USinger)
@@ -409,23 +405,10 @@ namespace LibreUtau.Core.Formats {
                 System.Diagnostics.Debug.WriteLine(e.ToString());
                 return null;
             }
-
+            
             // Load singers
-            for (int i = 0; i < project.Singers.Count; i++) {
-                foreach (var pair in DocManager.Inst.Singers) {
-                    if (project.Singers[i].Name == pair.Value.Name) {
-                        project.Singers[i] = pair.Value;
-                        continue;
-                    }
-                }
-            }
-
             foreach (var track in project.Tracks) {
-                foreach (var singer in project.Singers) {
-                    if (track.Singer.Name == singer.Name) {
-                        track.Singer = singer;
-                    }
-                }
+                track.Singer = UtauSoundbank.GetSinger(track.Singer.Path, FileEncoding.DetectFileEncoding(file));
             }
 
             return project;

@@ -20,9 +20,8 @@ namespace LibreUtau.Core.USTx {
 
         public List<UTrack> Tracks = new List<UTrack>();
         public List<UPart> Parts = new List<UPart>();
-        public List<USinger> Singers = new List<USinger>();
 
-        public Dictionary<string, UExpression> ExpressionTable = new Dictionary<string, UExpression>();
+        public readonly Dictionary<string, UExpression> ExpressionTable = new Dictionary<string, UExpression>();
 
         public void RegisterExpression(UExpression exp) {
             if (!ExpressionTable.ContainsKey(exp.Name))
@@ -46,8 +45,6 @@ namespace LibreUtau.Core.USTx {
             note.PitchBend.Points[1].X = Math.Min(25, DocManager.Inst.Project.TickToMillisecond(note.DurTick) / 2);
             return note;
         }
-
-        public UProject() { }
 
         public int MillisecondToTick(double ms) {
             return MusicMath.MillisecondToTick(ms, BPM, BeatUnit, Resolution);

@@ -30,7 +30,7 @@ namespace LibreUtau.Core {
             }
         }
 
-        public override void Unexecute() {
+        public override void Rollback() {
             lock (Part) {
                 foreach (var note in Notes) Part.Notes.Remove(note);
             }
@@ -56,7 +56,7 @@ namespace LibreUtau.Core {
             }
         }
 
-        public override void Unexecute() {
+        public override void Rollback() {
             lock (Part) {
                 foreach (var note in Notes) Part.Notes.Add(note);
             }
@@ -64,7 +64,7 @@ namespace LibreUtau.Core {
     }
 
     public class MoveNoteCommand : NoteCommand {
-        int DeltaPos, DeltaNoteNum;
+        readonly int DeltaPos, DeltaNoteNum;
 
         public MoveNoteCommand(UVoicePart part, List<UNote> notes, int deltaPos, int deltaNoteNum) {
             this.Part = part;
@@ -75,12 +75,12 @@ namespace LibreUtau.Core {
 
         public MoveNoteCommand(UVoicePart part, UNote note, int deltaPos, int deltaNoteNum) {
             this.Part = part;
-            this.Notes = new UNote[] {note};
+            this.Notes = new[] {note};
             this.DeltaPos = deltaPos;
             this.DeltaNoteNum = deltaNoteNum;
         }
 
-        public override string ToString() { return $"Move {Notes.Count()} notes"; }
+        public override string ToString() { return $"Move {Notes.Length} notes"; }
 
         public override void Execute() {
             lock (Part) {
@@ -93,7 +93,7 @@ namespace LibreUtau.Core {
             }
         }
 
-        public override void Unexecute() {
+        public override void Rollback() {
             lock (Part) {
                 foreach (UNote note in Notes) {
                     Part.Notes.Remove(note);
@@ -128,7 +128,7 @@ namespace LibreUtau.Core {
             }
         }
 
-        public override void Unexecute() {
+        public override void Rollback() {
             lock (Part) {
                 foreach (var note in Notes) note.DurTick -= DeltaDur;
             }
@@ -151,14 +151,12 @@ namespace LibreUtau.Core {
         public override void Execute() {
             lock (Part) {
                 Note.Lyric = NewLyric;
-                Note.Phoneme.PhonemeString = NewLyric; // FIXME
             }
         }
 
-        public override void Unexecute() {
+        public override void Rollback() {
             lock (Part) {
                 Note.Lyric = OldLyric;
-                Note.Phoneme.PhonemeString = OldLyric; // FIXME
             }
         }
     }

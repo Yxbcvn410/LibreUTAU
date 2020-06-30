@@ -8,16 +8,11 @@ using LibreUtau.Core.USTx;
 
 namespace LibreUtau.Core {
     public class PartManager : ICmdSubscriber {
-        class PartContainer {
-            public UVoicePart Part = null;
-        }
-
-        UProject _project;
-        UVoicePart _part;
+        private UVoicePart Part;
 
         public PartManager() {
-            _part = null;
             this.Subscribe(DocManager.Inst);
+            this.Part = null;
         }
 
         public void UpdatePart(UVoicePart part) {
@@ -28,6 +23,7 @@ namespace LibreUtau.Core {
                 UpdateEnvelope(part);
                 UpdatePitchBend(part);
                 DocManager.Inst.ExecuteCmd(new RedrawNotesNotification(), true);
+                part.RequireRebuild();
             }
         }
 
@@ -90,33 +86,7 @@ namespace LibreUtau.Core {
             UNote previousNote = null;
             foreach (UNote note in part.Notes) {
                 // Update oto
-                if (note.Phoneme.AutoRemapped) {
-                    if (note.Phoneme.PhonemeString.StartsWith("?")) {
-                        note.Phoneme.PhonemeString = note.Phoneme.PhonemeString.Substring(1);
-                        note.Phoneme.AutoRemapped = false;
-                    } else {
-                        string noteString = MusicMath.GetNoteString(note.NoteNum);
-                        if (singer.PitchMap.ContainsKey(noteString))
-                            note.Phoneme.RemappedBank = singer.PitchMap[noteString];
-                    }
-                }
-
-                if (singer.AliasMap.ContainsKey(note.Phoneme.PhonemeRemapped)) {
-                    note.Phoneme.Oto = singer.AliasMap[note.Phoneme.PhonemeRemapped];
-                    note.Phoneme.PhonemeError = false;
-                    note.Phoneme.Overlap = note.Phoneme.Oto.Overlap;
-                    note.Phoneme.Preutter = note.Phoneme.Oto.Preutter;
-                    int vel = (int)note.Phoneme.Parent.Expressions["velocity"].Data;
-                    if (vel != 100) {
-                        double stretchRatio = Math.Pow(2, 1.0 - (double)vel / 100);
-                        note.Phoneme.Overlap *= stretchRatio;
-                        note.Phoneme.Preutter *= stretchRatio;
-                    }
-                } else {
-                    note.Phoneme.PhonemeError = true;
-                    note.Phoneme.Overlap = 0;
-                    note.Phoneme.Preutter = 0;
-                }
+                note.UpdatePhoneme(singer);
 
                 // Overlap correction
                 note.Phoneme.DurTick = note.DurTick;
@@ -150,7 +120,7 @@ namespace LibreUtau.Core {
                         lastPhoneme.TailOverlap = 0;
                     }
                 }
-                
+
                 // TODO Почистить тут, убрать ненужные поля из Phoneme
                 previousNote = note;
             }
@@ -185,22 +155,38 @@ namespace LibreUtau.Core {
         }
 
         public void OnCommandExecuted(UCommand cmd, bool isUndo) {
-            if (cmd is PartCommand) {
-                var _cmd = cmd as PartCommand;
-                if (_cmd.part != _part) return;
-                else if (_cmd is RemovePartCommand) _part = null;
-            } else if (cmd is UNotification) {
-                var _cmd = cmd as UNotification;
-                if (_cmd is LoadPartNotification) {
-                    if (!(_cmd.part is UVoicePart)) return;
-                    _part = (UVoicePart)_cmd.part;
-                    _project = _cmd.project;
-                } else if (_cmd is LoadProjectNotification) OnProjectLoad(_cmd);
-            } else if (cmd is NoteCommand || cmd is ExpCommand || cmd is TrackChangeSingerCommand) {
-                if (_part != null) {
-                    UpdatePart(_part);
-                    _part.RequireRebuild();
-                }
+            switch (cmd) {
+                case LoadProjectNotification command:
+                    OnProjectLoad(command);
+                    break;
+                case LoadPartNotification command:
+                    Part = command.part as UVoicePart;
+                    UpdatePart(Part);
+                    break;
+                case RemovePartCommand command:
+                    if (command.part == Part)
+                        Part = null;
+                    break;
+                case NoteCommand _:
+                    UpdatePart(Part);
+                    break;
+                case ExpCommand _:
+                    UpdatePart(Part);
+                    break;
+                case TrackChangeSingerCommand command:
+                    foreach (var part in command.project.Parts.OfType<UVoicePart>()) {
+                        UpdatePart(part);
+                    }
+
+                    break;
+                case MovePartCommand command:
+                    if (command.part is UVoicePart voicePart &&
+                        command.project.Tracks[command.oldTrackNo].Singer !=
+                        command.project.Tracks[command.newTrackNo].Singer) {
+                        UpdatePart(voicePart);
+                    }
+
+                    break;
             }
         }
 

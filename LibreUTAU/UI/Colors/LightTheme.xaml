@@ -51,6 +51,10 @@
     <Color x:Key="NoteFillSelectedColorB">#ff679d</Color>
     <Color x:Key="NoteStrokeSelectedColor">#d0648a</Color>
     <Color x:Key="NoteStrokeErrorColor">Red</Color>
+    
+    <!--Midi phonemes-->
+    <Color x:Key="PhonemeColor">#4ea6ea</Color>
+    <Color x:Key="PhonemeErrorColor">#ea494e</Color>
 
     <!--Channel 0-->
     <Color x:Key="NoteFillColorACh0">#6eb6ee</Color>

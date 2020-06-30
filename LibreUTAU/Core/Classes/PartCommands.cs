@@ -19,7 +19,7 @@ namespace LibreUtau.Core {
 
         public override string ToString() { return "Add part"; }
         public override void Execute() { project.Parts.Add(part); }
-        public override void Unexecute() { project.Parts.Remove(part); }
+        public override void Rollback() { project.Parts.Remove(part); }
     }
 
     public class RemovePartCommand : PartCommand {
@@ -30,11 +30,12 @@ namespace LibreUtau.Core {
 
         public override string ToString() { return "Remove parts"; }
         public override void Execute() { project.Parts.Remove(part); }
-        public override void Unexecute() { project.Parts.Add(part); }
+        public override void Rollback() { project.Parts.Add(part); }
     }
 
     public class MovePartCommand : PartCommand {
-        int newPos, oldPos, newTrackNo, oldTrackNo;
+        private readonly int newPos, oldPos;
+        public readonly int newTrackNo, oldTrackNo;
 
         public MovePartCommand(UProject project, UPart part, int newPos, int newTrackNo) {
             this.project = project;
@@ -52,7 +53,7 @@ namespace LibreUtau.Core {
             part.TrackNo = newTrackNo;
         }
 
-        public override void Unexecute() {
+        public override void Rollback() {
             part.PosTick = oldPos;
             part.TrackNo = oldTrackNo;
         }
@@ -70,6 +71,6 @@ namespace LibreUtau.Core {
 
         public override string ToString() { return "Change parts duration"; }
         public override void Execute() { part.DurTick = newDur; }
-        public override void Unexecute() { part.DurTick = oldDur; }
+        public override void Rollback() { part.DurTick = oldDur; }
     }
 }

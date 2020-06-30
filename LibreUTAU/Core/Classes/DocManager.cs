@@ -12,42 +12,32 @@ namespace LibreUtau.Core {
     /// DocManager class
     /// Controls actions performed on the project
     /// TODO:
-    /// Why singer info is contained here?
-    /// Why play position is also here?
+    /// Why play position is here?
     /// Maybe, rename to CommandDispatcher?
     /// </summary>
     class DocManager : ICmdPublisher {
         DocManager() {
-            _project = new UProject();
+            Project = new UProject();
         }
 
         static DocManager _s;
 
         static DocManager GetInst() {
-            if (_s == null) { _s = new DocManager(); }
-
-            return _s;
+            return _s ?? (_s = new DocManager());
         }
 
         public static DocManager Inst { get { return GetInst(); } }
 
-        public int playPosTick = 0;
+        public int playPosTick;
 
-        Dictionary<string, USinger> _singers;
-        public Dictionary<string, USinger> Singers { get { return _singers; } }
-        UProject _project;
-        public UProject Project { get { return _project; } }
-
-        public void SearchAllSingers() {
-            _singers = Formats.UtauSoundbank.FindAllSingers();
-        }
+        public UProject Project { get; private set; }
 
         # region Command Queue
 
-        Deque<UCommandGroup> undoQueue = new Deque<UCommandGroup>();
-        Deque<UCommandGroup> redoQueue = new Deque<UCommandGroup>();
-        UCommandGroup undoGroup = null;
-        UCommandGroup savedPoint = null;
+        readonly Deque<UCommandGroup> undoQueue = new Deque<UCommandGroup>();
+        readonly Deque<UCommandGroup> redoQueue = new Deque<UCommandGroup>();
+        UCommandGroup undoGroup;
+        UCommandGroup savedPoint;
 
         public bool ChangesSaved {
             get {
@@ -58,25 +48,28 @@ namespace LibreUtau.Core {
 
         public void ExecuteCmd(UCommand cmd, bool quiet = false) {
             if (cmd is UNotification) {
-                if (cmd is SaveProjectNotification) {
-                    var _cmd = cmd as SaveProjectNotification;
-                    if (undoQueue.Count > 0) savedPoint = undoQueue.Last();
-                    if (string.IsNullOrEmpty(_cmd.Path)) Formats.USTx.Save(Project.FilePath, Project);
-                    else Formats.USTx.Save(_cmd.Path, Project);
-                } else if (cmd is LoadProjectNotification) {
-                    undoQueue.Clear();
-                    redoQueue.Clear();
-                    undoGroup = null;
-                    savedPoint = null;
-                    this._project = ((LoadProjectNotification)cmd).project;
-                    this.playPosTick = 0;
-                } else if (cmd is SetPlayPosTickNotification) {
-                    var _cmd = cmd as SetPlayPosTickNotification;
-                    this.playPosTick = _cmd.playPosTick;
+                switch (cmd) {
+                    case SaveProjectNotification saveNotification:
+                        if (undoQueue.Count > 0) savedPoint = undoQueue.Last();
+                        Formats.USTx.Save(
+                            string.IsNullOrEmpty(saveNotification.Path) ? Project.FilePath : saveNotification.Path,
+                            Project);
+                        break;
+                    case LoadProjectNotification loadNotification:
+                        undoQueue.Clear();
+                        redoQueue.Clear();
+                        undoGroup = null;
+                        savedPoint = null;
+                        this.Project = loadNotification.project;
+                        this.playPosTick = 0;
+                        break;
+                    case SetPlayPosTickNotification setPlayPosNotification:
+                        this.playPosTick = setPlayPosNotification.playPosTick;
+                        break;
                 }
 
                 Publish(cmd);
-                if (!quiet) System.Diagnostics.Debug.WriteLine("Publish notification " + cmd.ToString());
+                if (!quiet) System.Diagnostics.Debug.WriteLine($"Publish notification {cmd}");
                 return;
             } else if (undoGroup == null) {
                 System.Diagnostics.Debug.WriteLine("Null undoGroup");
@@ -87,7 +80,7 @@ namespace LibreUtau.Core {
                 Publish(cmd);
             }
 
-            if (!quiet) System.Diagnostics.Debug.WriteLine("ExecuteCmd " + cmd.ToString());
+            if (!quiet) System.Diagnostics.Debug.WriteLine($"ExecuteCmd {cmd}");
         }
 
         public void StartUndoGroup() {
@@ -113,25 +106,25 @@ namespace LibreUtau.Core {
 
         public void Undo() {
             if (undoQueue.Count == 0) return;
-            var cmdg = undoQueue.RemoveFromBack();
-            for (int i = cmdg.Commands.Count - 1; i >= 0; i--) {
-                var cmd = cmdg.Commands[i];
-                cmd.Unexecute();
+            var lastCommandGroup = undoQueue.RemoveFromBack();
+            for (int i = lastCommandGroup.Commands.Count - 1; i >= 0; i--) {
+                var cmd = lastCommandGroup.Commands[i];
+                cmd.Rollback();
                 if (!(cmd is NoteCommand)) Publish(cmd, true);
             }
 
-            redoQueue.AddToBack(cmdg);
+            redoQueue.AddToBack(lastCommandGroup);
         }
 
         public void Redo() {
             if (redoQueue.Count == 0) return;
-            var cmdg = redoQueue.RemoveFromBack();
-            foreach (var cmd in cmdg.Commands) {
+            var lastCommandGroup = redoQueue.RemoveFromBack();
+            foreach (var cmd in lastCommandGroup.Commands) {
                 cmd.Execute();
                 Publish(cmd);
             }
 
-            undoQueue.AddToBack(cmdg);
+            undoQueue.AddToBack(lastCommandGroup);
         }
 
         # endregion

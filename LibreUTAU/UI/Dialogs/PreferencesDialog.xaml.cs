@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using LibreUtau.Core;
+using LibreUtau.Core.Formats;
 
 namespace LibreUtau.UI.Dialogs {
     /// <summary>
@@ -54,7 +55,7 @@ namespace LibreUtau.UI.Dialogs {
             if (result == System.Windows.Forms.DialogResult.OK) {
                 PathManager.Inst.AddSingerSearchPath(dialog.SelectedPath);
                 UpdateSingerPaths();
-                DocManager.Inst.SearchAllSingers();
+                UtauSoundbank.FindAllSingers();
             }
         }
 
@@ -62,7 +63,7 @@ namespace LibreUtau.UI.Dialogs {
             PathManager.Inst.RemoveSingerSearchPath((string)singerPathsList.SelectedItem);
             UpdateSingerPaths();
             singerPathRemoveButton.IsEnabled = false;
-            DocManager.Inst.SearchAllSingers();
+            UtauSoundbank.FindAllSingers();
         }
 
         private void treeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e) {

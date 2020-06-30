@@ -142,10 +142,8 @@ namespace LibreUtau.Core.Formats {
                             project.Name = line.Trim().Replace("ProjectName=", string.Empty);
                         if (line.StartsWith("VoiceDir=")) {
                             string singerpath = line.Trim().Replace("VoiceDir=", string.Empty);
-                            var singer = UtauSoundbank.GetSinger(singerpath, FileEncoding.DetectFileEncoding(file),
-                                DocManager.Inst.Singers);
+                            var singer = UtauSoundbank.GetSinger(singerpath, FileEncoding.DetectFileEncoding(file));
                             if (singer == null) singer = new USinger() {Name = "", Path = singerpath};
-                            project.Singers.Add(singer);
                             project.Tracks[0].Singer = singer;
                         }
                     } else if (currentBlock == UstBlock.Note) {

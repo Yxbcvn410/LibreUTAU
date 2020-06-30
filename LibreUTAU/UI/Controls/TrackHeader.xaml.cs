@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using LibreUtau.Core;
+using LibreUtau.Core.Formats;
 using LibreUtau.Core.USTx;
 
 namespace LibreUtau.UI.Controls {
@@ -81,7 +82,7 @@ namespace LibreUtau.UI.Controls {
 
         private void buildChangeSingerMenuItems() {
             changeSingerMenu.Items.Clear();
-            foreach (var pair in DocManager.Inst.Singers) {
+            foreach (var pair in UtauSoundbank.GetAllSingers()) {
                 var menuItem = new MenuItem() {Header = pair.Value.Name};
                 menuItem.Click += (_o, _e) => {
                     if (this.Track.Singer != pair.Value) {
@@ -105,7 +106,7 @@ namespace LibreUtau.UI.Controls {
                 changeSingerMenu.HorizontalOffset = -10;
             }
 
-            if (DocManager.Inst.Singers.Count != 0) {
+            if (UtauSoundbank.GetAllSingers().Count != 0) {
                 buildChangeSingerMenuItems();
                 changeSingerMenu.IsOpen = true;
             }

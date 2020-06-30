@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using LibreUtau.UI.Controls;
 using LibreUtau.Core;
+using LibreUtau.Core.Formats;
 using LibreUtau.Core.USTx;
 
 namespace LibreUtau.UI.Dialogs {
@@ -29,7 +30,7 @@ namespace LibreUtau.UI.Dialogs {
 
         private void UpdateSingers() {
             singerNames = new List<string>();
-            foreach (var pair in DocManager.Inst.Singers) {
+            foreach (var pair in UtauSoundbank.GetAllSingers()) {
                 singerNames.Add(pair.Value.Name);
             }
 
@@ -43,7 +44,7 @@ namespace LibreUtau.UI.Dialogs {
 
         public void SetSinger(string singerName) {
             USinger singer = null;
-            foreach (var pair in DocManager.Inst.Singers)
+            foreach (var pair in UtauSoundbank.GetAllSingers())
                 if (pair.Value.Name == singerName) {
                     singer = pair.Value;
                 }

@@ -8,7 +8,7 @@ using LibreUtau.Core.USTx;
 namespace LibreUtau.Core {
     public abstract class UCommand {
         public abstract void Execute();
-        public abstract void Unexecute();
+        public abstract void Rollback();
 
         public abstract override string ToString();
     }

@@ -40,7 +40,7 @@ namespace LibreUtau.Core {
             UpdateTrackNo();
         }
 
-        public override void Unexecute() {
+        public override void Rollback() {
             project.Tracks.Remove(track);
             UpdateTrackNo();
         }
@@ -70,7 +70,7 @@ namespace LibreUtau.Core {
             UpdateTrackNo();
         }
 
-        public override void Unexecute() {
+        public override void Rollback() {
             if (track.TrackNo < project.Tracks.Count)
                 project.Tracks.Insert(track.TrackNo, track);
             else
@@ -94,6 +94,6 @@ namespace LibreUtau.Core {
 
         public override string ToString() { return "Change singer"; }
         public override void Execute() { track.Singer = newSinger; }
-        public override void Unexecute() { track.Singer = oldSinger; }
+        public override void Rollback() { track.Singer = oldSinger; }
     }
 }

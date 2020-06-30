@@ -91,7 +91,6 @@ namespace LibreUtau.Core.Formats {
             int partPosTickShift = -preMeasure * uproject.Resolution * uproject.BeatPerBar * 4 / uproject.BeatUnit;
 
             USinger usinger = new USinger();
-            uproject.Singers.Add(usinger);
 
             foreach (XmlNode track in root.SelectNodes(trackPath, nsmanager)) // track
             {
