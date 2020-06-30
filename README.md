@@ -13,7 +13,7 @@ Current status: Highly unstable
 * Importing audio files
 * Basic sequencing functions
 * Feature-rich MIDI editor
-* Loading UTS/VSQx projects
+* Loading UST/VSQx projects
 
 ## Development plan
 #### Known bugs and issues
@@ -29,20 +29,9 @@ Current status: Highly unstable
     * Keypresses are interpreted as commands when note lyric edited
     * Expression controls are not properly updated sometimes
     
-#### Features to wait for in the nearest release ~~(coming soon)~~
--[ ] Fixing all bugs
--[ ] UI tweaks
-    -[ ] Phoneme hints
-        -[x] Wrong phoneme highlighting
-        -[ ] Drop-down list of available phonemes when editing note lyric
-    -[ ] Proper error/warning notification system
-    -[ ] Copying and pastiing notes in the midi window
--[ ] Automatic updater
-    
 #### Features yet to implement (sometime in the future)
+* Automatic updater
 * Convenient singer import interface
 * Singer editor
 * Numerous UI tweaks
-    * For example, resetting volume/pan lever or note expression controls by double-click
-    * Note lyric edit textbox is centered - maybe move it to the note location?
-    
+   
