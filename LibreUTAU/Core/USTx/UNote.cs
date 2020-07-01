@@ -18,7 +18,6 @@ namespace LibreUtau.Core.USTx {
         public PitchBendExpression PitchBend;
         public VibratoExpression Vibrato;
         public bool Error = false;
-        public bool Selected = false;
 
         public int EndTick { get { return PosTick + DurTick; } }
 
@@ -96,7 +95,7 @@ namespace LibreUtau.Core.USTx {
 
         public override string ToString() {
             return
-                $"\"{Lyric}\" Pos:{PosTick} Dur:{DurTick} Note:{NoteNum}{(Error ? " Error" : string.Empty)}{(Selected ? " Selected" : string.Empty)}";
+                $"\"{Lyric}\" Pos:{PosTick} Dur:{DurTick} Note:{NoteNum}{(Error ? " Error" : string.Empty)}";
         }
     }
 }

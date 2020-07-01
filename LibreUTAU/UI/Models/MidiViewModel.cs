@@ -315,45 +315,43 @@ namespace LibreUtau.UI.Models {
 
         # region Selection
 
-        public List<UNote> SelectedNotes = new List<UNote>();
-        public List<UNote> TempSelectedNotes = new List<UNote>();
+        public NoteSelection SelectedNotes = new NoteSelection();
+        private UNote ManipulatedNote = null;
+
+        public void SetModifiedNote(UNote note) {
+            ManipulatedNote = note;
+            DeselectAll();
+        }
+
+        public UNote GetModifiedNote() {
+            return ManipulatedNote;
+        }
+
+        public NoteSelection ManipulatedNotes {
+            get => SelectedNotes.Count == 0 ? new NoteSelection(ManipulatedNote) : SelectedNotes;
+        }
 
         public void SelectAll() {
-            SelectedNotes.Clear();
-            foreach (UNote note in Part.Notes) {
-                SelectedNotes.Add(note);
-                note.Selected = true;
-            }
-
+            SelectedNotes = new NoteSelection(Part.Notes);
             DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
         }
 
         public void DeselectAll() {
             SelectedNotes.Clear();
-            foreach (UNote note in Part.Notes) note.Selected = false;
             DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
         }
 
-        public void SelectNote(UNote note) {
-            if (!SelectedNotes.Contains(note)) {
-                SelectedNotes.Add(note);
-                note.Selected = true;
-                DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
-            }
-        }
-
-        public void DeselectNote(UNote note) {
-            SelectedNotes.Remove(note);
-            note.Selected = false;
+        public void ToggleSelection(UNote note) {
+            if (SelectedNotes.Contains(note))
+                SelectedNotes.RemoveNote(note);
+            else
+                SelectedNotes.AddNote(note);
+            
             DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+            ManipulatedNote = null;
         }
 
-        public void SelectTempNote(UNote note) {
-            TempSelectedNotes.Add(note);
-            note.Selected = true;
-        }
-
-        public void TempSelectInBox(double quarter1, double quarter2, int noteNum1, int noteNum2) {
+        public void SelectFromBox(double quarter1, double quarter2, int noteNum1, int noteNum2) {
             if (quarter2 < quarter1) {
                 double temp = quarter1;
                 quarter1 = quarter2;
@@ -368,19 +366,13 @@ namespace LibreUtau.UI.Models {
 
             int tick1 = (int)(quarter1 * Project.Resolution);
             int tick2 = (int)(quarter2 * Project.Resolution);
-            foreach (UNote note in TempSelectedNotes) note.Selected = false;
-            TempSelectedNotes.Clear();
+            SelectedNotes.Clear();
             foreach (UNote note in Part.Notes) {
                 if (note.PosTick <= tick2 && note.PosTick + note.DurTick >= tick1 &&
-                    note.NoteNum >= noteNum1 && note.NoteNum <= noteNum2) SelectTempNote(note);
+                    note.NoteNum >= noteNum1 && note.NoteNum <= noteNum2) SelectedNotes.AddNote(note);
             }
 
             DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
-        }
-
-        public void DoneTempSelect() {
-            foreach (UNote note in TempSelectedNotes) SelectNote(note);
-            TempSelectedNotes.Clear();
         }
 
         # endregion

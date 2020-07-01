@@ -134,9 +134,9 @@ namespace LibreUtau.UI.Controls {
             double width = Math.Max(2, note.DurTick * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution - 1);
             double height = Math.Max(2, midiVM.TrackHeight - 2);
             cxt.DrawRoundedRectangle(
-                note.Error ? note.Selected ? ThemeManager.NoteFillSelectedErrorBrush :
+                note.Error ? midiVM.SelectedNotes.Contains(note) ? ThemeManager.NoteFillSelectedErrorBrush :
                 ThemeManager.NoteFillErrorBrushes[0] :
-                note.Selected ? ThemeManager.NoteFillSelectedBrush : ThemeManager.NoteFillBrushes[0],
+                midiVM.SelectedNotes.Contains(note) ? ThemeManager.NoteFillSelectedBrush : ThemeManager.NoteFillBrushes[0],
                 null, new Rect(new Point(left, top), new Size(width, height)), 2, 2);
             if (height >= 10) {
                 if (note.Lyric.Length == 0) return;

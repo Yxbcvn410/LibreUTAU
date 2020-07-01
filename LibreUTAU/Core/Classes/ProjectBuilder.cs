@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Windows;
 using LibreUtau.Core.Render;
 using LibreUtau.Core.ResamplerDriver;
 using LibreUtau.Core.USTx;
@@ -43,7 +42,7 @@ namespace LibreUtau.Core {
             //TODO Что за костыль?
         }
 
-        private List<TrackSampleProvider> BuildAudio(UProject project) {
+        private List<TrackSampleProvider> BuildAudio(UProject project, bool forceRebuild = false) {
             var trackSources = new List<TrackSampleProvider>();
             foreach (UTrack track in project.Tracks) {
                 trackSources.Add(new TrackSampleProvider {Volume = DecibelToVolume(track.Volume)});
@@ -62,7 +61,7 @@ namespace LibreUtau.Core {
                     this.ReportProgress((int)(100 * (progress + p * part.ProgressWeight) / maxProgress));
                 }
 
-                if (!part.IsBuilt) {
+                if (!part.IsBuilt || forceRebuild) {
                     part.Build(ReportProgress, new BuildContext {Driver = engine, Project = project});
                     currentProgress += part.ProgressWeight;
                 }

@@ -19,14 +19,14 @@ Current status: Highly unstable
 #### Known bugs and issues
 * Sampling issues
     * Vocal part is not played if it has a note in the very beginning of the project timeline
+    * Project is not rebuilt when resampler is changed
     * Sometimes sound is not played at all
-    * Sound glitches if there is more than one voice part in the project
+    * Sometimes sound is glitchy
 * Wacky playback controls
     * Project beat properties and BPM are not editable
     * Timeline not updated when Go To Beginning/Go To End buttons are pressed
     * Different buttons for Play and Pause
-* Misc UI glitches
-    * Keypresses are interpreted as commands when note lyric edited
+* Misc UI bugs
     * Expression controls are not properly updated sometimes
     
 #### Features yet to implement (sometime in the future)

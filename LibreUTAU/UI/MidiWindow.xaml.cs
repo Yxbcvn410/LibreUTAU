@@ -31,7 +31,13 @@ namespace LibreUtau.UI {
         public MidiWindow() {
             InitializeComponent();
 
-            this.CloseButtonClicked += (o, e) => { Hide(); };
+            void WindowHide() {
+                EndNoteEditing(true);
+                midiVM.DeselectAll();
+                Hide();
+            }
+            
+            this.CloseButtonClicked += (o, e) => WindowHide();
             CompositionTargetEx.FrameUpdating += RenderLoop;
 
             viewScaler.Max = UIConstants.NoteMaxHeight;
@@ -128,7 +134,7 @@ namespace LibreUtau.UI {
             tickBackground.RenderIfUpdated();
             timelineBackground.RenderIfUpdated();
             keyTrackBackground.RenderIfUpdated();
-            expTickBackground.RenderIfUpdated();
+            ExpTickBackground.RenderIfUpdated();
             midiVM.RedrawIfUpdated();
         }
 
@@ -136,27 +142,25 @@ namespace LibreUtau.UI {
             if (Mouse.Captured == this.notesCanvas && Mouse.LeftButton == MouseButtonState.Pressed) {
                 const double scrollSpeed = 0.015;
                 Point mousePos = Mouse.GetPosition(notesCanvas);
-                bool needUdpate = false;
+                bool needsUpdate = false;
                 double delta = scrollSpeed * deltaTime;
                 if (mousePos.X < 0) {
-                    this.horizontalScroll.Value =
-                        this.horizontalScroll.Value - this.horizontalScroll.SmallChange * delta;
-                    needUdpate = true;
+                    this.horizontalScroll.Value -= this.horizontalScroll.SmallChange * delta;
+                    needsUpdate = true;
                 } else if (mousePos.X > notesCanvas.ActualWidth) {
-                    this.horizontalScroll.Value =
-                        this.horizontalScroll.Value + this.horizontalScroll.SmallChange * delta;
-                    needUdpate = true;
+                    this.horizontalScroll.Value += this.horizontalScroll.SmallChange * delta;
+                    needsUpdate = true;
                 }
 
                 if (mousePos.Y < 0 && Mouse.Captured == this.notesCanvas) {
-                    this.verticalScroll.Value = this.verticalScroll.Value - this.verticalScroll.SmallChange * delta;
-                    needUdpate = true;
+                    this.verticalScroll.Value -= this.verticalScroll.SmallChange * delta;
+                    needsUpdate = true;
                 } else if (mousePos.Y > notesCanvas.ActualHeight && Mouse.Captured == this.notesCanvas) {
-                    this.verticalScroll.Value = this.verticalScroll.Value + this.verticalScroll.SmallChange * delta;
-                    needUdpate = true;
+                    this.verticalScroll.Value += this.verticalScroll.SmallChange * delta;
+                    needsUpdate = true;
                 }
 
-                if (needUdpate) {
+                if (needsUpdate) {
                     notesCanvas_MouseMove_Helper(mousePos);
                     if (Mouse.Captured == this.timelineCanvas) timelineCanvas_MouseMove_Helper(mousePos);
                 }
@@ -199,21 +203,26 @@ namespace LibreUtau.UI {
                     midiVM.DeselectAll();
                     DocManager.Inst.Redo();
                 }
-            } else if (Keyboard.Modifiers == 0) // No midifiers
+            } else if (Keyboard.Modifiers == 0) // No modifiers
             {
                 if (e.Key == Key.Delete) {
                     if (midiVM.SelectedNotes.Count > 0) {
                         DocManager.Inst.StartUndoGroup();
-                        DocManager.Inst.ExecuteCmd(new RemoveNoteCommand(midiVM.Part, midiVM.SelectedNotes));
+                        DocManager.Inst.ExecuteCmd(new RemoveNoteCommand(midiVM.Part, midiVM.SelectedNotes.GetNotes()));
                         DocManager.Inst.EndUndoGroup();
                     }
-                } else if (e.Key == Key.I) {
-                    midiVM.ShowPitch = !midiVM.ShowPitch;
-                } else if (e.Key == Key.O) {
-                    midiVM.ShowPhoneme = !midiVM.ShowPhoneme;
-                } else if (e.Key == Key.P) {
-                    midiVM.Snap = !midiVM.Snap;
-                }
+                } else if (CurrentState != EditorState.EDIT_LYRIC)
+                    switch (e.Key) {
+                        case Key.I:
+                            midiVM.ShowPitch = !midiVM.ShowPitch;
+                            break;
+                        case Key.O:
+                            midiVM.ShowPhoneme = !midiVM.ShowPhoneme;
+                            break;
+                        case Key.P:
+                            midiVM.Snap = !midiVM.Snap;
+                            break;
+                    }
             }
         }
 
@@ -265,6 +274,8 @@ namespace LibreUtau.UI {
             DocManager.Inst.ExecuteCmd(new ShowPitchExpNotification());
         }
 
+        #region Lyric editor
+
         private void LyricBox_KeyDown(object sender, KeyEventArgs e) {
             switch (e.Key) {
                 case Key.Enter:
@@ -273,26 +284,64 @@ namespace LibreUtau.UI {
                 case Key.Escape:
                     EndNoteEditing(true);
                     break;
-                default:
-                    var singer = DocManager.Inst.Project.Tracks[midiVM.Part.TrackNo].Singer;
-                    if (singer != null && singer.AliasMap != null) {
-                    }
-
-                    break;
             }
         }
 
+        private void LyricBox_KeyUp(object sender, KeyEventArgs e) {
+            if (e.Key == Key.Down && LyricBox.Visibility == Visibility.Visible) {
+                LyricVariants.Focus();
+                LyricVariants.SelectedIndex = 0;
+            }
+        }
+
+        private void LyricBox_TextChanged(object sender, TextChangedEventArgs e) {
+            if (LyricBox.IsKeyboardFocused) UpdateLyricHints();
+        }
+
+        private void UpdateLyricHints() {
+            var singer = DocManager.Inst.Project.Tracks[midiVM.Part.TrackNo].Singer;
+            if (singer?.AliasMap != null) {
+                List<string> autocomplete = new List<string>((from phoneme in singer.AliasMap.Keys
+                    where phoneme.StartsWith(LyricBox.Text)
+                    select phoneme));
+                autocomplete.Sort();
+                LyricVariants.ItemsSource = autocomplete;
+                LyricVariants.Visibility = Visibility.Visible;
+            } else LyricVariants.Visibility = Visibility.Hidden;
+        }
+
+        private void LyricVariants_OnSelected(object sender, RoutedEventArgs e) {
+            LyricBox.Text = LyricVariants.SelectedItem as string ?? String.Empty;
+        }
+
+        private void LyricVariants_KeyDown(object sender, KeyEventArgs e) {
+            if (e.Key != Key.Enter && e.Key != Key.Escape)
+                return;
+            UpdateLyricHints();
+            LyricBox_KeyDown(sender, e);
+        }
+
+        private void LyricVariants_OnMouseDoubleClick(object sender, MouseButtonEventArgs e) {
+            UpdateLyricHints();
+            EndNoteEditing(false);
+        }
+
         private void EndNoteEditing(bool cancel) {
-            if (!string.IsNullOrEmpty(LyricBox.Text.Trim())) {
+            if (!string.IsNullOrEmpty(LyricBox.Text.Trim()) && !cancel) {
                 DocManager.Inst.StartUndoGroup();
-                DocManager.Inst.ExecuteCmd(new ChangeNoteLyricCommand(midiVM.Part, _noteInEdit, LyricBox.Text));
+                DocManager.Inst.ExecuteCmd(new ChangeNoteLyricCommand(midiVM.Part, midiVM.GetModifiedNote(),
+                    LyricBox.Text));
                 DocManager.Inst.EndUndoGroup();
             }
 
             LyricBox.Text = string.Empty;
-            LyricBox.Visibility = Visibility.Hidden;
-            _noteInEdit = null;
+            LyricEnterGrid.Visibility = Visibility.Hidden;
+            midiVM.SetModifiedNote(null);
+
+            CurrentState = EditorState.IDLE;
         }
+
+        #endregion
 
         class PitchPointHitTestResultContainer {
             public PitchPointHitTestResult Result;
@@ -304,29 +353,29 @@ namespace LibreUtau.UI {
         Point? selectionStart;
         int _lastNoteLength = 480;
 
-        private enum State {
+        private enum EditorState {
             IDLE,
             MOVE_NOTE,
             MOVE_PITCHPOINT,
-            RESIZE_NOTE
+            RESIZE_NOTE,
+            EDIT_LYRIC
         }
 
-        private State CurrentState = State.IDLE;
+        private EditorState CurrentState = EditorState.IDLE;
         UNote _noteHit;
         PitchPoint _pitHit;
         int _pitHitIndex;
         int _tickMoveRelative;
         int _tickMoveStart;
-        UNote _noteMoveNoteLeft;
-        UNote _noteMoveNoteRight;
-        UNote _noteMoveNoteMin;
-        UNote _noteMoveNoteMax;
-        UNote _noteResizeShortest;
-        UNote _noteInEdit;
 
         private void notesCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             if (midiVM.Part == null) return;
-            EndNoteEditing(false);
+            if (CurrentState == EditorState.EDIT_LYRIC) {
+                EndNoteEditing(false);
+                CurrentState = EditorState.IDLE;
+                return;
+            }
+
             Point mousePos = e.GetPosition((Canvas)sender);
 
             var hit = VisualTreeHelper.HitTest(notesCanvas, mousePos).VisualHit;
@@ -338,7 +387,7 @@ namespace LibreUtau.UI {
             if (pitchPointHit != null) {
                 // Start moving pitchpoint
                 if (pitchPointHit.OnPoint) {
-                    CurrentState = State.MOVE_PITCHPOINT;
+                    CurrentState = EditorState.MOVE_PITCHPOINT;
                     _pitHit = pitchPointHit.Note.PitchBend.Points[pitchPointHit.Index];
                     _pitHitIndex = pitchPointHit.Index;
                     _noteHit = pitchPointHit.Note;
@@ -346,76 +395,61 @@ namespace LibreUtau.UI {
                 }
             } else if (Keyboard.Modifiers == ModifierKeys.Control ||
                        Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) {
-                // Start selection
-                selectionStart = new Point(midiVM.CanvasToQuarter(mousePos.X), midiVM.CanvasToNoteNum(mousePos.Y));
-
-                if (Keyboard.IsKeyUp(Key.LeftShift) && Keyboard.IsKeyUp(Key.RightShift)) midiVM.DeselectAll();
-
-                if (selectionBox == null) {
-                    selectionBox = new Rectangle {
-                        Stroke = Brushes.Black,
-                        StrokeThickness = 2,
-                        Fill = ThemeManager.BarNumberBrush,
-                        Width = 0,
-                        Height = 0,
-                        Opacity = 0.5,
-                        RadiusX = 8,
-                        RadiusY = 8,
-                        IsHitTestVisible = false
-                    };
-                    notesCanvas.Children.Add(selectionBox);
-                    Panel.SetZIndex(selectionBox, 1000);
-                    selectionBox.Visibility = Visibility.Visible;
+                if (noteHit != null) {
+                    // Toggle note selection
+                    midiVM.ToggleSelection(noteHit);
                 } else {
+                    // Start selection
+                    selectionStart = new Point(midiVM.CanvasToQuarter(mousePos.X), midiVM.CanvasToNoteNum(mousePos.Y));
+
+                    if (Keyboard.IsKeyUp(Key.LeftShift) && Keyboard.IsKeyUp(Key.RightShift)) midiVM.DeselectAll();
+
+                    if (selectionBox == null) {
+                        selectionBox = new Rectangle {
+                            Stroke = Brushes.Black,
+                            StrokeThickness = 2,
+                            Fill = ThemeManager.BarNumberBrush,
+                            Opacity = 0.5,
+                            RadiusX = 8,
+                            RadiusY = 8,
+                            IsHitTestVisible = false
+                        };
+                        notesCanvas.Children.Add(selectionBox);
+                    }
+
                     selectionBox.Width = 0;
                     selectionBox.Height = 0;
                     Panel.SetZIndex(selectionBox, 1000);
                     selectionBox.Visibility = Visibility.Visible;
-                }
 
-                Mouse.OverrideCursor = Cursors.Cross;
+                    Mouse.OverrideCursor = Cursors.Cross;
+                }
             } else if (noteHit != null) {
                 _noteHit = noteHit;
-                if (!midiVM.SelectedNotes.Contains(noteHit)) midiVM.DeselectAll();
+                if (!midiVM.SelectedNotes.Contains(noteHit)) midiVM.SetModifiedNote(noteHit);
 
                 if (e.ClickCount == 2) {
                     // Edit note lyric
-                    _noteInEdit = _noteHit;
-                    LyricBox.Visibility = Visibility.Visible;
-                    LyricBox.Text = _noteInEdit.Lyric;
+                    midiVM.DeselectAll();
+                    midiVM.SetModifiedNote(noteHit);
+                    LyricEnterGrid.Visibility = Visibility.Visible;
+                    CurrentState = EditorState.EDIT_LYRIC;
+                    LyricBox.Text = midiVM.GetModifiedNote().Lyric;
                     // TODO: clear undo from last note edited
                     LyricBox.Focus();
                     LyricBox.SelectAll();
-                    // TODO: auto complete list
+                    UpdateLyricHints();
                 } else if (midiHT.HitNoteResizeArea(noteHit, mousePos)) {
                     // Resize note
-                    CurrentState = State.RESIZE_NOTE;
+                    CurrentState = EditorState.RESIZE_NOTE;
                     Mouse.OverrideCursor = Cursors.SizeWE;
-                    if (midiVM.SelectedNotes.Count != 0) {
-                        _noteResizeShortest = noteHit;
-                        foreach (UNote note in midiVM.SelectedNotes)
-                            if (note.DurTick < _noteResizeShortest.DurTick)
-                                _noteResizeShortest = note;
-                    }
-
                     DocManager.Inst.StartUndoGroup();
                 } else {
                     // Move note
-                    CurrentState = State.MOVE_NOTE;
+                    CurrentState = EditorState.MOVE_NOTE;
                     _tickMoveRelative = midiVM.CanvasToSnappedTick(mousePos.X) - noteHit.PosTick;
                     _tickMoveStart = noteHit.PosTick;
                     _lastNoteLength = noteHit.DurTick;
-                    if (midiVM.SelectedNotes.Count != 0) {
-                        _noteMoveNoteMax = _noteMoveNoteMin = noteHit;
-                        _noteMoveNoteLeft = _noteMoveNoteRight = noteHit;
-                        foreach (UNote note in midiVM.SelectedNotes) {
-                            if (note.PosTick < _noteMoveNoteLeft.PosTick) _noteMoveNoteLeft = note;
-                            if (note.EndTick > _noteMoveNoteRight.EndTick) _noteMoveNoteRight = note;
-                            if (note.NoteNum < _noteMoveNoteMin.NoteNum) _noteMoveNoteMin = note;
-                            if (note.NoteNum > _noteMoveNoteMax.NoteNum) _noteMoveNoteMax = note;
-                        }
-                    }
-
                     DocManager.Inst.StartUndoGroup();
                 }
             } else // Add note
@@ -430,8 +464,8 @@ namespace LibreUtau.UI {
                 DocManager.Inst.EndUndoGroup();
                 midiVM.MarkUpdate();
                 // Enable drag
-                midiVM.DeselectAll();
-                CurrentState = State.MOVE_NOTE;
+                midiVM.SetModifiedNote(newNote);
+                CurrentState = EditorState.MOVE_NOTE;
                 _noteHit = newNote;
                 _tickMoveRelative = 0;
                 _tickMoveStart = newNote.PosTick;
@@ -443,10 +477,15 @@ namespace LibreUtau.UI {
 
         private void notesCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
             if (midiVM.Part == null) return;
-            CurrentState = State.IDLE;
+
             _noteHit = null;
             _pitHit = null;
-            DocManager.Inst.EndUndoGroup();
+            if (CurrentState == EditorState.MOVE_NOTE || CurrentState == EditorState.RESIZE_NOTE ||
+                CurrentState == EditorState.MOVE_PITCHPOINT) {
+                CurrentState = EditorState.IDLE;
+                DocManager.Inst.EndUndoGroup();
+            }
+
             // End selection
             selectionStart = null;
             if (selectionBox != null) {
@@ -454,7 +493,6 @@ namespace LibreUtau.UI {
                 selectionBox.Visibility = Visibility.Hidden;
             }
 
-            midiVM.DoneTempSelect();
             ((Canvas)sender).ReleaseMouseCapture();
             Mouse.OverrideCursor = null;
         }
@@ -478,19 +516,11 @@ namespace LibreUtau.UI {
                 selectionBox.Height = bottom - top;
                 Canvas.SetLeft(selectionBox, left);
                 Canvas.SetTop(selectionBox, top);
-                midiVM.TempSelectInBox(selectionStart.Value.X, midiVM.CanvasToQuarter(mousePos.X),
+                midiVM.SelectFromBox(selectionStart.Value.X, midiVM.CanvasToQuarter(mousePos.X),
                     (int)selectionStart.Value.Y, midiVM.CanvasToNoteNum(mousePos.Y));
             } else {
-                List<UNote> ControlledNotes =
-                    (midiVM.SelectedNotes.Count == 0)
-                        ? new List<UNote> {_noteHit}
-                        : midiVM.SelectedNotes;
-                if (_noteResizeShortest == null)
-                    _noteResizeShortest = _noteHit;
-                // TODO Убрать этот отвратительный костыль
-
                 switch (CurrentState) {
-                    case State.MOVE_PITCHPOINT:
+                    case EditorState.MOVE_PITCHPOINT:
                         double tickX = midiVM.CanvasToQuarter(mousePos.X) * DocManager.Inst.Project.Resolution -
                                        _noteHit.PosTick;
                         double deltaX = DocManager.Inst.Project.TickToMillisecond(tickX) - _pitHit.X;
@@ -506,45 +536,40 @@ namespace LibreUtau.UI {
                         if (deltaX != 0 || deltaY != 0)
                             DocManager.Inst.ExecuteCmd(new MovePitchPointCommand(_pitHit, deltaX, deltaY));
                         break;
-                    case State.MOVE_NOTE:
-                        if (midiVM.SelectedNotes.Count == 0) {
-                            int newNoteNum = Math.Max(0,
-                                Math.Min(UIConstants.MaxNoteNum - 1, midiVM.CanvasToNoteNum(mousePos.Y)));
-                            int newPosTick = Math.Max(0,
-                                Math.Min((int)(midiVM.QuarterCount * midiVM.Project.Resolution) - _noteHit.DurTick,
-                                    (int)(midiVM.Project.Resolution * midiVM.CanvasToSnappedQuarter(mousePos.X)) -
-                                    _tickMoveRelative));
-                            if (newNoteNum != _noteHit.NoteNum || newPosTick != _noteHit.PosTick)
-                                DocManager.Inst.ExecuteCmd(new MoveNoteCommand(midiVM.Part, _noteHit,
-                                    newPosTick - _noteHit.PosTick, newNoteNum - _noteHit.NoteNum));
-                        } else {
-                            int deltaNoteNum = midiVM.CanvasToNoteNum(mousePos.Y) - _noteHit.NoteNum;
-                            int deltaPosTick =
-                                ((int)(midiVM.Project.Resolution * midiVM.CanvasToSnappedQuarter(mousePos.X)) -
-                                 _tickMoveRelative) - _noteHit.PosTick;
+                    case EditorState.MOVE_NOTE: {
+                        int deltaNoteNum = midiVM.CanvasToNoteNum(mousePos.Y) - _noteHit.NoteNum;
+                        int deltaPosTick =
+                            ((int)(midiVM.Project.Resolution * midiVM.CanvasToSnappedQuarter(mousePos.X)) -
+                             _tickMoveRelative) - _noteHit.PosTick;
 
-                            if (deltaNoteNum != 0 || deltaPosTick != 0) {
-                                bool changeNoteNum = deltaNoteNum + _noteMoveNoteMin.NoteNum >= 0 &&
-                                                     deltaNoteNum + _noteMoveNoteMax.NoteNum < UIConstants.MaxNoteNum;
-                                bool changePosTick = deltaPosTick + _noteMoveNoteLeft.PosTick >= 0 &&
-                                                     deltaPosTick + _noteMoveNoteRight.EndTick <=
-                                                     midiVM.QuarterCount * midiVM.Project.Resolution;
-                                if (changeNoteNum || changePosTick)
+                        if (deltaNoteNum != 0 || deltaPosTick != 0) {
+                            var constraints = midiVM.ManipulatedNotes.GetSelectionConstraints();
+                            bool changeNoteNum =
+                                deltaNoteNum + constraints.BottomNoteNum >= 0 &&
+                                deltaNoteNum + constraints.TopNoteNum < UIConstants.MaxNoteNum;
+                            bool changePosTick = deltaPosTick + constraints.EarliestNoteStart >= 0 &&
+                                                 deltaPosTick + constraints.LatestNoteEnd <=
+                                                 midiVM.QuarterCount * midiVM.Project.Resolution;
+                            if (changeNoteNum || changePosTick)
 
-                                    DocManager.Inst.ExecuteCmd(new MoveNoteCommand(midiVM.Part, midiVM.SelectedNotes,
-                                        changePosTick ? deltaPosTick : 0, changeNoteNum ? deltaNoteNum : 0));
-                            }
+                                DocManager.Inst.ExecuteCmd(new MoveNoteCommand(midiVM.Part,
+                                    midiVM.ManipulatedNotes.GetNotes(),
+                                    changePosTick ? deltaPosTick : 0, changeNoteNum ? deltaNoteNum : 0));
                         }
+                    }
 
                         Mouse.OverrideCursor = Cursors.SizeAll;
                         break;
 
-                    case State.RESIZE_NOTE: {
+                    case EditorState.RESIZE_NOTE: {
                         int deltaDurTick =
                             (int)(midiVM.CanvasRoundToSnappedQuarter(mousePos.X) * midiVM.Project.Resolution) -
                             _noteHit.EndTick;
-                        if (deltaDurTick != 0 && deltaDurTick + _noteResizeShortest.DurTick > midiVM.GetSnapUnit()) {
-                            DocManager.Inst.ExecuteCmd(new ResizeNoteCommand(midiVM.Part, ControlledNotes,
+                        if (deltaDurTick != 0 &&
+                            deltaDurTick + midiVM.ManipulatedNotes.GetSelectionConstraints().ShortestNoteDur >
+                            midiVM.GetSnapUnit()) {
+                            DocManager.Inst.ExecuteCmd(new ResizeNoteCommand(midiVM.Part,
+                                midiVM.ManipulatedNotes.GetNotes(),
                                 deltaDurTick));
                             _lastNoteLength = _noteHit.DurTick;
                         }
@@ -582,7 +607,12 @@ namespace LibreUtau.UI {
 
         private void notesCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e) {
             if (midiVM.Part == null) return;
-            EndNoteEditing(false);
+            if (CurrentState == EditorState.EDIT_LYRIC) {
+                EndNoteEditing(false);
+                CurrentState = EditorState.IDLE;
+                return;
+            }
+
             Point mousePos = e.GetPosition((Canvas)sender);
 
             var pitchPointHit = midiHT.HitTestPitchPoint(mousePos);
@@ -615,9 +645,10 @@ namespace LibreUtau.UI {
             } else {
                 UNote noteHit = midiHT.HitTestNote(mousePos);
                 DocManager.Inst.StartUndoGroup();
-                if (noteHit != null && (midiVM.SelectedNotes.Contains(noteHit) || midiVM.SelectedNotes.Count == 0))
+                if (noteHit != null && (midiVM.SelectedNotes.Contains(noteHit) || midiVM.SelectedNotes.Count == 0)) {
                     DocManager.Inst.ExecuteCmd(new RemoveNoteCommand(midiVM.Part, noteHit));
-                else midiVM.DeselectAll();
+                    DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+                } else midiVM.DeselectAll();
 
                 ((UIElement)sender).CaptureMouse();
                 Mouse.OverrideCursor = Cursors.No;

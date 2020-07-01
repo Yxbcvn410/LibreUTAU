@@ -86,7 +86,7 @@ namespace LibreUtau.UI.Controls {
                 * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution;
             double y4 = (1 - phoneme.Envelope.Points[4].Y / 100) * height;
 
-            Pen pen = note.Selected ? penEnvSel : penEnv;
+            Pen pen = midiVM.SelectedNotes.Contains(note) ? penEnvSel : penEnv;
             Brush brush = phoneme.PhonemeError
                 ? ThemeManager.PhonemeErrorBrush
                 : ThemeManager.PhonemeBrush;

@@ -59,7 +59,7 @@
         </Grid>
     </local:BorderlessWindow.MenuContent>
     <Grid>
-        <Grid x:Name="mainGrid" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0">
+        <Grid Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" MinHeight="200" />
                 <RowDefinition Height="10" />
@@ -68,7 +68,7 @@
             <Button x:Name="mainButton" Grid.Row="0" Style="{StaticResource MidiWindowMainButton}"
                     HorizontalAlignment="Left" VerticalAlignment="Top" Height="21" Width="21" Margin="14,7,0,0"
                     Click="mainButton_Click" />
-            <Grid x:Name="timelineBackgroundGrid" Grid.Row="0" VerticalAlignment="Top" Height="20" Margin="48,20,20,0"
+            <Grid Grid.Row="0" VerticalAlignment="Top" Height="20" Margin="48,20,20,0"
                   ClipToBounds="True">
                 <local:TimelineBackground x:Name="timelineBackground"
                                           QuarterOffset="{Binding QuarterOffset, Source={StaticResource midiVM}}"
@@ -83,7 +83,7 @@
                     Background="Transparent" ClipToBounds="True"
                     MouseWheel="timelineCanvas_MouseWheel" MouseLeftButtonDown="timelineCanvas_MouseLeftButtonDown"
                     MouseMove="timelineCanvas_MouseMove" MouseLeftButtonUp="timelineCanvas_MouseLeftButtonUp" />
-            <Grid x:Name="notesBackgroundGrid" Grid.Row="0" ClipToBounds="True" Margin="48,40,20,0">
+            <Grid Grid.Row="0" ClipToBounds="True" Margin="48,40,20,0">
                 <local:KeyTrackBackground x:Name="keyTrackBackground"
                                           TrackHeight="{Binding TrackHeight, Source={StaticResource midiVM}}"
                                           OffsetY="{Binding OffsetY, Source={StaticResource midiVM}}"
@@ -152,16 +152,31 @@
                     <Border.Effect>
                         <DropShadowEffect Color="Black" ShadowDepth="0" BlurRadius="5" Opacity="0.75" />
                     </Border.Effect>
-                    <TextBox x:Name="LyricBox" TextWrapping="Wrap" Width="240" Height="28" FontSize="18"
-                             Visibility="Hidden" KeyDown="LyricBox_KeyDown" />
+                    <Grid x:Name="LyricEnterGrid" Visibility="Hidden" Width="240" Height="240">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <TextBox Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                                 x:Name="LyricBox" FontSize="18" Margin="1"
+                                 KeyDown="LyricBox_KeyDown" KeyUp="LyricBox_KeyUp" TextChanged="LyricBox_TextChanged" />
+                        <ListBox Grid.Row="1" Grid.RowSpan="4" HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Stretch" Margin="1"
+                                 x:Name="LyricVariants"
+                                 SelectionChanged="LyricVariants_OnSelected" KeyDown="LyricVariants_KeyDown"
+                                 MouseDoubleClick="LyricVariants_OnMouseDoubleClick" />
+                    </Grid>
                 </Border>
             </Border>
-            <Grid x:Name="keyboardBackgroundGrid" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"
+            <Grid Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"
                   Width="48" Margin="0,40,0,0" ClipToBounds="True">
                 <local:KeyboardBackground x:Name="keyboardBackground"
                                           TrackHeight="{Binding TrackHeight, Source={StaticResource midiVM}}"
                                           OffsetY="{Binding OffsetY, Source={StaticResource midiVM}}" />
-                <Canvas x:Name="keysCanvas" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                <Canvas Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"
                         Width="48" Margin="0,40,0,0" Background="Transparent"
                         ClipToBounds="True" MouseLeftButtonDown="keysCanvas_MouseLeftButtonDown"
                         MouseLeftButtonUp="keysCanvas_MouseLeftButtonUp"
@@ -169,8 +184,8 @@
             </Grid>
             <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="10"
                           Margin="0,0,0,0" Background="White" Focusable="False" />
-            <Grid x:Name="expBackgroundGrid" Grid.Row="2" ClipToBounds="True" Margin="48,0,20,1">
-                <local:TickBackground x:Name="expTickBackground"
+            <Grid Grid.Row="2" ClipToBounds="True" Margin="48,0,20,1">
+                <local:TickBackground x:Name="ExpTickBackground"
                                       QuarterOffset="{Binding QuarterOffset, Source={StaticResource midiVM}}"
                                       QuarterWidth="{Binding QuarterWidth, Source={StaticResource midiVM}}"
                                       OffsetX="{Binding OffsetX, Source={StaticResource midiVM}}"
@@ -178,7 +193,7 @@
                                       BeatPerBar="{Binding BeatPerBar, Source={StaticResource midiVM}}"
                                       BeatUnit="{Binding BeatUnit, Source={StaticResource midiVM}}" />
             </Grid>
-            <Grid x:Name="CCGrid" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="48"
+            <Grid Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="48"
                   Margin="0,0,0,1">
                 <local:ExpComboBox x:Name="expCombo0" VerticalAlignment="Top" Margin="0,0,0,0" />
                 <local:ExpComboBox x:Name="expCombo1" VerticalAlignment="Top" Margin="0,22,0,0" />
