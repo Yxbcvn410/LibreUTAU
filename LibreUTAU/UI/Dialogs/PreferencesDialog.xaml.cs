@@ -107,6 +107,7 @@ namespace LibreUtau.UI.Dialogs {
 
         private void previewEngineCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             Core.Util.Preferences.Default.ExternalPreviewEngine = engines[previewEngineCombo.SelectedIndex];
+            DocManager.Inst.Project.RequireRebuild();
             Core.Util.Preferences.Save();
         }
 

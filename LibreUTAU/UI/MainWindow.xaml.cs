@@ -189,12 +189,12 @@ namespace LibreUtau.UI {
                     if (trackVM.SelectedParts.Count > 0) {
                         _partResizeShortest = _hitPartElement.Part;
                         foreach (UPart part in trackVM.SelectedParts) {
-                            if (part.DurTick - part.GetMinDurTick(trackVM.Project) <
-                                _partResizeShortest.DurTick - _partResizeShortest.GetMinDurTick(trackVM.Project))
+                            if (part.DurTick - part.GetMinDurTick() <
+                                _partResizeShortest.DurTick - _partResizeShortest.GetMinDurTick())
                                 _partResizeShortest = part;
                         }
 
-                        _resizeMinDurTick = _partResizeShortest.GetMinDurTick(trackVM.Project);
+                        _resizeMinDurTick = _partResizeShortest.GetMinDurTick();
                     }
 
                     DocManager.Inst.StartUndoGroup();

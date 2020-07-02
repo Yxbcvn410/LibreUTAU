@@ -11,7 +11,6 @@ using NAudio.Wave.SampleProviders;
 
 namespace LibreUtau.Core {
     class PlaybackManager : ICmdSubscriber {
-
         MixingSampleProvider masterMix;
         private WaveOut outDevice;
 
@@ -30,11 +29,12 @@ namespace LibreUtau.Core {
                     outDevice.Play();
                     return;
                 }
+
                 outDevice.Dispose();
             }
 
             ProjectBuilder builder = new ProjectBuilder(project);
-            builder.Start(StartPlayback);
+            builder.Start(tracks => StartPlayback(tracks));
         }
 
         public void StopPlayback() {
@@ -45,11 +45,14 @@ namespace LibreUtau.Core {
             if (outDevice != null) outDevice.Pause();
         }
 
-        private void StartPlayback(List<TrackSampleProvider> trackSources) {
+        private void StartPlayback(List<TrackSampleProvider> trackSources, int deviceNumber = -1) {
             masterMix = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
             foreach (var source in trackSources)
                 masterMix.AddMixerInput(source);
-            outDevice = new WaveOut();
+            outDevice = new WaveOut {
+                DeviceNumber = deviceNumber,
+                NumberOfBuffers = 4
+            };
             outDevice.Init(masterMix);
             outDevice.Play();
         }

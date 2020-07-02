@@ -25,7 +25,7 @@ namespace LibreUtau.Core.Formats {
                     }
 
                 foreach (var pair in parts) {
-                    pair.Value.DurTick = pair.Value.GetMinDurTick(project);
+                    pair.Value.DurTick = pair.Value.GetMinDurTick();
                     resultParts.Add(pair.Value);
                 }
             }

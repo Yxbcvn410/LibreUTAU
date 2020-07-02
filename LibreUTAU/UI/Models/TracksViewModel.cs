@@ -334,7 +334,7 @@ namespace LibreUtau.UI.Models {
         }
 
         public int GetPartMinDurTick(UPart part) {
-            return part.GetMinDurTick(Project);
+            return part.GetMinDurTick();
         }
 
         # region PlayPosMarker

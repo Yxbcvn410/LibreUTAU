@@ -38,6 +38,7 @@ namespace LibreUtau.UI {
             }
             
             this.CloseButtonClicked += (o, e) => WindowHide();
+            this.Deactivated += (o, e) => WindowHide();
             CompositionTargetEx.FrameUpdating += RenderLoop;
 
             viewScaler.Max = UIConstants.NoteMaxHeight;
@@ -109,10 +110,9 @@ namespace LibreUtau.UI {
                 }
             };
 
-            foreach (var item in pitchCxtMenu.Items) {
-                var _item = item as MenuItem;
-                if (_item != null) _item.Click += pitchShapeDelegate;
-            }
+            foreach (var item in pitchCxtMenu.Items)
+                if (item is MenuItem menuItem)
+                    menuItem.Click += pitchShapeDelegate;
         }
 
         void viewScaler_ViewScaled(object sender, EventArgs e) {

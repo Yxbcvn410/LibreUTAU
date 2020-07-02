@@ -46,6 +46,12 @@ namespace LibreUtau.Core.USTx {
             return note;
         }
 
+        public void RequireRebuild() {
+            foreach ( var part in Parts)
+                if (part is UVoicePart voicePart)
+                    voicePart.RequireRebuild();
+        }
+
         public int MillisecondToTick(double ms) {
             return MusicMath.MillisecondToTick(ms, BPM, BeatUnit, Resolution);
         }

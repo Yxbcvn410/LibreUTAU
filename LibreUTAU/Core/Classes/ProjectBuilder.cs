@@ -48,23 +48,28 @@ namespace LibreUtau.Core {
                 trackSources.Add(new TrackSampleProvider {Volume = DecibelToVolume(track.Volume)});
             }
 
-            double maxProgress = project.Parts.Sum(part => part.IsBuilt ? 0 : part.ProgressWeight), currentProgress = 0;
+            double maxProgress =
+                    project.Parts.Sum(part => part is UVoicePart voicePart ? voicePart.ProgressWeight : 0),
+                currentProgress = 0;
             FileInfo ResamplerFile =
                 new FileInfo(PathManager.Inst.GetPreviewEnginePath());
             IResamplerDriver engine =
                 ResamplerDriver.ResamplerDriver.LoadEngine(ResamplerFile.FullName);
 
             foreach (UPart part in project.Parts) {
-                var progress = currentProgress;
+                if (part is UVoicePart voicePart){
+                    var progress = currentProgress;
 
-                void ReportProgress(double p) {
-                    this.ReportProgress((int)(100 * (progress + p * part.ProgressWeight) / maxProgress));
+                    void ReportProgress(double p) {
+                        this.ReportProgress((int)(100 * (progress + p * voicePart.ProgressWeight) / maxProgress));
+                    }
+
+                    if (!voicePart.IsBuilt || forceRebuild) {
+                        voicePart.Build(ReportProgress, new BuildContext {Driver = engine, Project = project});
+                        currentProgress += voicePart.ProgressWeight;
+                    }
                 }
 
-                if (!part.IsBuilt || forceRebuild) {
-                    part.Build(ReportProgress, new BuildContext {Driver = engine, Project = project});
-                    currentProgress += part.ProgressWeight;
-                }
                 trackSources[part.TrackNo].AddSource(part.RenderedTrack,
                     TimeSpan.FromMilliseconds(project.TickToMillisecond(part.PosTick)));
             }

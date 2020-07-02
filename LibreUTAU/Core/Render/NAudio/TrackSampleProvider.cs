@@ -36,9 +36,11 @@ namespace LibreUtau.Core.Render {
             get { return volume.WaveFormat; }
         }
 
+        public int Count { get => mix.MixerInputs.Count(); }
+
         public void AddSource(ISampleProvider source, TimeSpan delayBy) {
             ISampleProvider _source;
-            if (source == null || source.WaveFormat == null) {
+            if (source?.WaveFormat == null) {
                 return;
             }
 

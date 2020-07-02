@@ -21,24 +21,14 @@ namespace LibreUtau.Core.USTx {
         public string Name = "New Part";
         public string Comment = string.Empty;
 
-        #region Incremental build
-
         public abstract ISampleProvider RenderedTrack { get; }
-
-        public abstract bool IsBuilt { get; }
-
-        public virtual double ProgressWeight { get { return 1; } }
-
-        public abstract void Build(Action<double> ProgressChangedCallback, BuildContext context);
-
-        #endregion
 
         public int TrackNo;
         public int PosTick = 0;
         public virtual int DurTick { set; get; }
         public int EndTick { get { return PosTick + DurTick; } }
 
-        public abstract int GetMinDurTick(UProject project);
+        public abstract int GetMinDurTick();
     }
 
     public class UVoicePart : UPart {
@@ -62,11 +52,12 @@ namespace LibreUtau.Core.USTx {
             }
         }
 
-        public override double ProgressWeight { get { return Notes.Count; } }
+        public double ProgressWeight { get { return Notes.Count; } }
 
-        public override bool IsBuilt { get { return !_needsRebuild; } }
+        public bool IsBuilt { get { return !_needsRebuild; } }
 
-        public override void Build(Action<double> ProgressChangedCallback, BuildContext context) {
+        public void Build(Action<double> ProgressChangedCallback, BuildContext buildContext) {
+            var context = buildContext is BuildContext context1 ? context1 : default;
             _needsRebuild = false;
             _builtState.Clear();
             var watch = new Stopwatch();
@@ -78,8 +69,11 @@ namespace LibreUtau.Core.USTx {
                 int count = Notes.Count, phonemeProgress = 0;
 
                 foreach (var note in Notes) {
-                    if (string.IsNullOrEmpty(note.Phoneme.Oto.File)) {
-                        Log.Warning($"Cannot find phoneme in note {note.Lyric}");
+                    if (note.Phoneme.PhonemeError) {
+                        Log.Warning($"Phoneme error in note {note}");
+                        continue;
+                    } else if (string.IsNullOrEmpty(note.Phoneme.Oto.File)) {
+                        Log.Warning($"Invalid wave location in note {note}");
                         continue;
                     }
 
@@ -98,7 +92,7 @@ namespace LibreUtau.Core.USTx {
             Log.Information($"Resampling end, total time {watch.Elapsed}");
         }
 
-        public override int GetMinDurTick(UProject project) {
+        public override int GetMinDurTick() {
             return Notes.Max(note => note.PosTick + note.DurTick);
         }
     }
@@ -127,14 +121,11 @@ namespace LibreUtau.Core.USTx {
             }
         }
 
-        public override bool IsBuilt { get => true; }
-        public override void Build(Action<double> ProgressChangedCallback, BuildContext context) { }
-
         public override int DurTick {
             get { return FileDurTick - HeadTrimTick - TailTrimTick; }
             set { TailTrimTick = FileDurTick - HeadTrimTick - value; }
         }
 
-        public override int GetMinDurTick(UProject project) { return 60; }
+        public override int GetMinDurTick() { return 60; }
     }
 }
