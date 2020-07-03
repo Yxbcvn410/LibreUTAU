@@ -1,41 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using System.Windows.Shell;
-using WinInterop = System.Windows.Interop;
-using System.Runtime.InteropServices;
-using System.Threading;
 using LibreUtau.Core;
+using LibreUtau.Core.Formats;
+using LibreUtau.Core.USTx;
+using LibreUtau.Core.Util;
 using LibreUtau.UI.Controls;
+using LibreUtau.UI.Dialogs;
 using LibreUtau.UI.Models;
 using Microsoft.Win32;
-using LibreUtau.Core.USTx;
+using WinInterop = System.Windows.Interop;
 
 namespace LibreUtau.UI {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    ///     Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : BorderlessWindow {
+        readonly ProgressBarViewModel progVM;
+        readonly TracksViewModel trackVM;
         MidiWindow midiWindow;
-        TracksViewModel trackVM;
-        ProgressBarViewModel progVM;
 
         public MainWindow() {
             InitializeComponent();
 
-            this.Width = Core.Util.Preferences.Default.MainWidth;
-            this.Height = Core.Util.Preferences.Default.MainHeight;
-            this.WindowState = Core.Util.Preferences.Default.MainMaximized ? WindowState.Maximized : WindowState.Normal;
+            this.Width = Preferences.Default.MainWidth;
+            this.Height = Preferences.Default.MainHeight;
+            this.WindowState = Preferences.Default.MainMaximized ? WindowState.Maximized : WindowState.Normal;
 
             ThemeManager.LoadTheme(); // TODO : move to program entry point
 
@@ -59,12 +54,12 @@ namespace LibreUtau.UI {
             CmdNewFile();
 
             if (UpdateChecker.Check()) {
-                var menuItem = new MenuItem() {
+                var menuItem = new MenuItem {
                     Header = (string)FindResource("menu.updateavail"),
-                    Foreground = ThemeManager.WhiteKeyNameBrushNormal,
+                    Foreground = ThemeManager.WhiteKeyNameBrushNormal
                 };
                 menuItem.Click += (sender, e) => {
-                    System.Diagnostics.Process.Start("https://github.com/stakira/LibreUTAU");
+                    Process.Start("https://github.com/Yxbcvn410/LibreUTAU");
                 };
 
                 mainMenu.Items.Add(menuItem);
@@ -76,6 +71,71 @@ namespace LibreUtau.UI {
             timelineBackground.RenderIfUpdated();
             trackBackground.RenderIfUpdated();
             trackVM.RedrawIfUpdated();
+        }
+
+        // Disable system menu and main menu
+        protected override void OnKeyDown(KeyEventArgs e) {
+            Window_KeyDown(this, e);
+            e.Handled = true;
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e) {
+            if (Keyboard.Modifiers == 0 && e.Key == Key.Delete) {
+                DocManager.Inst.StartUndoGroup();
+                while (trackVM.SelectedParts.Count > 0)
+                    DocManager.Inst.ExecuteCmd(new RemovePartCommand(trackVM.Project, trackVM.SelectedParts.Last()));
+                DocManager.Inst.EndUndoGroup();
+            } else if (Keyboard.Modifiers == ModifierKeys.Alt && e.SystemKey == Key.F4) CmdExit();
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.O) CmdOpenFileDialog();
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z) {
+                trackVM.DeselectAll();
+                DocManager.Inst.Undo();
+            } else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y) {
+                trackVM.DeselectAll();
+                DocManager.Inst.Redo();
+            }
+        }
+
+        private void navigateDrag_NavDrag(object sender, EventArgs e) {
+            trackVM.OffsetX += ((NavDragEventArgs)e).X * trackVM.SmallChangeX;
+            trackVM.OffsetY += ((NavDragEventArgs)e).Y * trackVM.SmallChangeY * 0.2;
+            trackVM.MarkUpdate();
+        }
+
+        private void trackCanvas_DragEnter(object sender, DragEventArgs e) {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effects = DragDropEffects.Copy;
+        }
+
+        private void trackCanvas_Drop(object sender, DragEventArgs e) {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            CmdOpenFile(files);
+        }
+
+        private void trackCanvas_MouseWheel(object sender, MouseWheelEventArgs e) {
+            if (Keyboard.Modifiers == ModifierKeys.Control) {
+                timelineCanvas_MouseWheel(sender, e);
+            } else if (Keyboard.Modifiers == ModifierKeys.Shift) {
+                trackVM.OffsetX -= trackVM.ViewWidth * 0.001 * e.Delta;
+            } else if (Keyboard.Modifiers == ModifierKeys.Alt) {
+            } else {
+                verticalScroll.Value -= verticalScroll.SmallChange * e.Delta / 100;
+                verticalScroll.Value = Math.Min(verticalScroll.Maximum,
+                    Math.Max(verticalScroll.Minimum, verticalScroll.Value));
+            }
+        }
+
+        private void Window_Activated(object sender, EventArgs e) {
+            if (trackVM != null) trackVM.MarkUpdate();
+        }
+
+        private void headerCanvas_MouseDown(object sender, MouseButtonEventArgs e) {
+            if (e.ClickCount == 2) {
+                var project = DocManager.Inst.Project;
+                DocManager.Inst.StartUndoGroup();
+                DocManager.Inst.ExecuteCmd(
+                    new AddTrackCommand(project, new UTrack {TrackNo = project.Tracks.Count()}));
+                DocManager.Inst.EndUndoGroup();
+            }
         }
 
         # region Timeline Canvas
@@ -119,10 +179,10 @@ namespace LibreUtau.UI {
         # region track canvas
 
         Rectangle selectionBox;
-        Nullable<Point> selectionStart;
+        Point? selectionStart;
 
-        bool _movePartElement = false;
-        bool _resizePartElement = false;
+        bool _movePartElement;
+        bool _resizePartElement;
         PartElement _hitPartElement;
         int _partMoveRelativeTick;
         int _partMoveStartTick;
@@ -136,7 +196,7 @@ namespace LibreUtau.UI {
             Point mousePos = e.GetPosition((UIElement)sender);
 
             var hit = VisualTreeHelper.HitTest(trackCanvas, mousePos).VisualHit;
-            System.Diagnostics.Debug.WriteLine("Mouse hit " + hit.ToString());
+            Debug.WriteLine("Mouse hit " + hit);
 
             if (Keyboard.Modifiers == ModifierKeys.Control ||
                 Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) {
@@ -145,7 +205,7 @@ namespace LibreUtau.UI {
                 if (Keyboard.IsKeyUp(Key.LeftShift) && Keyboard.IsKeyUp(Key.RightShift)) trackVM.DeselectAll();
 
                 if (selectionBox == null) {
-                    selectionBox = new Rectangle() {
+                    selectionBox = new Rectangle {
                         Stroke = Brushes.Black,
                         StrokeThickness = 2,
                         Fill = ThemeManager.BarNumberBrush,
@@ -218,7 +278,7 @@ namespace LibreUtau.UI {
                 }
             } else {
                 if (trackVM.CanvasToTrack(mousePos.Y) > trackVM.Project.Tracks.Count - 1) return;
-                UVoicePart part = new UVoicePart() {
+                UVoicePart part = new UVoicePart {
                     PosTick = trackVM.CanvasToSnappedTick(mousePos.X),
                     TrackNo = trackVM.CanvasToTrack(mousePos.Y),
                     DurTick = trackVM.Project.Resolution * 4 / trackVM.Project.BeatUnit * trackVM.Project.BeatPerBar
@@ -381,7 +441,7 @@ namespace LibreUtau.UI {
         private void MenuRedo_Click(object sender, RoutedEventArgs e) { DocManager.Inst.Redo(); }
 
         private void MenuImportAudio_Click(object sender, RoutedEventArgs e) {
-            OpenFileDialog openFileDialog = new OpenFileDialog() {
+            OpenFileDialog openFileDialog = new OpenFileDialog {
                 Filter = "Audio Files|*.*",
                 Multiselect = false,
                 CheckFileExists = true
@@ -390,14 +450,14 @@ namespace LibreUtau.UI {
         }
 
         private void MenuImportMidi_Click(object sender, RoutedEventArgs e) {
-            OpenFileDialog openFileDialog = new OpenFileDialog() {
+            OpenFileDialog openFileDialog = new OpenFileDialog {
                 Filter = "Midi File|*.mid",
                 Multiselect = false,
                 CheckFileExists = true
             };
             if (openFileDialog.ShowDialog() == true) CmdImportAudio(openFileDialog.FileName);
             var project = DocManager.Inst.Project;
-            var parts = Core.Formats.Midi.Load(openFileDialog.FileName, project);
+            var parts = Midi.Load(openFileDialog.FileName, project);
 
             DocManager.Inst.StartUndoGroup();
             foreach (var part in parts) {
@@ -412,7 +472,7 @@ namespace LibreUtau.UI {
         }
 
         private void MenuSingers_Click(object sender, RoutedEventArgs e) {
-            var w = new Dialogs.SingerViewDialog() {Owner = this};
+            var w = new SingerViewDialog {Owner = this};
             w.ShowDialog();
         }
 
@@ -429,43 +489,20 @@ namespace LibreUtau.UI {
         }
 
         private void MenuPrefs_Click(object sender, RoutedEventArgs e) {
-            var w = new Dialogs.PreferencesDialog() {Owner = this};
+            var w = new PreferencesDialog {Owner = this};
             w.ShowDialog();
         }
 
         # endregion
 
-        // Disable system menu and main menu
-        protected override void OnKeyDown(KeyEventArgs e) {
-            Window_KeyDown(this, e);
-            e.Handled = true;
-        }
-
-        private void Window_KeyDown(object sender, KeyEventArgs e) {
-            if (Keyboard.Modifiers == 0 && e.Key == Key.Delete) {
-                DocManager.Inst.StartUndoGroup();
-                while (trackVM.SelectedParts.Count > 0)
-                    DocManager.Inst.ExecuteCmd(new RemovePartCommand(trackVM.Project, trackVM.SelectedParts.Last()));
-                DocManager.Inst.EndUndoGroup();
-            } else if (Keyboard.Modifiers == ModifierKeys.Alt && e.SystemKey == Key.F4) CmdExit();
-            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.O) CmdOpenFileDialog();
-            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z) {
-                trackVM.DeselectAll();
-                DocManager.Inst.Undo();
-            } else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y) {
-                trackVM.DeselectAll();
-                DocManager.Inst.Redo();
-            }
-        }
-
         # region application commmands
 
         private void CmdNewFile() {
-            DocManager.Inst.ExecuteCmd(new LoadProjectNotification(Core.Formats.USTx.Create()));
+            DocManager.Inst.ExecuteCmd(new LoadProjectNotification(USTx.Create()));
         }
 
         private void CmdOpenFileDialog() {
-            OpenFileDialog openFileDialog = new OpenFileDialog() {
+            OpenFileDialog openFileDialog = new OpenFileDialog {
                 Filter = "Project Files|*.ustx; *.vsqx; *.ust|All Files|*.*",
                 Multiselect = true,
                 CheckFileExists = true
@@ -475,15 +512,15 @@ namespace LibreUtau.UI {
 
         private void CmdOpenFile(string[] files) {
             if (files.Length == 1) {
-                Core.Formats.Formats.LoadProject(files[0]);
+                Formats.LoadProject(files[0]);
             } else if (files.Length > 1) {
-                Core.Formats.Ust.Load(files);
+                Ust.Load(files);
             }
         }
 
         private void CmdSaveFile() {
             if (DocManager.Inst.Project.Saved == false) {
-                SaveFileDialog dialog = new SaveFileDialog()
+                SaveFileDialog dialog = new SaveFileDialog
                     {DefaultExt = "ustx", Filter = "Project Files|*.ustx", Title = "Save File"};
                 if (dialog.ShowDialog() == true) {
                     DocManager.Inst.ExecuteCmd(new SaveProjectNotification(dialog.FileName));
@@ -494,68 +531,26 @@ namespace LibreUtau.UI {
         }
 
         private void CmdImportAudio(string file) {
-            UWavePart part = Core.Formats.Wave.CreatePart(file);
+            UWavePart part = Wave.CreatePart(file);
             if (part == null) return;
             int trackNo = trackVM.Project.Tracks.Count;
             part.TrackNo = trackNo;
             DocManager.Inst.StartUndoGroup();
-            DocManager.Inst.ExecuteCmd(new AddTrackCommand(trackVM.Project, new UTrack() {TrackNo = trackNo}));
+            DocManager.Inst.ExecuteCmd(new AddTrackCommand(trackVM.Project, new UTrack {TrackNo = trackNo}));
             DocManager.Inst.ExecuteCmd(new AddPartCommand(trackVM.Project, part));
             DocManager.Inst.EndUndoGroup();
         }
 
         private void CmdExit() {
-            Core.Util.Preferences.Default.MainMaximized = this.WindowState == WindowState.Maximized;
+            Preferences.Default.MainMaximized = this.WindowState == WindowState.Maximized;
             if (midiWindow != null)
-                Core.Util.Preferences.Default.MidiMaximized = midiWindow.WindowState == WindowState.Maximized;
-            Core.Util.Preferences.Save();
+                Preferences.Default.MidiMaximized = midiWindow.WindowState == WindowState.Maximized;
+            Preferences.Save();
             this.Close();
             Environment.Exit(0);
         }
 
         # endregion
-
-        private void navigateDrag_NavDrag(object sender, EventArgs e) {
-            trackVM.OffsetX += ((NavDragEventArgs)e).X * trackVM.SmallChangeX;
-            trackVM.OffsetY += ((NavDragEventArgs)e).Y * trackVM.SmallChangeY * 0.2;
-            trackVM.MarkUpdate();
-        }
-
-        private void trackCanvas_DragEnter(object sender, DragEventArgs e) {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effects = DragDropEffects.Copy;
-        }
-
-        private void trackCanvas_Drop(object sender, DragEventArgs e) {
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            CmdOpenFile(files);
-        }
-
-        private void trackCanvas_MouseWheel(object sender, MouseWheelEventArgs e) {
-            if (Keyboard.Modifiers == ModifierKeys.Control) {
-                timelineCanvas_MouseWheel(sender, e);
-            } else if (Keyboard.Modifiers == ModifierKeys.Shift) {
-                trackVM.OffsetX -= trackVM.ViewWidth * 0.001 * e.Delta;
-            } else if (Keyboard.Modifiers == ModifierKeys.Alt) {
-            } else {
-                verticalScroll.Value -= verticalScroll.SmallChange * e.Delta / 100;
-                verticalScroll.Value = Math.Min(verticalScroll.Maximum,
-                    Math.Max(verticalScroll.Minimum, verticalScroll.Value));
-            }
-        }
-
-        private void Window_Activated(object sender, EventArgs e) {
-            if (trackVM != null) trackVM.MarkUpdate();
-        }
-
-        private void headerCanvas_MouseDown(object sender, MouseButtonEventArgs e) {
-            if (e.ClickCount == 2) {
-                var project = DocManager.Inst.Project;
-                DocManager.Inst.StartUndoGroup();
-                DocManager.Inst.ExecuteCmd(
-                    new AddTrackCommand(project, new UTrack() {TrackNo = project.Tracks.Count()}));
-                DocManager.Inst.EndUndoGroup();
-            }
-        }
 
         # region Playback controls
 

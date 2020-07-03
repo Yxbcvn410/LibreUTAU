@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 using LibreUtau.Core.USTx;
 
 namespace LibreUtau.Core {
@@ -23,7 +19,6 @@ namespace LibreUtau.Core {
                 UpdateEnvelope(part);
                 UpdatePitchBend(part);
                 DocManager.Inst.ExecuteCmd(new RedrawNotesNotification(), true);
-                part.RequireRebuild();
             }
         }
 
@@ -144,6 +139,7 @@ namespace LibreUtau.Core {
             foreach (UPart part in cmd.project.Parts)
                 if (part is UVoicePart)
                     UpdatePart((UVoicePart)part);
+            cmd.project.RequireRebuild();
         }
 
         # endregion
@@ -169,13 +165,16 @@ namespace LibreUtau.Core {
                     break;
                 case NoteCommand _:
                     UpdatePart(Part);
+                    Part.RequireRebuild();
                     break;
                 case ExpCommand _:
                     UpdatePart(Part);
+                    Part.RequireRebuild();
                     break;
                 case TrackChangeSingerCommand command:
                     foreach (var part in command.project.Parts.OfType<UVoicePart>()) {
                         UpdatePart(part);
+                        part.RequireRebuild();
                     }
 
                     break;
@@ -184,6 +183,7 @@ namespace LibreUtau.Core {
                         command.project.Tracks[command.oldTrackNo].Singer !=
                         command.project.Tracks[command.newTrackNo].Singer) {
                         UpdatePart(voicePart);
+                        voicePart.RequireRebuild();
                     }
 
                     break;
