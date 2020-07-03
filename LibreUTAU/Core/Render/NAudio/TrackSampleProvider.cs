@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -38,16 +39,20 @@ namespace LibreUtau.Core.Render {
 
         public int Count { get => mix.MixerInputs.Count(); }
 
-        public void AddSource(ISampleProvider source, TimeSpan delayBy) {
-            ISampleProvider _source;
-            if (source?.WaveFormat == null) {
+        public void AddSource(ISampleProvider source) {
+            if (source?.WaveFormat == null)
                 return;
-            }
 
-            if (source.WaveFormat.Channels == 1) _source = new MonoToStereoSampleProvider(source);
-            else if (source.WaveFormat.Channels == 2) _source = source;
-            else return;
-            mix.AddMixerInput(new OffsetSampleProvider(_source) {DelayBy = delayBy});
+            switch (source.WaveFormat.Channels) {
+                case 1:
+                    mix.AddMixerInput(new MonoToStereoSampleProvider(source));
+                    break;
+                case 2:
+                    mix.AddMixerInput(source);
+                    break;
+                default:
+                    return;
+            }
         }
     }
 }

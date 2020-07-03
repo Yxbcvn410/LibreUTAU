@@ -14,6 +14,8 @@ using static LibreUtau.Core.ResamplerDriver.DriverModels;
 
 namespace LibreUtau.Core.Render {
     internal class RenderItem {
+        // TODO Delay in OffsetAudioProvider must never be negative!
+        
         // For resampler
         public string SourceFile;
 
@@ -58,10 +60,14 @@ namespace LibreUtau.Core.Render {
             Tempo = project.BPM;
 
             SkipOver = phoneme.Oto.Preutter * strechRatio - phoneme.Preutter;
-            PosMs = project.TickToMillisecond(phoneme.Parent.PosTick) -
+            PosMs = project.TickToMillisecond(phoneme.Parent.PosTick + part.PosTick) -
                     phoneme.Preutter;
             DurMs = project.TickToMillisecond(phoneme.DurTick) + lengthAdjustment;
             Envelope = phoneme.Envelope.Points;
+            if (PosMs < 0) {
+                SkipOver -= PosMs;
+                PosMs = 0;
+            }
         }
 
         public uint HashParameters() {

@@ -6,6 +6,7 @@ using System.Text;
 using System.IO;
 using LibreUtau.Core.USTx;
 using LibreUtau.SimpleHelpers;
+using Serilog;
 
 namespace LibreUtau.Core.Formats {
     public static class UtauSoundbank {
@@ -16,16 +17,13 @@ namespace LibreUtau.Core.Formats {
             foreach (string searchPath in singerSearchPaths) {
                 if (!Directory.Exists(searchPath)) continue;
                 foreach (var dirpath in Directory.EnumerateDirectories(searchPath)) {
-                    if (File.Exists(Path.Combine(dirpath, "character.txt")) &&
-                        File.Exists(Path.Combine(dirpath, "oto.ini"))) {
-                        USinger singer = null;
-                        try {
-                            singer = LoadSinger(dirpath);
-                            if (singer == null) {
-                                System.Diagnostics.Debug.WriteLine($"Error: Unable to load singer from '{dirpath}'");
-                            } else allSingers.Add(singer.Path, singer);
-                        } catch (Exception e) { throw e; }
-                    }
+                    USinger singer = null;
+                    try {
+                        singer = LoadSinger(dirpath);
+                        if (singer == null) {
+                            System.Diagnostics.Debug.WriteLine($"Error: Unable to load singer from '{dirpath}'");
+                        } else allSingers.Add(singer.Path, singer);
+                    } catch (Exception e) { throw e; }
                 }
             }
         }
@@ -51,41 +49,41 @@ namespace LibreUtau.Core.Formats {
 
         static USinger LoadSinger(string path) {
             if (!Directory.Exists(path) ||
-                !File.Exists(Path.Combine(path, "character.txt")) ||
-                !File.Exists(Path.Combine(path, "oto.ini"))) return null;
+                !File.Exists(Path.Combine(path, "character.txt"))) return null;
 
             USinger singer = new USinger {Path = path};
 
             LoadOtos(singer);
-            string[] lines;
 
             try {
                 var characterFile = Path.Combine(singer.Path, "character.txt");
-                lines = File.ReadAllLines(characterFile,
+                string[] lines = File.ReadAllLines(characterFile,
                     FileEncoding.DetectFileEncoding(characterFile, Encoding.Default));
-            } catch { return null; }
 
-            foreach (var line in lines) {
-                if (line.StartsWith("name=")) singer.Name = line.Trim().Replace("name=", "");
-                if (line.StartsWith("image=")) {
-                    string imageFile = line.Trim().Replace("image=", "");
-                    var fileEnc =
-                        FileEncoding.DetectFileEncoding(Path.Combine(singer.Path, imageFile), Encoding.Default);
-                    var pathEnc = DetectPathEncoding(imageFile, singer.Path, fileEnc);
-                    Uri imagepath = new Uri(
-                        Path.Combine(singer.Path,
-                            FileEncoding.ConvertEncoding(fileEnc, pathEnc, imageFile)),
-                        UriKind.RelativeOrAbsolute);
-                    singer.Avatar = new System.Windows.Media.Imaging.BitmapImage(imagepath);
-                    singer.Avatar.Freeze();
+                foreach (var line in lines) {
+                    // TODO: implement adequate property extraction
+                    if (line.StartsWith("name=")) singer.Name = line.Trim().Replace("name=", "");
+                    if (line.StartsWith("image=")) {
+                        string imageFile = line.Trim().Replace("image=", "");
+                        var fileEnc =
+                            FileEncoding.DetectFileEncoding(Path.Combine(singer.Path, imageFile), Encoding.Default);
+                        var pathEnc = DetectPathEncoding(imageFile, singer.Path, fileEnc);
+                        Uri imagepath = new Uri(
+                            Path.Combine(singer.Path,
+                                FileEncoding.ConvertEncoding(fileEnc, pathEnc, imageFile)),
+                            UriKind.RelativeOrAbsolute);
+                        singer.Avatar = new System.Windows.Media.Imaging.BitmapImage(imagepath);
+                        singer.Avatar.Freeze();
+                    }
+
+                    if (line.StartsWith("author=")) singer.Author = line.Trim().Replace("author=", "");
+                    if (line.StartsWith("web=")) singer.Website = line.Trim().Replace("web=", "");
+                    if (line.StartsWith("web:")) singer.Website = line.Trim().Replace("web:", "");
                 }
-
-                if (line.StartsWith("author=")) singer.Author = line.Trim().Replace("author=", "");
-                if (line.StartsWith("web=")) singer.Website = line.Trim().Replace("web=", "");
-                if (line.StartsWith("web:")) singer.Website = line.Trim().Replace("web:", "");
-            }
-
-            LoadPrefixMap(singer);
+                
+                LoadPrefixMap(singer);
+            } catch { return null; }
+            
             singer.Loaded = true;
 
             return singer.AliasMap.Count == 0 ? null : singer;
@@ -150,22 +148,26 @@ namespace LibreUtau.Core.Formats {
         }
 
         static void LoadPrefixMap(USinger singer) {
+            // TODO Review this
             string path = singer.Path;
-            if (File.Exists(Path.Combine(path, "prefix.map"))) {
-                string[] lines;
-                try {
-                    lines = File.ReadAllLines(Path.Combine(path, "prefix.map"));
-                } catch {
-                    throw new Exception("Prefix map exists but cannot be opened for read.");
-                }
+            if (!File.Exists(Path.Combine(path, "prefix.map"))) {
+                return;
+            }
 
-                foreach (string line in lines) {
-                    var s = line.Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
-                    if (s.Count() == 2) {
-                        string source = s[0];
-                        string target = s[1];
-                        singer.PitchMap.Add(source, target);
-                    }
+            string[] lines;
+            try {
+                lines = File.ReadAllLines(Path.Combine(path, "prefix.map"));
+            } catch {
+                Log.Error("Prefix map exists but cannot be opened for read.");
+                throw new Exception("Prefix map exists but cannot be opened for read.");
+            }
+
+            foreach (string line in lines) {
+                var s = line.Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
+                if (s.Count() == 2) {
+                    string source = s[0];
+                    string target = s[1];
+                    singer.PitchMap.Add(source, target);
                 }
             }
         }

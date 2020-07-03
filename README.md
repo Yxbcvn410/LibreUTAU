@@ -5,23 +5,24 @@ with modern user experience and intelligent phonological support.
 
 Forked from [OpenUtau](https://github.com/stakira/OpenUtau).
 
-Current status: Highly unstable
+Current status: Unstable
 
 ## Current functionality
 
-* Creating vocal parts (Works with some voicebanks/resamplers)
+* Creating vocal parts (Works with most voicebanks/resamplers, needs minimal tweaking)
 * Importing audio files
 * Basic sequencing functions
 * Feature-rich MIDI editor
 * Loading UST/VSQx projects
+* Exporting USTx projects
 
 ## Development plan
 #### Known bugs and issues
-* Sampling issues
-    * Vocal part is not played if it has a note in the very beginning of the project timeline
+* Sound control
+    * Volume/pan track controls do not work
 * Wacky playback controls
     * Project beat properties and BPM are not editable
-    * Timeline not updated when Go To Beginning/Go To End buttons are pressed
+    * Go to beginning/Go to end/Seek do not work at all
     * Different buttons for Play and Pause
 * Misc UI bugs
     * Expression controls are not properly updated sometimes

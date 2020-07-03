@@ -13,6 +13,7 @@ namespace LibreUtau.Core {
     class PlaybackManager : ICmdSubscriber {
         MixingSampleProvider masterMix;
         private WaveOut outDevice;
+        public int playbackPositionTick;
 
         List<TrackSampleProvider> trackSources;
 

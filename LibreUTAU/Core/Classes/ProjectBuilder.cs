@@ -70,8 +70,7 @@ namespace LibreUtau.Core {
                     }
                 }
 
-                trackSources[part.TrackNo].AddSource(part.RenderedTrack,
-                    TimeSpan.FromMilliseconds(project.TickToMillisecond(part.PosTick)));
+                trackSources[part.TrackNo].AddSource(part.RenderedTrack);
             }
 
             return trackSources;

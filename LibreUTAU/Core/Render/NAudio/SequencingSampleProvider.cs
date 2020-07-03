@@ -15,9 +15,7 @@ namespace LibreUtau.Core.Render {
         private List<RenderItemSampleProvider> sources;
         private WaveFormat waveFormat;
         private float[] sourceBuffer;
-
-        public int firstSample { get; private set; }
-        public int lastSample { get; private set; }
+        
         private const int maxInputs = 2048; // protect ourselves against doing something silly
 
         /// <summary>
@@ -43,8 +41,6 @@ namespace LibreUtau.Core.Render {
                 }
 
                 this.sources.Add(mixerInput);
-                firstSample = Math.Min(firstSample, mixerInput.FirstSample);
-                lastSample = Math.Max(lastSample, mixerInput.LastSample);
             }
 
             if (this.waveFormat == null) {
@@ -64,8 +60,6 @@ namespace LibreUtau.Core.Render {
         public void RemoveMixerInput(RenderItemSampleProvider mixerInput) {
             lock (sources) {
                 this.sources.Remove(mixerInput);
-                firstSample = sources.Min(input => input.FirstSample);
-                lastSample = sources.Max(input => input.LastSample);
             }
         }
 
@@ -75,7 +69,6 @@ namespace LibreUtau.Core.Render {
         public void RemoveAllMixerInputs() {
             lock (sources) {
                 this.sources.Clear();
-                lastSample = 0;
             }
         }
 
@@ -84,13 +77,6 @@ namespace LibreUtau.Core.Render {
         /// </summary>
         public WaveFormat WaveFormat {
             get { return this.waveFormat; }
-        }
-
-        /// <summary>
-        /// Last sample of sequence (not included)
-        /// </summary>
-        public int LastSample {
-            get { return lastSample; }
         }
 
         /// <summary>
