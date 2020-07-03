@@ -24,9 +24,7 @@ namespace LibreUtau.UI {
         readonly MidiViewModel midiVM;
         ContextMenu pitchCxtMenu;
 
-        RoutedEventHandler pitchShapeDelegate;
-
-        PitchPointHitTestResultContainer pitHitContainer;
+        PitchPointHitTestResultContainer pitHitContainer = new PitchPointHitTestResultContainer();
 
         public MidiWindow() {
             InitializeComponent();
@@ -36,7 +34,7 @@ namespace LibreUtau.UI {
                 midiVM.DeselectAll();
                 Hide();
             }
-            
+
             this.CloseButtonClicked += (o, e) => WindowHide();
             this.Deactivated += (o, e) => WindowHide();
             CompositionTargetEx.FrameUpdating += RenderLoop;
@@ -55,6 +53,8 @@ namespace LibreUtau.UI {
 
             midiHT = new MidiViewHitTest(midiVM);
 
+            pitchCxtMenu = (ContextMenu)this.Resources["pitchCxtMenu"];
+
             List<ExpComboBoxViewModel> comboVMs = new List<ExpComboBoxViewModel> {
                 new ExpComboBoxViewModel {Index = 0},
                 new ExpComboBoxViewModel {Index = 1},
@@ -66,54 +66,81 @@ namespace LibreUtau.UI {
             comboVMs[1].CreateBindings(expCombo1);
             comboVMs[2].CreateBindings(expCombo2);
             comboVMs[3].CreateBindings(expCombo3);
-
-            InitPitchPointContextMenu();
         }
 
-        void InitPitchPointContextMenu() {
-            pitchCxtMenu = new ContextMenu();
-            pitchCxtMenu.Background = Brushes.White;
-            pitchCxtMenu.Items.Add(new MenuItem {Header = "Ease In/Out"});
-            pitchCxtMenu.Items.Add(new MenuItem {Header = "Linear"});
-            pitchCxtMenu.Items.Add(new MenuItem {Header = "Ease In"});
-            pitchCxtMenu.Items.Add(new MenuItem {Header = "Ease Out"});
-            pitchCxtMenu.Items.Add(new MenuItem {Header = "Snap to Previous Note"});
-            pitchCxtMenu.Items.Add(new MenuItem {Header = "Delete Point"});
-            pitchCxtMenu.Items.Add(new MenuItem {Header = "Add Point"});
+        #region Context menu
 
-            pitHitContainer = new PitchPointHitTestResultContainer();
-            pitchShapeDelegate = (_o, _e) => {
-                var o = _o as MenuItem;
-                var pitHit = pitHitContainer.Result;
-                if (o == pitchCxtMenu.Items[4]) {
-                    DocManager.Inst.StartUndoGroup();
-                    DocManager.Inst.ExecuteCmd(new SnapPitchPointCommand(pitHit.Note));
-                    DocManager.Inst.EndUndoGroup();
-                } else if (o == pitchCxtMenu.Items[5]) {
-                    DocManager.Inst.StartUndoGroup();
-                    DocManager.Inst.ExecuteCmd(new DeletePitchPointCommand(midiVM.Part, pitHit.Note, pitHit.Index));
-                    DocManager.Inst.EndUndoGroup();
-                } else if (o == pitchCxtMenu.Items[6]) {
-                    DocManager.Inst.StartUndoGroup();
-                    DocManager.Inst.ExecuteCmd(new AddPitchPointCommand(pitHit.Note, new PitchPoint(pitHit.X, pitHit.Y),
-                        pitHit.Index + 1));
-                    DocManager.Inst.EndUndoGroup();
-                } else {
-                    PitchPointShape shape =
-                        o == pitchCxtMenu.Items[0] ? PitchPointShape.SINE_IN_OUT :
-                        o == pitchCxtMenu.Items[2] ? PitchPointShape.SINE_IN :
-                        o == pitchCxtMenu.Items[3] ? PitchPointShape.SINE_OUT : PitchPointShape.LINEAR;
-                    DocManager.Inst.StartUndoGroup();
-                    DocManager.Inst.ExecuteCmd(
-                        new ChangePitchPointShapeCommand(pitHit.Note.PitchBend.Points[pitHit.Index], shape));
-                    DocManager.Inst.EndUndoGroup();
-                }
-            };
-
-            foreach (var item in pitchCxtMenu.Items)
-                if (item is MenuItem menuItem)
-                    menuItem.Click += pitchShapeDelegate;
+        void PitchCxtMenuItem_SetIn_Click(object o, RoutedEventArgs e) {
+            PitchPointSetShape(PitchPointShape.SINE_IN);
         }
+
+        void PitchCxtMenuItem_SetOut_Click(object o, RoutedEventArgs e) {
+            PitchPointSetShape(PitchPointShape.SINE_OUT);
+        }
+
+        void PitchCxtMenuItem_SetInOut_Click(object o, RoutedEventArgs e) {
+            PitchPointSetShape(PitchPointShape.SINE_IN_OUT);
+        }
+
+        void PitchCxtMenuItem_SetLinear_Click(object o, RoutedEventArgs e) {
+            PitchPointSetShape(PitchPointShape.LINEAR);
+        }
+
+        void PitchCxtMenuItem_AddPoint_Click(object o, RoutedEventArgs e) {
+            var pitHit = pitHitContainer.Result;
+            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.ExecuteCmd(new AddPitchPointCommand(pitHit.Note, new PitchPoint(pitHit.X, pitHit.Y),
+                pitHit.Index + 1));
+            DocManager.Inst.EndUndoGroup();
+        }
+
+        void PitchCxtMenuItem_DeletePoint_Click(object o, RoutedEventArgs e) {
+            var pitHit = pitHitContainer.Result;
+            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.ExecuteCmd(new DeletePitchPointCommand(midiVM.Part, pitHit.Note, pitHit.Index));
+            DocManager.Inst.EndUndoGroup();
+        }
+
+        void PitchCxtMenuItem_SnapPoint_Click(object o, RoutedEventArgs e) {
+            var pitHit = pitHitContainer.Result;
+            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.ExecuteCmd(new SnapPitchPointCommand(pitHit.Note));
+            DocManager.Inst.EndUndoGroup();
+        }
+
+        private void PitchPointSetShape(PitchPointShape shape) {
+            var pitHit = pitHitContainer.Result;
+            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.ExecuteCmd(
+                new ChangePitchPointShapeCommand(pitHit.Note.PitchBend.Points[pitHit.Index], shape));
+            DocManager.Inst.EndUndoGroup();
+        }
+
+        private void PitchCxtMenuItem_AddPoint_Update(object o, RoutedEventArgs e) {
+            var pitHit = pitHitContainer.Result;
+            ((MenuItem)o).Visibility = pitHit.OnPoint ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void PitchCxtMenuItem_DelPoint_Update(object o, RoutedEventArgs e) {
+            var pitHit = pitHitContainer.Result;
+            ((MenuItem)o).Visibility =
+                pitHit.OnPoint && pitHit.Index != 0 && pitHit.Index != pitHit.Note.PitchBend.Points.Count - 1
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+        }
+
+        private void PitchCxtMenuItem_SnapPoint_Update(object o, RoutedEventArgs e) {
+            var pitHit = pitHitContainer.Result;
+            if (pitHit.OnPoint)
+                ((MenuItem)o).Header = pitHit.Note.PitchBend.SnapFirst
+                    ? (string)FindResource("contextmenu.unsnappoint")
+                    : (string)FindResource("contextmenu.snappoint");
+            ((MenuItem)o).Visibility = pitHit.OnPoint && pitHit.Index == 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        #endregion
 
         void viewScaler_ViewScaled(object sender, EventArgs e) {
             double zoomCenter = (midiVM.OffsetY + midiVM.ViewHeight / 2) / midiVM.TrackHeight;
@@ -619,26 +646,6 @@ namespace LibreUtau.UI {
             if (pitchPointHit != null) {
                 Mouse.OverrideCursor = null;
                 pitHitContainer.Result = pitchPointHit;
-
-                if (pitchPointHit.OnPoint) {
-                    ((MenuItem)pitchCxtMenu.Items[4]).Header = pitchPointHit.Note.PitchBend.SnapFirst
-                        ? "Unsnap from previous point"
-                        : "Snap to previous point";
-                    ((MenuItem)pitchCxtMenu.Items[4]).Visibility = pitchPointHit.Index == 0
-                        ? Visibility.Visible
-                        : Visibility.Collapsed;
-
-                    if (pitchPointHit.Index == 0 ||
-                        pitchPointHit.Index == pitchPointHit.Note.PitchBend.Points.Count - 1)
-                        ((MenuItem)pitchCxtMenu.Items[5]).Visibility = Visibility.Collapsed;
-                    else ((MenuItem)pitchCxtMenu.Items[5]).Visibility = Visibility.Visible;
-
-                    ((MenuItem)pitchCxtMenu.Items[6]).Visibility = Visibility.Collapsed;
-                } else {
-                    ((MenuItem)pitchCxtMenu.Items[4]).Visibility = Visibility.Collapsed;
-                    ((MenuItem)pitchCxtMenu.Items[5]).Visibility = Visibility.Collapsed;
-                    ((MenuItem)pitchCxtMenu.Items[6]).Visibility = Visibility.Visible;
-                }
 
                 pitchCxtMenu.IsOpen = true;
                 pitchCxtMenu.PlacementTarget = this.notesCanvas;

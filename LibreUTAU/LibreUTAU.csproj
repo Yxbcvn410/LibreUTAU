@@ -194,15 +194,11 @@
     <Compile Include="UI\Colors\ThemeManager.cs" />
     <Compile Include="UI\Models\ProgressBarViewModel.cs" />
     <Compile Include="UI\Models\TracksViewModel.cs" />
+    <Compile Include="UI\SplashScreen.xaml.cs">
+      <DependentUpon>SplashScreen.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\UIConstants.cs" />
-    <Page Include="UI\Strings.ja-JP.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UI\Strings.zh-CN.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
+    <Page Include="UI\SplashScreen.xaml" />
     <Page Include="UI\Strings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -328,7 +324,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\prefs.json" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="UI\Assets\background.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

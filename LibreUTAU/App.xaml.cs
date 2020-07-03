@@ -46,17 +46,14 @@ namespace LibreUtau {
             NBug.Settings.StoragePath = NBug.Enums.StoragePath.CurrentDirectory;
             NBug.Settings.UIMode = NBug.Enums.UIMode.Full;
 
-            UtauSoundbank.FindAllSingers();
-            var pm = new Core.PartManager();
-
             var app = new App();
             if (!Debugger.IsAttached) {
                 AppDomain.CurrentDomain.UnhandledException += NBug.Handler.UnhandledException;
                 app.DispatcherUnhandledException += NBug.Handler.DispatcherUnhandledException;
             }
 
-            var window = new UI.MainWindow();
-            app.Run(window);
+            //var window = new UI.MainWindow();
+            app.Run(new UI.SplashScreen());
         }
     }
 }

@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using System.Windows.Shell;
 using WinInterop = System.Windows.Interop;
 using System.Runtime.InteropServices;
+using System.Threading;
 using LibreUtau.Core;
 using LibreUtau.UI.Controls;
 using LibreUtau.UI.Models;
@@ -508,7 +509,8 @@ namespace LibreUtau.UI {
             if (midiWindow != null)
                 Core.Util.Preferences.Default.MidiMaximized = midiWindow.WindowState == WindowState.Maximized;
             Core.Util.Preferences.Save();
-            Application.Current.Shutdown();
+            this.Close();
+            Environment.Exit(0);
         }
 
         # endregion

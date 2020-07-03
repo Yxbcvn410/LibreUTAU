@@ -10,6 +10,7 @@ using LibreUtau.SimpleHelpers;
 namespace LibreUtau.Core.Formats {
     public static class UtauSoundbank {
         private static Dictionary<string, USinger> allSingers = new Dictionary<string, USinger>();
+
         public static void FindAllSingers() {
             var singerSearchPaths = Util.Preferences.GetSingerSearchPaths();
             foreach (string searchPath in singerSearchPaths) {
@@ -53,73 +54,57 @@ namespace LibreUtau.Core.Formats {
                 !File.Exists(Path.Combine(path, "character.txt")) ||
                 !File.Exists(Path.Combine(path, "oto.ini"))) return null;
 
-            USinger singer = new USinger();
-            singer.Path = path;
-            singer.FileEncoding =
-                FileEncoding.DetectFileEncoding(Path.Combine(singer.Path, "oto.ini"), Encoding.Default);
-            singer.PathEncoding = Encoding.Default;
-            string[] lines = File.ReadAllLines(Path.Combine(singer.Path, "oto.ini"), singer.FileEncoding);
-
-            int i = 0;
-            while (i < 16 && i < lines.Count()) {
-                if (lines[i].Contains("=")) {
-                    string filename = lines[i].Split(new[] {'='})[0];
-                    var detected = DetectPathEncoding(filename, singer.Path, singer.FileEncoding);
-                    if (singer.PathEncoding == Encoding.Default) singer.PathEncoding = detected;
-                    i++;
-                }
-            }
-
-            if (singer.PathEncoding == null) return null;
+            USinger singer = new USinger {Path = path};
 
             LoadOtos(singer);
+            string[] lines;
 
             try {
-                lines = File.ReadAllLines(Path.Combine(singer.Path, "character.txt"), singer.FileEncoding);
+                var characterFile = Path.Combine(singer.Path, "character.txt");
+                lines = File.ReadAllLines(characterFile,
+                    FileEncoding.DetectFileEncoding(characterFile, Encoding.Default));
             } catch { return null; }
 
             foreach (var line in lines) {
                 if (line.StartsWith("name=")) singer.Name = line.Trim().Replace("name=", "");
                 if (line.StartsWith("image=")) {
-                    string imagePath = line.Trim().Replace("image=", "");
-                    Uri imagepath =
-                        new Uri(
-                            Path.Combine(singer.Path,
-                                FileEncoding.ConvertEncoding(singer.FileEncoding, singer.PathEncoding, imagePath)),
-                            UriKind.RelativeOrAbsolute);
+                    string imageFile = line.Trim().Replace("image=", "");
+                    var fileEnc =
+                        FileEncoding.DetectFileEncoding(Path.Combine(singer.Path, imageFile), Encoding.Default);
+                    var pathEnc = DetectPathEncoding(imageFile, singer.Path, fileEnc);
+                    Uri imagepath = new Uri(
+                        Path.Combine(singer.Path,
+                            FileEncoding.ConvertEncoding(fileEnc, pathEnc, imageFile)),
+                        UriKind.RelativeOrAbsolute);
                     singer.Avatar = new System.Windows.Media.Imaging.BitmapImage(imagepath);
                     singer.Avatar.Freeze();
                 }
 
                 if (line.StartsWith("author=")) singer.Author = line.Trim().Replace("author=", "");
                 if (line.StartsWith("web=")) singer.Website = line.Trim().Replace("web=", "");
+                if (line.StartsWith("web:")) singer.Website = line.Trim().Replace("web:", "");
             }
 
             LoadPrefixMap(singer);
             singer.Loaded = true;
 
-            return singer;
+            return singer.AliasMap.Count == 0 ? null : singer;
         }
 
         static Encoding DetectSingerPathEncoding(string singerPath, Encoding ustEncoding) {
-            string[] encodings = new string[] {"shift_jis", "gbk", "utf-8"};
-            foreach (string encoding in encodings) {
-                string path = FileEncoding.ConvertEncoding(ustEncoding, Encoding.GetEncoding(encoding), singerPath);
-                if (PathManager.Inst.GetSingerAbsPath(path) != "") return Encoding.GetEncoding(encoding);
-            }
-
-            return null;
+            string[] encodings = {"shift_jis", "gbk", "utf-8"};
+            return (from encoding in encodings let path =
+                        FileEncoding.ConvertEncoding(ustEncoding, Encoding.GetEncoding(encoding), singerPath)
+                    where PathManager.Inst.GetSingerAbsPath(path) != "" select Encoding.GetEncoding(encoding))
+                .FirstOrDefault();
         }
 
         static Encoding DetectPathEncoding(string path, string basePath, Encoding encoding) {
-            string[] encodings = new string[] {"shift_jis", "gbk", "utf-8"};
-            foreach (string enc in encodings) {
-                string absPath = Path.Combine(basePath,
-                    FileEncoding.ConvertEncoding(encoding, Encoding.GetEncoding(enc), path));
-                if (File.Exists(absPath) || Directory.Exists(absPath)) return Encoding.GetEncoding(enc);
-            }
-
-            return null;
+            string[] encodings = {"shift_jis", "gbk", "utf-8"};
+            return (from enc in encodings let absPath =
+                        Path.Combine(basePath, FileEncoding.ConvertEncoding(encoding, Encoding.GetEncoding(enc), path))
+                    where File.Exists(absPath) || Directory.Exists(absPath) select Encoding.GetEncoding(enc))
+                .FirstOrDefault();
         }
 
         static void LoadOtos(USinger singer) {
@@ -131,10 +116,11 @@ namespace LibreUtau.Core.Formats {
         }
 
         static void LoadOto(string dirpath, string path, USinger singer) {
-            string file = Path.Combine(dirpath, "oto.ini");
+            string otoFile = Path.Combine(dirpath, "oto.ini");
             string relativeDir = dirpath.Replace(path, "");
             while (relativeDir.StartsWith("\\")) relativeDir = relativeDir.Substring(1);
-            string[] lines = File.ReadAllLines(file, singer.FileEncoding);
+            Encoding fileEncoding = FileEncoding.DetectFileEncoding(otoFile, Encoding.Default);
+            string[] lines = File.ReadAllLines(otoFile, fileEncoding);
             List<string> errorLines = new List<string>();
             foreach (var line in lines) {
                 var s = line.Split(new[] {'='});
@@ -160,7 +146,7 @@ namespace LibreUtau.Core.Formats {
 
             if (errorLines.Count > 0)
                 System.Diagnostics.Debug.WriteLine(
-                    $"Oto file {file} has following errors:\n{string.Join("\n", errorLines.ToArray())}");
+                    $"Oto file {otoFile} has following errors:\n{string.Join("\n", errorLines.ToArray())}");
         }
 
         static void LoadPrefixMap(USinger singer) {

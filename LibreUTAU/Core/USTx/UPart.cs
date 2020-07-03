@@ -93,7 +93,7 @@ namespace LibreUtau.Core.USTx {
         }
 
         public override int GetMinDurTick() {
-            return Notes.Max(note => note.PosTick + note.DurTick);
+            return Notes.Count > 0 ? Notes.Max(note => note.PosTick + note.DurTick) : 1;
         }
     }
 

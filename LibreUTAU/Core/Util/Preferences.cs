@@ -18,7 +18,7 @@ namespace LibreUtau.Core.Util {
 
         public static void Reset() {
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var stream = new StreamReader(assembly.GetManifestResourceStream("LibreUTAU.Resources.prefs.json"));
+            var stream = new StreamReader(assembly.GetManifestResourceStream("LibreUtau.Resources.prefs.json"));
             Default = JsonConvert.DeserializeObject<SerializablePreferences>(stream.ReadToEnd());
             Save();
         }

@@ -26,9 +26,6 @@ namespace LibreUtau.Core.USTx {
 
         public System.Windows.Media.Imaging.BitmapImage Avatar;
 
-        public Encoding FileEncoding;
-        public Encoding PathEncoding;
-
         public Dictionary<string, string> PitchMap = new Dictionary<string, string>();
         public Dictionary<string, UOto> AliasMap = new Dictionary<string, UOto>();
     }

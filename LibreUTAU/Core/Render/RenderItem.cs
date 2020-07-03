@@ -38,8 +38,8 @@ namespace LibreUtau.Core.Render {
 
         public RenderItem(UPhoneme phoneme, UVoicePart part, UProject project) {
             var singer = project.Tracks[part.TrackNo].Singer;
-            SourceFile = FileEncoding.ConvertEncoding(singer.FileEncoding, singer.PathEncoding, phoneme.Oto.File);
-            SourceFile = Path.Combine(singer.Path, SourceFile);
+            // TODO: Check how encoding works here
+            SourceFile = Path.Combine(singer.Path, phoneme.Oto.File);
 
             var strechRatio = Math.Pow(2, 1.0 - (double)(int)phoneme.Parent.Expressions["velocity"].Data / 100);
             var length = phoneme.Oto.Preutter * strechRatio + phoneme.Envelope.Points[4].X;
