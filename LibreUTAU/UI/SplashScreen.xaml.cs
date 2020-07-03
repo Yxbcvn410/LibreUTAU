@@ -1,32 +1,30 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using System.Threading;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using LibreUtau.Core.Formats;
-using LibreUtau.Core.Render;
 
 namespace LibreUtau.UI {
-    public partial class SplashScreen : Window {
+    public partial class SplashScreen {
         public SplashScreen() {
             InitializeComponent();
 
             var info = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
-            var current_version = new Version(info.ProductVersion);
-            TitleText.Text = "LibreUtau v" + current_version;
+            var currentVersion = new Version(info.ProductVersion);
+            TitleText.Text = "LibreUtau v" + currentVersion;
 
             ProgressText.Text = "Loading...";
 
             BackgroundWorker loadAppWorker = new BackgroundWorker();
             loadAppWorker.WorkerReportsProgress = true;
             loadAppWorker.DoWork += (sender, args) => LoadApp(sender as BackgroundWorker);
-            loadAppWorker.ProgressChanged += (sender, args) => this.Dispatcher.Invoke(delegate {
-                ProgressText.Text = args.UserState as string;
-            });
+            loadAppWorker.ProgressChanged += (sender, args) => {
+                var dispatcher = this.Dispatcher;
+                dispatcher?.Invoke(delegate {
+                    if (args.UserState != null) ProgressText.Text = args.UserState as string;
+                });
+            };
             loadAppWorker.RunWorkerCompleted += (sender, args) => OpenMainWindow();
             loadAppWorker.RunWorkerAsync();
         }
@@ -35,7 +33,7 @@ namespace LibreUtau.UI {
             worker.ReportProgress(0, "Loading singers...");
             UtauSoundbank.FindAllSingers();
 
-            var pm = new Core.PartManager();
+            var partManager = new Core.PartManager();
             worker.ReportProgress(0, "Loading UI...");
         }
 
@@ -43,7 +41,8 @@ namespace LibreUtau.UI {
             var t = new Thread((o => {
                 MainWindow mw = new MainWindow();
                 mw.Show();
-                this.Dispatcher.Invoke(delegate { this.Close(); });
+                var dispatcher = this.Dispatcher;
+                dispatcher?.Invoke(this.Hide);
                 System.Windows.Threading.Dispatcher.Run();
             }));
             t.SetApartmentState(ApartmentState.STA);
