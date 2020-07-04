@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using LibreUtau.Core.USTx;
 
 namespace LibreUtau.Core {
     public static class MusicMath {
@@ -17,11 +18,13 @@ namespace LibreUtau.Core {
             Tuple.Create("G#", KeyColor.Black),
             Tuple.Create("A", KeyColor.White),
             Tuple.Create("A#", KeyColor.Black),
-            Tuple.Create("B", KeyColor.White),
+            Tuple.Create("B", KeyColor.White)
         };
 
+        public static double[] zoomRatios = {4.0, 2.0, 1.0, 1.0 / 2, 1.0 / 4, 1.0 / 8, 1.0 / 16, 1.0 / 32, 1.0 / 64};
+
         public static string GetNoteString(int noteNum) {
-            return noteNum < 0 ? string.Empty : KeysInOctave[noteNum % 12].Item1 + (noteNum / 12 - 1).ToString();
+            return noteNum < 0 ? string.Empty : KeysInOctave[noteNum % 12].Item1 + (noteNum / 12);
         }
 
         public static bool IsBlackKey(int noteNum) {
@@ -31,8 +34,6 @@ namespace LibreUtau.Core {
         public static bool IsCenterKey(int noteNum) {
             return noteNum % 12 == 0;
         }
-
-        public static double[] zoomRatios = {4.0, 2.0, 1.0, 1.0 / 2, 1.0 / 4, 1.0 / 8, 1.0 / 16, 1.0 / 32, 1.0 / 64};
 
         public static double getZoomRatio(double quarterWidth, int beatPerBar, int beatUnit, double minWidth) {
             int i;
@@ -60,13 +61,13 @@ namespace LibreUtau.Core {
 
             if (quarterWidth * beatPerBar * 4 <= minWidth * beatUnit) {
                 return beatPerBar / beatUnit * 4;
-            } else {
-                while (i + 1 < zoomRatios.Length && quarterWidth * zoomRatios[i + 1] > minWidth) {
-                    i++;
-                }
-
-                return zoomRatios[i];
             }
+
+            while (i + 1 < zoomRatios.Length && quarterWidth * zoomRatios[i + 1] > minWidth) {
+                i++;
+            }
+
+            return zoomRatios[i];
         }
 
         public static double TickToMillisecond(double tick, double BPM, int beatUnit, int resolution) {
@@ -109,20 +110,20 @@ namespace LibreUtau.Core {
             return (y - p0.Y) / (p1.Y - p0.Y) * (p1.X - p0.X) + p0.X;
         }
 
-        public static double InterpolateShape(Point p0, Point p1, double x, USTx.PitchPointShape shape) {
+        public static double InterpolateShape(Point p0, Point p1, double x, PitchPointShape shape) {
             switch (shape) {
-                case USTx.PitchPointShape.SINE_IN_OUT: return SinEasingInOut(p0, p1, x);
-                case USTx.PitchPointShape.SINE_IN: return SinEasingIn(p0, p1, x);
-                case USTx.PitchPointShape.SINE_OUT: return SinEasingOut(p0, p1, x);
+                case PitchPointShape.SINE_IN_OUT: return SinEasingInOut(p0, p1, x);
+                case PitchPointShape.SINE_IN: return SinEasingIn(p0, p1, x);
+                case PitchPointShape.SINE_OUT: return SinEasingOut(p0, p1, x);
                 default: return Linear(p0, p1, x);
             }
         }
 
-        public static double InterpolateShapeX(Point p0, Point p1, double y, USTx.PitchPointShape shape) {
+        public static double InterpolateShapeX(Point p0, Point p1, double y, PitchPointShape shape) {
             switch (shape) {
-                case USTx.PitchPointShape.SINE_IN_OUT: return SinEasingInOutX(p0, p1, y);
-                case USTx.PitchPointShape.SINE_IN: return SinEasingInX(p0, p1, y);
-                case USTx.PitchPointShape.SINE_OUT: return SinEasingOutX(p0, p1, y);
+                case PitchPointShape.SINE_IN_OUT: return SinEasingInOutX(p0, p1, y);
+                case PitchPointShape.SINE_IN: return SinEasingInX(p0, p1, y);
+                case PitchPointShape.SINE_OUT: return SinEasingOutX(p0, p1, y);
                 default: return LinearX(p0, p1, y);
             }
         }

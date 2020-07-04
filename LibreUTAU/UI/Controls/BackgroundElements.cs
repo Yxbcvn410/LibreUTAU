@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using LibreUtau.Core;
-using LibreUtau.UI.Models;
-using LibreUtau.Core.USTx;
 
 namespace LibreUtau.UI.Controls {
     class BackgroundElement : FrameworkElement {
         protected Size _size;
-        protected bool _updated = false;
+        protected bool _updated;
 
         public BackgroundElement() {
             this.SizeChanged += (o, e) => {
@@ -34,16 +31,6 @@ namespace LibreUtau.UI.Controls {
     }
 
     class TrackBackground : BackgroundElement {
-        public double TrackHeight {
-            set { SetValue(TrackHeightProperty, value); }
-            get { return (double)GetValue(TrackHeightProperty); }
-        }
-
-        public double OffsetY {
-            set { SetValue(OffsetYProperty, value); }
-            get { return (double)GetValue(OffsetYProperty); }
-        }
-
         public static readonly DependencyProperty TrackHeightProperty = DependencyProperty.Register("TrackHeight",
             typeof(double), typeof(TrackBackground), new PropertyMetadata(0.0, MarkUpdateCallback));
 
@@ -56,6 +43,16 @@ namespace LibreUtau.UI.Controls {
             this.VisualEdgeMode = EdgeMode.Aliased;
         }
 
+        public double TrackHeight {
+            set { SetValue(TrackHeightProperty, value); }
+            get { return (double)GetValue(TrackHeightProperty); }
+        }
+
+        public double OffsetY {
+            set { SetValue(OffsetYProperty, value); }
+            get { return (double)GetValue(OffsetYProperty); }
+        }
+
         protected override void OnRender(DrawingContext drawingContext) {
             int firstTrack = (int)(OffsetY / TrackHeight);
             bool alt = firstTrack % 2 == 1;
@@ -66,6 +63,8 @@ namespace LibreUtau.UI.Controls {
                     alt ? ThemeManager.TrackBackgroundBrushAlt : ThemeManager.TrackBackgroundBrush,
                     null,
                     new Rect(0, (int)top, _size.Width, TrackHeight));
+                drawingContext.DrawLine(new Pen(ThemeManager.TickLineBrushLight, 1), new Point(0, (int)top),
+                    new Point(_size.Width, (int)top));
                 top += TrackHeight;
                 alt = !alt;
             }
@@ -75,18 +74,21 @@ namespace LibreUtau.UI.Controls {
     class KeyTrackBackground : TrackBackground {
         protected override void OnRender(DrawingContext drawingContext) {
             int firstTrack = (int)(OffsetY / TrackHeight);
-            int alt = firstTrack % 12;
+            int alt = firstTrack;
             double top = TrackHeight * firstTrack - OffsetY;
 
             while (top < _size.Height) {
+                int noteNum = UIConstants.MaxNoteNum - alt - 1;
                 drawingContext.DrawRectangle(
-                    MusicMath.IsBlackKey(alt)
+                    MusicMath.IsBlackKey(noteNum)
                         ? ThemeManager.TrackBackgroundBrushAlt
                         : ThemeManager.TrackBackgroundBrush,
                     null,
                     new Rect(0, (int)top, _size.Width, TrackHeight));
+                drawingContext.DrawLine(new Pen(ThemeManager.TickLineBrushLight, 1), new Point(0, (int)top),
+                    new Point(_size.Width, (int)top));
                 top += TrackHeight;
-                alt = (alt + 1) % 12;
+                alt++;
             }
         }
     }
@@ -98,26 +100,26 @@ namespace LibreUtau.UI.Controls {
             double top = TrackHeight * firstTrack - OffsetY;
 
             while (top < _size.Height) {
+                int noteNum = UIConstants.MaxNoteNum - alt - 1;
                 drawingContext.DrawRectangle(
-                    MusicMath.IsBlackKey(alt) ? ThemeManager.BlackKeyBrushNormal :
-                    MusicMath.IsCenterKey(alt) ? ThemeManager.CenterKeyBrushNormal : ThemeManager.WhiteKeyBrushNormal,
-                    null,
+                    MusicMath.IsBlackKey(noteNum) ? ThemeManager.BlackKeyBrushNormal :
+                    MusicMath.IsCenterKey(noteNum) ? ThemeManager.CenterKeyBrushNormal :
+                    ThemeManager.WhiteKeyBrushNormal,
+                    new Pen(ThemeManager.BlackKeyBrushNormal, 1),
                     new Rect(0, (int)top, _size.Width, TrackHeight));
 
-                if (TrackHeight >= 12) {
-                    FormattedText text = new FormattedText(
-                        MusicMath.GetNoteString(UIConstants.MaxNoteNum - alt - 1),
-                        System.Threading.Thread.CurrentThread.CurrentUICulture,
-                        FlowDirection.LeftToRight,
-                        SystemFonts.CaptionFontFamily.GetTypefaces().First(),
-                        12,
-                        MusicMath.IsBlackKey(alt) ? ThemeManager.BlackKeyNameBrushNormal :
-                        MusicMath.IsCenterKey(alt) ? ThemeManager.CenterKeyNameBrushNormal :
-                        ThemeManager.WhiteKeyNameBrushNormal
-                    );
-                    drawingContext.DrawText(text,
-                        new Point(42 - text.Width, (int)(top + (TrackHeight - text.Height) / 2)));
-                }
+                FormattedText text = new FormattedText(
+                    MusicMath.GetNoteString(noteNum),
+                    Thread.CurrentThread.CurrentUICulture,
+                    FlowDirection.LeftToRight,
+                    SystemFonts.CaptionFontFamily.GetTypefaces().First(),
+                    12,
+                    MusicMath.IsBlackKey(noteNum) ? ThemeManager.BlackKeyNameBrushNormal :
+                    MusicMath.IsCenterKey(noteNum) ? ThemeManager.CenterKeyNameBrushNormal :
+                    ThemeManager.WhiteKeyNameBrushNormal
+                );
+                drawingContext.DrawText(text,
+                    new Point(_size.Width - text.Width - 5, (int)(top + (TrackHeight - text.Height) / 2)));
 
                 top += TrackHeight;
                 alt++;
@@ -126,6 +128,39 @@ namespace LibreUtau.UI.Controls {
     }
 
     class TickBackground : BackgroundElement {
+        public static readonly DependencyProperty QuarterWidthProperty = DependencyProperty.Register("QuarterWidth",
+            typeof(double), typeof(TickBackground), new PropertyMetadata(0.0, MarkUpdateCallback));
+
+        public static readonly DependencyProperty MinTickWidthProperty = DependencyProperty.Register("MinTickWidth",
+            typeof(double), typeof(TickBackground), new PropertyMetadata(0.0, MarkUpdateCallback));
+
+        public static readonly DependencyProperty OffsetXProperty = DependencyProperty.Register("OffsetX",
+            typeof(double), typeof(TickBackground), new PropertyMetadata(0.0, MarkUpdateCallback));
+
+        public static readonly DependencyProperty QuarterOffsetProperty = DependencyProperty.Register("QuarterOffset",
+            typeof(double), typeof(TickBackground), new PropertyMetadata(0.0, MarkUpdateCallback));
+
+        public static readonly DependencyProperty BeatPerBarProperty = DependencyProperty.Register("BeatPerBar",
+            typeof(int), typeof(TickBackground), new PropertyMetadata(0, MarkUpdateCallback));
+
+        public static readonly DependencyProperty BeatUnitProperty = DependencyProperty.Register("BeatUnit",
+            typeof(int), typeof(TickBackground), new PropertyMetadata(0, MarkUpdateCallback));
+
+        public static readonly DependencyProperty TickModeProperty = DependencyProperty.Register("TickMode",
+            typeof(int), typeof(TickBackground), new PropertyMetadata(0, MarkUpdateCallback));
+
+        protected Pen darkPen, lightPen, dashedPen;
+
+        public TickBackground() {
+            this.VerticalAlignment = VerticalAlignment.Stretch;
+            this.HorizontalAlignment = HorizontalAlignment.Stretch;
+            this.VisualEdgeMode = EdgeMode.Aliased;
+            darkPen = new Pen(ThemeManager.TickLineBrushDark, 1);
+            lightPen = new Pen(ThemeManager.TickLineBrushLight, 1);
+            dashedPen = new Pen(ThemeManager.TickLineBrushLight, 1)
+                {DashStyle = new DashStyle(UIConstants.DashLineArray, 0)};
+        }
+
         public double QuarterWidth {
             set { SetValue(QuarterWidthProperty, value); }
             get { return (double)GetValue(QuarterWidthProperty); }
@@ -159,39 +194,6 @@ namespace LibreUtau.UI.Controls {
         public int TickMode {
             set { SetValue(TickModeProperty, value); }
             get { return (int)GetValue(TickModeProperty); }
-        }
-
-        public static readonly DependencyProperty QuarterWidthProperty = DependencyProperty.Register("QuarterWidth",
-            typeof(double), typeof(TickBackground), new PropertyMetadata(0.0, MarkUpdateCallback));
-
-        public static readonly DependencyProperty MinTickWidthProperty = DependencyProperty.Register("MinTickWidth",
-            typeof(double), typeof(TickBackground), new PropertyMetadata(0.0, MarkUpdateCallback));
-
-        public static readonly DependencyProperty OffsetXProperty = DependencyProperty.Register("OffsetX",
-            typeof(double), typeof(TickBackground), new PropertyMetadata(0.0, MarkUpdateCallback));
-
-        public static readonly DependencyProperty QuarterOffsetProperty = DependencyProperty.Register("QuarterOffset",
-            typeof(double), typeof(TickBackground), new PropertyMetadata(0.0, MarkUpdateCallback));
-
-        public static readonly DependencyProperty BeatPerBarProperty = DependencyProperty.Register("BeatPerBar",
-            typeof(int), typeof(TickBackground), new PropertyMetadata(0, MarkUpdateCallback));
-
-        public static readonly DependencyProperty BeatUnitProperty = DependencyProperty.Register("BeatUnit",
-            typeof(int), typeof(TickBackground), new PropertyMetadata(0, MarkUpdateCallback));
-
-        public static readonly DependencyProperty TickModeProperty = DependencyProperty.Register("TickMode",
-            typeof(int), typeof(TickBackground), new PropertyMetadata(0, MarkUpdateCallback));
-
-        protected Pen darkPen, lightPen, dashedPen;
-
-        public TickBackground() {
-            this.VerticalAlignment = VerticalAlignment.Stretch;
-            this.HorizontalAlignment = HorizontalAlignment.Stretch;
-            this.VisualEdgeMode = EdgeMode.Aliased;
-            darkPen = new Pen(ThemeManager.TickLineBrushDark, 1);
-            lightPen = new Pen(ThemeManager.TickLineBrushLight, 1);
-            dashedPen = new Pen(ThemeManager.TickLineBrushLight, 1)
-                {DashStyle = new DashStyle(UIConstants.DashLineArray, 0)};
         }
 
         protected override void OnRender(DrawingContext drawingContext) {
@@ -231,7 +233,7 @@ namespace LibreUtau.UI.Controls {
     }
 
     class TimelineBackground : TickBackground {
-        Dictionary<int, FormattedText> fTextPool = new Dictionary<int, FormattedText>();
+        readonly Dictionary<int, FormattedText> fTextPool = new Dictionary<int, FormattedText>();
 
         protected override void OnRender(DrawingContext drawingContext) {
             double zoomRatio = MusicMath.getZoomRatio(QuarterWidth, BeatPerBar, BeatUnit, MinTickWidth);
@@ -252,7 +254,7 @@ namespace LibreUtau.UI.Controls {
                     if (!fTextPool.ContainsKey(barNumber)) {
                         fText = new FormattedText(
                             barNumber.ToString(),
-                            System.Threading.Thread.CurrentThread.CurrentUICulture,
+                            Thread.CurrentThread.CurrentUICulture,
                             FlowDirection.LeftToRight, SystemFonts.CaptionFontFamily.GetTypefaces().First(),
                             12,
                             darkPen.Brush);

@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Windows.Media;
 
 namespace LibreUtau.UI {
     static class UIConstants {
-        public const int MaxNoteNum = 12 * 11;
+        public const int MaxNoteNum = 12 * 10;
         public const int HiddenNoteNum = 12 * 4;
 
         public const int PosMarkerHightlighZIndex = -100;
 
         public const int ResizeMargin = 8;
-
-        public static System.Windows.Media.DoubleCollection DashLineArray = new System.Windows.Media.DoubleCollection()
-            {2, 4};
 
         public const double NoteMaxHeight = 128;
         public const double NoteMinHeight = 8;
@@ -52,5 +45,8 @@ namespace LibreUtau.UI {
         public const int ExpressionShadowZIndex = 100;
 
         public const double PlayPosMarkerMargin = 0.92;
+
+        public static DoubleCollection DashLineArray = new DoubleCollection
+            {2, 4};
     }
 }
