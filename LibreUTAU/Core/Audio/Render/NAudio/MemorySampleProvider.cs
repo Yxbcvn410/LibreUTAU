@@ -6,11 +6,19 @@ using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using Serilog;
 
-namespace LibreUtau.Core.Render {
+namespace LibreUtau.Core.Audio.Render.NAudio {
     internal class MemorySampleProvider : ISampleProvider {
         private float[] data;
         private int position;
         public WaveFormat WaveFormat { private set; get; }
+
+        public int Read(float[] buffer, int offset, int count) {
+            var left = data.Length - position;
+            count = Math.Min(left, count);
+            Array.Copy(data, position, buffer, offset, count);
+            position += count;
+            return count;
+        }
 
         public static MemorySampleProvider FromStream(Stream stream) {
             using (var waveProvider = new WaveFileReader(stream)) {
@@ -42,19 +50,11 @@ namespace LibreUtau.Core.Render {
                 }
 
                 var data = samples.ToArray();
-                return new MemorySampleProvider() {
+                return new MemorySampleProvider {
                     WaveFormat = format,
-                    data = data,
+                    data = data
                 };
             }
-        }
-
-        public int Read(float[] buffer, int offset, int count) {
-            var left = data.Length - position;
-            count = Math.Min(left, count);
-            Array.Copy(data, position, buffer, offset, count);
-            position += count;
-            return count;
         }
     }
 }

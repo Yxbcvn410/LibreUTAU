@@ -9,42 +9,45 @@
 
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using LibreUtau.Core.ResamplerDriver.Factories;
-using LibreUtau.Core.ResamplerDriver;
 
 namespace LibreUtau.Core.ResamplerDriver {
-    internal interface IResamplerDriver {
-        Stream DoResampler(DriverModels.EngineInput Args);
+    public interface IResamplerDriver {
+        Stream DoResampler(DriverModels.EngineInput args);
         DriverModels.EngineInfo GetInfo();
     }
 
     internal class ResamplerDriver {
-        public static IResamplerDriver LoadEngine(string FilePath) {
+        public static IResamplerDriver LoadEngine(string filePath) {
+            if (!File.Exists(filePath))
+                return null;
+
             IResamplerDriver ret = null;
-            if (File.Exists(FilePath)) {
-                if (Path.GetExtension(FilePath).ToLower() == ".exe") {
-                    ret = new ExeDriver(FilePath);
-                } else if (Path.GetExtension(FilePath).ToLower() == ".dll") {
-                    CppDriver retcpp = new CppDriver(FilePath);
+
+            switch (Path.GetExtension(filePath)?.ToLower()) {
+                case ".exe":
+                    ret = new ExeDriver(filePath);
+                    break;
+                case ".dll":
+                    CppDriver retcpp = new CppDriver(filePath);
                     if (retcpp.isLegalPlugin) {
                         ret = retcpp;
                     } else {
-                        SharpDriver retnet = new SharpDriver(FilePath);
+                        SharpDriver retnet = new SharpDriver(filePath);
                         if (retnet.isLegalPlugin) {
                             ret = retnet;
                         }
                     }
-                }
+
+                    break;
             }
 
             return ret;
         }
 
-        public static List<DriverModels.EngineInfo> SearchEngines(string path) {
+        public static IEnumerable<DriverModels.EngineInfo> SearchEngines(string path) {
             var engineInfoList = new List<DriverModels.EngineInfo>();
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             var files = Directory.EnumerateFiles(path);

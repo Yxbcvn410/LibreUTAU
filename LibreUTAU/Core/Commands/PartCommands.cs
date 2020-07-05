@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LibreUtau.Core.USTx;
+﻿using LibreUtau.Core.USTx;
 
-namespace LibreUtau.Core {
+namespace LibreUtau.Core.Commands {
     public abstract class PartCommand : UCommand {
-        public UProject project;
         public UPart part;
+        public UProject project;
     }
 
     public class AddPartCommand : PartCommand {
@@ -60,7 +55,8 @@ namespace LibreUtau.Core {
     }
 
     public class ResizePartCommand : PartCommand {
-        int newDur, oldDur;
+        readonly int newDur;
+        readonly int oldDur;
 
         public ResizePartCommand(UProject project, UPart part, int newDur) {
             this.project = project;

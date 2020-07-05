@@ -1,21 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Shapes;
-using LibreUtau.Core;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 
 namespace LibreUtau.UI.Controls {
     class PhonemesElement : NotesElement {
-        public new double Y { set { } get { return 0; } }
+        bool _hidePhoneme;
 
-        bool _hidePhoneme = false;
+        protected Pen penEnv;
+        protected Pen penEnvSel;
+
+        public PhonemesElement() {
+            penEnv = new Pen(ThemeManager.NoteFillBrushes[0], 1);
+            penEnv.Freeze();
+            penEnvSel = new Pen(ThemeManager.NoteFillSelectedBrush, 1);
+            penEnvSel.Freeze();
+        }
+
+        public new double Y { set { } get { return 0; } }
 
         public bool HidePhoneme {
             set {
@@ -25,17 +31,6 @@ namespace LibreUtau.UI.Controls {
                 }
             }
             get { return _hidePhoneme; }
-        }
-
-        protected Pen penEnv;
-        protected Pen penEnvSel;
-
-        public PhonemesElement()
-            : base() {
-            penEnv = new Pen(ThemeManager.NoteFillBrushes[0], 1);
-            penEnv.Freeze();
-            penEnvSel = new Pen(ThemeManager.NoteFillSelectedBrush, 1);
-            penEnvSel.Freeze();
         }
 
         public override void RedrawIfUpdated() {
@@ -69,21 +64,21 @@ namespace LibreUtau.UI.Controls {
             const double height = 24;
             if (note.Error) return;
             var phoneme = note.Phoneme;
-            double x = Math.Round(note.PosTick * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution) + 0.5;
-            double x0 = (note.PosTick + DocManager.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[0].X))
-                * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution;
+            double x = Math.Round(note.PosTick * midiVM.QuarterWidth / CommandDispatcher.Inst.Project.Resolution) + 0.5;
+            double x0 = (note.PosTick + CommandDispatcher.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[0].X))
+                * midiVM.QuarterWidth / CommandDispatcher.Inst.Project.Resolution;
             double y0 = (1 - phoneme.Envelope.Points[0].Y / 100) * height;
-            double x1 = (note.PosTick + DocManager.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[1].X))
-                * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution;
+            double x1 = (note.PosTick + CommandDispatcher.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[1].X))
+                * midiVM.QuarterWidth / CommandDispatcher.Inst.Project.Resolution;
             double y1 = (1 - phoneme.Envelope.Points[1].Y / 100) * height;
-            double x2 = (note.PosTick + DocManager.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[2].X))
-                * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution;
+            double x2 = (note.PosTick + CommandDispatcher.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[2].X))
+                * midiVM.QuarterWidth / CommandDispatcher.Inst.Project.Resolution;
             double y2 = (1 - phoneme.Envelope.Points[2].Y / 100) * height;
-            double x3 = (note.PosTick + DocManager.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[3].X))
-                * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution;
+            double x3 = (note.PosTick + CommandDispatcher.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[3].X))
+                * midiVM.QuarterWidth / CommandDispatcher.Inst.Project.Resolution;
             double y3 = (1 - phoneme.Envelope.Points[3].Y / 100) * height;
-            double x4 = (note.PosTick + DocManager.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[4].X))
-                * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution;
+            double x4 = (note.PosTick + CommandDispatcher.Inst.Project.MillisecondToTick(phoneme.Envelope.Points[4].X))
+                * midiVM.QuarterWidth / CommandDispatcher.Inst.Project.Resolution;
             double y4 = (1 - phoneme.Envelope.Points[4].Y / 100) * height;
 
             Pen pen = midiVM.SelectedNotes.Contains(note) ? penEnvSel : penEnv;

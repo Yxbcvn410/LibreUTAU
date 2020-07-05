@@ -1,19 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using System.ComponentModel;
 using LibreUtau.Core;
-using LibreUtau.UI.Controls;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
+using LibreUtau.UI.Controls;
 
 namespace LibreUtau.UI.Models {
     class MidiViewModel : INotifyPropertyChanged, ICmdSubscriber {
+        readonly Dictionary<string, FloatExpElement> expElements = new Dictionary<string, FloatExpElement>();
+        public NotesElement notesElement;
+        public PhonemesElement phonemesElement;
+        public FloatExpElement visibleExpElement, shadowExpElement;
+
+        public void RedrawIfUpdated() {
+            if (_updated) {
+                if (visibleExpElement != null) {
+                    visibleExpElement.X = -OffsetX;
+                    visibleExpElement.ScaleX = QuarterWidth / Project.Resolution;
+                    visibleExpElement.VisualHeight = ExpCanvas.ActualHeight;
+                }
+
+                if (shadowExpElement != null) {
+                    shadowExpElement.X = -OffsetX;
+                    shadowExpElement.ScaleX = QuarterWidth / Project.Resolution;
+                    shadowExpElement.VisualHeight = ExpCanvas.ActualHeight;
+                }
+
+                if (notesElement != null) {
+                    notesElement.X = -OffsetX;
+                    notesElement.Y = -OffsetY;
+                    notesElement.VisualHeight = MidiCanvas.ActualHeight;
+                    notesElement.TrackHeight = TrackHeight;
+                    notesElement.QuarterWidth = QuarterWidth;
+                }
+
+                if (phonemesElement != null) {
+                    phonemesElement.X = -OffsetX;
+                    phonemesElement.QuarterWidth = QuarterWidth;
+                }
+
+                updatePlayPosMarker();
+            }
+
+            _updated = false;
+            foreach (var pair in expElements) pair.Value.RedrawIfUpdated();
+            if (notesElement != null) notesElement.RedrawIfUpdated();
+            if (phonemesElement != null && ShowPhoneme) phonemesElement.RedrawIfUpdated();
+        }
+
         # region Properties
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -25,17 +64,16 @@ namespace LibreUtau.UI.Models {
             }
         }
 
-        public UProject Project { get { return DocManager.Inst.Project; } }
+        public UProject Project { get { return CommandDispatcher.Inst.Project; } }
 
-        UVoicePart _part;
-        public UVoicePart Part { get { return _part; } }
+        public UVoicePart Part { get; private set; }
 
         public Canvas TimelineCanvas;
         public Canvas MidiCanvas;
         public Canvas ExpCanvas;
         public Canvas PhonemeCanvas;
 
-        protected bool _updated = false;
+        protected bool _updated;
         public void MarkUpdate() { _updated = true; }
 
         string _title = "New Part";
@@ -44,9 +82,9 @@ namespace LibreUtau.UI.Models {
         double _quarterWidth = UIConstants.MidiQuarterDefaultWidth;
         double _viewWidth;
         double _viewHeight;
-        double _offsetX = 0;
+        double _offsetX;
         double _offsetY = UIConstants.NoteDefaultHeight * 5 * 12;
-        double _quarterOffset = 0;
+        double _quarterOffset;
         double _minTickWidth = UIConstants.MidiTickMinWidth;
         int _beatPerBar = 4;
         int _beatUnit = 4;
@@ -132,14 +170,14 @@ namespace LibreUtau.UI.Models {
         public double ViewportSizeX {
             get {
                 if (TotalWidth < 1) return 10000;
-                else return ViewWidth * (TotalWidth + ViewWidth) / TotalWidth;
+                return ViewWidth * (TotalWidth + ViewWidth) / TotalWidth;
             }
         }
 
         public double ViewportSizeY {
             get {
                 if (TotalHeight < 1) return 10000;
-                else return ViewHeight * (TotalHeight + ViewHeight) / TotalHeight;
+                return ViewHeight * (TotalHeight + ViewHeight) / TotalHeight;
             }
         }
 
@@ -231,65 +269,22 @@ namespace LibreUtau.UI.Models {
 
         # endregion
 
-        Dictionary<string, FloatExpElement> expElements = new Dictionary<string, FloatExpElement>();
-        public NotesElement notesElement;
-        public PhonemesElement phonemesElement;
-        public FloatExpElement visibleExpElement, shadowExpElement;
-
-        public MidiViewModel() { }
-
-        public void RedrawIfUpdated() {
-            if (_updated) {
-                if (visibleExpElement != null) {
-                    visibleExpElement.X = -OffsetX;
-                    visibleExpElement.ScaleX = QuarterWidth / Project.Resolution;
-                    visibleExpElement.VisualHeight = ExpCanvas.ActualHeight;
-                }
-
-                if (shadowExpElement != null) {
-                    shadowExpElement.X = -OffsetX;
-                    shadowExpElement.ScaleX = QuarterWidth / Project.Resolution;
-                    shadowExpElement.VisualHeight = ExpCanvas.ActualHeight;
-                }
-
-                if (notesElement != null) {
-                    notesElement.X = -OffsetX;
-                    notesElement.Y = -OffsetY;
-                    notesElement.VisualHeight = MidiCanvas.ActualHeight;
-                    notesElement.TrackHeight = TrackHeight;
-                    notesElement.QuarterWidth = QuarterWidth;
-                }
-
-                if (phonemesElement != null) {
-                    phonemesElement.X = -OffsetX;
-                    phonemesElement.QuarterWidth = QuarterWidth;
-                }
-
-                updatePlayPosMarker();
-            }
-
-            _updated = false;
-            foreach (var pair in expElements) pair.Value.RedrawIfUpdated();
-            if (notesElement != null) notesElement.RedrawIfUpdated();
-            if (phonemesElement != null && ShowPhoneme) phonemesElement.RedrawIfUpdated();
-        }
-
         # region PlayPosMarker
 
-        public int playPosTick = 0;
+        public int playPosTick;
         Path playPosMarker;
         Rectangle playPosMarkerHighlight;
 
         private void initPlayPosMarker() {
-            playPosTick = DocManager.Inst.playPosTick;
+            playPosTick = CommandDispatcher.Inst.playPosTick;
             if (playPosMarker == null) {
-                playPosMarker = new Path() {
+                playPosMarker = new Path {
                     Fill = ThemeManager.TickLineBrushDark,
                     Data = Geometry.Parse("M 0 0 L 13 0 L 13 3 L 6.5 9 L 0 3 Z")
                 };
                 TimelineCanvas.Children.Add(playPosMarker);
 
-                playPosMarkerHighlight = new Rectangle() {
+                playPosMarkerHighlight = new Rectangle {
                     Fill = ThemeManager.TickLineBrushDark,
                     Opacity = 0.25,
                     Width = 32
@@ -300,7 +295,7 @@ namespace LibreUtau.UI.Models {
         }
 
         public void updatePlayPosMarker() {
-            double quarter = (double)(playPosTick - Part.PosTick) / DocManager.Inst.Project.Resolution;
+            double quarter = (double)(playPosTick - Part.PosTick) / CommandDispatcher.Inst.Project.Resolution;
             int playPosMarkerOffset = (int)Math.Round(QuarterToCanvas(quarter) + 0.5);
             Canvas.SetLeft(playPosMarker, playPosMarkerOffset - 6);
             playPosMarkerHighlight.Height = MidiCanvas.ActualHeight;
@@ -316,7 +311,7 @@ namespace LibreUtau.UI.Models {
         # region Selection
 
         public NoteSelection SelectedNotes = new NoteSelection();
-        private UNote ManipulatedNote = null;
+        private UNote ManipulatedNote;
 
         public void SetModifiedNote(UNote note) {
             ManipulatedNote = note;
@@ -333,12 +328,12 @@ namespace LibreUtau.UI.Models {
 
         public void SelectAll() {
             SelectedNotes = new NoteSelection(Part.Notes);
-            DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+            CommandDispatcher.Inst.ExecuteCmd(new RedrawNotesNotification());
         }
 
         public void DeselectAll() {
             SelectedNotes.Clear();
-            DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+            CommandDispatcher.Inst.ExecuteCmd(new RedrawNotesNotification());
         }
 
         public void ToggleSelection(UNote note) {
@@ -346,8 +341,8 @@ namespace LibreUtau.UI.Models {
                 SelectedNotes.RemoveNote(note);
             else
                 SelectedNotes.AddNote(note);
-            
-            DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+
+            CommandDispatcher.Inst.ExecuteCmd(new RedrawNotesNotification());
             ManipulatedNote = null;
         }
 
@@ -372,7 +367,7 @@ namespace LibreUtau.UI.Models {
                     note.NoteNum >= noteNum1 && note.NoteNum <= noteNum2) SelectedNotes.AddNote(note);
             }
 
-            DocManager.Inst.ExecuteCmd(new RedrawNotesNotification());
+            CommandDispatcher.Inst.ExecuteCmd(new RedrawNotesNotification());
         }
 
         # endregion
@@ -422,7 +417,7 @@ namespace LibreUtau.UI.Models {
         {
             double leftTick = OffsetX / QuarterWidth * Project.Resolution - 512;
             double rightTick = leftTick + ViewWidth / QuarterWidth * Project.Resolution + 512;
-            return ((double)note.PosTick < rightTick && (double)note.EndTick > leftTick);
+            return (note.PosTick < rightTick && note.EndTick > leftTick);
         }
 
         # endregion
@@ -432,7 +427,7 @@ namespace LibreUtau.UI.Models {
         private void UnloadPart() {
             SelectedNotes.Clear();
             Title = "";
-            _part = null;
+            Part = null;
 
             if (notesElement != null) {
                 notesElement.Part = null;
@@ -453,19 +448,19 @@ namespace LibreUtau.UI.Models {
             if (part == Part) return;
             if (!(part is UVoicePart)) return;
             UnloadPart();
-            _part = (UVoicePart)part;
+            Part = (UVoicePart)part;
 
             OnPartModified();
 
             if (notesElement == null) {
-                notesElement = new NotesElement() {Key = "pitchbend", Part = this.Part, midiVM = this};
+                notesElement = new NotesElement {Key = "pitchbend", Part = this.Part, midiVM = this};
                 MidiCanvas.Children.Add(notesElement);
             } else {
                 notesElement.Part = this.Part;
             }
 
             if (phonemesElement == null) {
-                phonemesElement = new PhonemesElement() {Part = this.Part, midiVM = this};
+                phonemesElement = new PhonemesElement {Part = this.Part, midiVM = this};
                 PhonemeCanvas.Children.Add(phonemesElement);
             } else {
                 phonemesElement.Part = this.Part;
@@ -493,7 +488,7 @@ namespace LibreUtau.UI.Models {
         private void OnSelectExpression(UNotification cmd) {
             var _cmd = cmd as SelectExpressionNotification;
             if (!expElements.ContainsKey(_cmd.ExpKey)) {
-                var expEl = new FloatExpElement() {Key = _cmd.ExpKey, Part = this.Part, midiVM = this};
+                var expEl = new FloatExpElement {Key = _cmd.ExpKey, Part = this.Part, midiVM = this};
                 expElements.Add(_cmd.ExpKey, expEl);
                 ExpCanvas.Children.Add(expEl);
             }
@@ -525,7 +520,7 @@ namespace LibreUtau.UI.Models {
 
         # region ICmdSubscriber
 
-        public void Subscribe(ICmdPublisher publisher) {
+        public void SubscribeTo(ICmdPublisher publisher) {
             if (publisher != null) publisher.Subscribe(this);
         }
 
@@ -536,7 +531,7 @@ namespace LibreUtau.UI.Models {
             } else if (cmd is PartCommand) {
                 var _cmd = cmd as PartCommand;
                 if (_cmd.part != this.Part) return;
-                else if (_cmd is RemovePartCommand) UnloadPart();
+                if (_cmd is RemovePartCommand) UnloadPart();
                 else if (_cmd is ResizePartCommand) OnPartModified();
                 else if (_cmd is MovePartCommand) OnPartModified();
             } else if (cmd is ExpCommand) {

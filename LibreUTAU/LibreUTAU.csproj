@@ -104,56 +104,57 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\Classes\PlaybackManager.cs" />
-    <Compile Include="Core\Classes\ProjectBuilder.cs" />
-    <Compile Include="Core\Classes\TrackCommands.cs" />
-    <Compile Include="Core\Formats\Midi.cs" />
+    <Compile Include="Core\Audio\Build\NoteCacheProvider.cs"/>
+    <Compile Include="Core\Audio\Build\ProjectBuilder.cs"/>
+    <Compile Include="Core\Audio\Playback\PlaybackManager.cs"/>
+    <Compile Include="Core\Audio\Render\NAudio\AudioStreamReader.cs"/>
+    <Compile Include="Core\Audio\Render\NAudio\EnvelopeSampleProvider.cs"/>
+    <Compile Include="Core\Audio\Render\NAudio\MemorySampleProvider.cs"/>
+    <Compile Include="Core\Audio\Render\NAudio\RenderItemSampleProvider.cs"/>
+    <Compile Include="Core\Audio\Render\NAudio\SequencingSampleProvider.cs"/>
+    <Compile Include="Core\Audio\Render\NAudio\TrackSampleProvider.cs"/>
+    <Compile Include="Core\Audio\Render\RenderDispatcher.cs"/>
+    <Compile Include="Core\Audio\Render\RenderItem.cs"/>
+    <Compile Include="Core\Commands\TrackCommands.cs"/>
+    <Compile Include="Core\Formats\Midi.cs"/>
     <Compile Include="Core\Formats\USTx.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Core\Formats\UtauSoundbank.cs" />
-    <Compile Include="Core\Render\NAudio\AudioStreamReader.cs" />
-    <Compile Include="Core\Render\NAudio\EnvelopeSampleProvider.cs" />
-    <Compile Include="Core\Render\NAudio\MemorySampleProvider.cs" />
-    <Compile Include="Core\Render\NAudio\TrackSampleProvider.cs" />
-    <Compile Include="Core\Render\NAudio\SequencingSampleProvider.cs" />
-    <Compile Include="Core\Render\RenderItem.cs" />
-    <Compile Include="Core\Render\NAudio\RenderItemSampleProvider.cs" />
-    <Compile Include="Core\Classes\ExpCommands.cs" />
-    <Compile Include="Core\Render\RenderDispatcher.cs" />
-    <Compile Include="Core\ResamplerDriver\DriverEngine.cs" />
-    <Compile Include="Core\ResamplerDriver\DriverModels.cs" />
-    <Compile Include="Core\ResamplerDriver\Factories\CppDriver.cs" />
-    <Compile Include="Core\ResamplerDriver\Factories\ExeDriver.cs" />
-    <Compile Include="Core\ResamplerDriver\Factories\SharpDriver.cs" />
-    <Compile Include="Core\USTx\UExpression.cs" />
-    <Compile Include="Core\Classes\NoteCommands.cs" />
-    <Compile Include="ThirdParty\Deque.cs" />
-    <Compile Include="Core\Classes\DocManager.cs" />
-    <Compile Include="Core\Classes\Notifications.cs" />
-    <Compile Include="Core\Classes\PartCommands.cs" />
-    <Compile Include="Core\Classes\UCommand.cs" />
-    <Compile Include="Core\Classes\PartManager.cs" />
-    <Compile Include="Core\USTx\UPhoneme.cs" />
-    <Compile Include="Core\USTx\USinger.cs" />
-    <Compile Include="ThirdParty\FileEncoding.cs" />
-    <Compile Include="Core\Util\Base64.cs" />
-    <Compile Include="Core\Util\IniFileClass.cs" />
-    <Compile Include="Core\Util\Logger.cs" />
-    <Compile Include="Core\Util\PathManager.cs" />
-    <Compile Include="Core\Util\Preferences.cs" />
-    <Compile Include="Core\Util\UpdateChecker.cs" />
+    <Compile Include="Core\Formats\UtauSoundbank.cs"/>
+    <Compile Include="Core\Commands\ExpCommands.cs"/>
+    <Compile Include="Core\ResamplerDriver\DriverEngine.cs"/>
+    <Compile Include="Core\ResamplerDriver\DriverModels.cs"/>
+    <Compile Include="Core\ResamplerDriver\Factories\CppDriver.cs"/>
+    <Compile Include="Core\ResamplerDriver\Factories\ExeDriver.cs"/>
+    <Compile Include="Core\ResamplerDriver\Factories\SharpDriver.cs"/>
+    <Compile Include="Core\USTx\UExpression.cs"/>
+    <Compile Include="Core\Commands\NoteCommands.cs"/>
+    <Compile Include="ThirdParty\Deque.cs"/>
+    <Compile Include="Core\Commands\CommandDispatcher.cs"/>
+    <Compile Include="Core\Commands\Notifications.cs"/>
+    <Compile Include="Core\Commands\PartCommands.cs"/>
+    <Compile Include="Core\Commands\UCommand.cs"/>
+    <Compile Include="Core\Commands\ProjectWatcher.cs"/>
+    <Compile Include="Core\USTx\UPhoneme.cs"/>
+    <Compile Include="Core\USTx\USinger.cs"/>
+    <Compile Include="ThirdParty\FileEncoding.cs"/>
+    <Compile Include="Core\Util\Base64.cs"/>
+    <Compile Include="Core\Util\IniFileClass.cs"/>
+    <Compile Include="Core\Util\Logger.cs"/>
+    <Compile Include="Core\Util\PathManager.cs"/>
+    <Compile Include="Core\Util\Preferences.cs"/>
+    <Compile Include="Core\Util\UpdateChecker.cs"/>
     <Compile Include="UI\Controls\ExpComboBox.xaml.cs">
       <DependentUpon>ExpComboBox.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\Controls\ExpElements.cs" />
-    <Compile Include="UI\Controls\NotesElement.cs" />
-    <Compile Include="UI\Controls\PartElements.cs" />
+    <Compile Include="UI\Controls\ExpElements.cs"/>
+    <Compile Include="UI\Controls\NotesElement.cs"/>
+    <Compile Include="UI\Controls\PartElements.cs"/>
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Core\Formats\Formats.cs" />
+    <Compile Include="Core\Formats\Formats.cs"/>
     <Compile Include="Core\Formats\Wave.cs" />
     <Compile Include="Core\Formats\Ust.cs" />
     <Compile Include="Core\Util\MusicMath.cs" />

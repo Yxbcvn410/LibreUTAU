@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LibreUtau.Core.USTx;
 
-namespace LibreUtau.Core {
+namespace LibreUtau.Core.Commands {
     public abstract class UCommand {
         public abstract void Execute();
         public abstract void Rollback();
@@ -20,7 +16,8 @@ namespace LibreUtau.Core {
     }
 
     public class ICmdPublisher {
-        private List<ICmdSubscriber> subscribers = new List<ICmdSubscriber>();
+        private readonly List<ICmdSubscriber> subscribers = new List<ICmdSubscriber>();
+
         public void Subscribe(ICmdSubscriber subscriber) {
             if (!subscribers.Contains(subscriber)) subscribers.Add(subscriber);
         }
@@ -31,7 +28,7 @@ namespace LibreUtau.Core {
     }
 
     public interface ICmdSubscriber {
-        void Subscribe(ICmdPublisher publisher);
+        void SubscribeTo(ICmdPublisher publisher);
         void OnCommandExecuted(UCommand cmd, bool isUndo);
     }
 }

@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LibreUtau.Core.USTx;
+﻿using LibreUtau.Core.USTx;
 
-namespace LibreUtau.Core {
+namespace LibreUtau.Core.Commands {
     public class UNotification : UCommand {
-        public UProject project;
         public UPart part;
+        public UProject project;
         public override void Execute() { }
         public override void Rollback() { }
         public override string ToString() { return "Notification"; }
     }
 
     /// <summary>
-    /// Message for user's information.
+    ///     Message for user's information.
     /// </summary>
     public class UserMessageNotification : UNotification {
         public string message;
@@ -53,8 +48,8 @@ namespace LibreUtau.Core {
 
     public class SelectExpressionNotification : UNotification {
         public string ExpKey;
-        public bool UpdateShadow;
         public int SelectorIndex;
+        public bool UpdateShadow;
 
         public SelectExpressionNotification(string expKey, int index, bool updateShadow) {
             ExpKey = expKey;
@@ -88,8 +83,8 @@ namespace LibreUtau.Core {
     }
 
     public class ProgressBarNotification : UNotification {
-        public int Progress;
         public string Info;
+        public int Progress;
 
         public ProgressBarNotification(int progress, string info) {
             Progress = progress;
@@ -100,8 +95,8 @@ namespace LibreUtau.Core {
     }
 
     public class VolumeChangeNotification : UNotification {
-        public double Volume;
         public int TrackNo;
+        public double Volume;
 
         public VolumeChangeNotification(int trackNo, double volume) {
             this.TrackNo = trackNo;

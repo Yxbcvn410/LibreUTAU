@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
+using LibreUtau.Core.Audio.Build;
 using LibreUtau.Core.USTx;
 
-namespace LibreUtau.Core {
-    public class PartManager : ICmdSubscriber {
+namespace LibreUtau.Core.Commands {
+    public class ProjectWatcher : ICmdSubscriber {
         private UVoicePart Part;
 
-        public PartManager() {
-            this.Subscribe(DocManager.Inst);
+        public ProjectWatcher() {
+            this.SubscribeTo(CommandDispatcher.Inst);
             this.Part = null;
         }
 
@@ -18,7 +19,7 @@ namespace LibreUtau.Core {
                 UpdatePhonemes(part);
                 UpdateEnvelope(part);
                 UpdatePitchBend(part);
-                DocManager.Inst.ExecuteCmd(new RedrawNotesNotification(), true);
+                CommandDispatcher.Inst.ExecuteCmd(new RedrawNotesNotification(), true);
             }
         }
 
@@ -52,12 +53,12 @@ namespace LibreUtau.Core {
 
         private void UpdateEnvelope(UVoicePart part) {
             foreach (UNote note in part.Notes) {
-                note.Phoneme.Envelope.Points[0].X = -note.Phoneme.Preutter;
+                note.Phoneme.Envelope.Points[0].X = -note.Phoneme.PreUtter;
                 note.Phoneme.Envelope.Points[1].X =
                     note.Phoneme.Envelope.Points[0].X + (note.Phoneme.Overlapped ? note.Phoneme.Overlap : 5);
                 note.Phoneme.Envelope.Points[2].X = Math.Max(0, note.Phoneme.Envelope.Points[1].X);
                 note.Phoneme.Envelope.Points[3].X =
-                    DocManager.Inst.Project.TickToMillisecond(note.Phoneme.DurTick) - note.Phoneme.TailIntrude;
+                    CommandDispatcher.Inst.Project.TickToMillisecond(note.Phoneme.DurTick) - note.Phoneme.TailIntrude;
                 note.Phoneme.Envelope.Points[4].X = note.Phoneme.Envelope.Points[3].X + note.Phoneme.TailOverlap;
 
                 note.Phoneme.Envelope.Points[1].Y = (int)note.Phoneme.Parent.Expressions["volume"].Data;
@@ -65,7 +66,7 @@ namespace LibreUtau.Core {
                                                     (note.Phoneme.Overlapped ? note.Phoneme.Overlap : 5) *
                                                     (int)note.Phoneme.Parent.Expressions["accent"].Data / 100.0;
                 note.Phoneme.Envelope.Points[1].Y = (int)note.Phoneme.Parent.Expressions["accent"].Data *
-                    (int)note.Phoneme.Parent.Expressions["volume"].Data / 100;
+                    (int)note.Phoneme.Parent.Expressions["volume"].Data / 100.0;
                 note.Phoneme.Envelope.Points[2].Y = (int)note.Phoneme.Parent.Expressions["volume"].Data;
                 note.Phoneme.Envelope.Points[3].Y = (int)note.Phoneme.Parent.Expressions["volume"].Data;
                 note.Phoneme.Envelope.Points[3].X -=
@@ -76,7 +77,7 @@ namespace LibreUtau.Core {
         }
 
         private void UpdatePhonemes(UVoicePart part) {
-            var singer = DocManager.Inst.Project.Tracks[part.TrackNo].Singer;
+            var singer = CommandDispatcher.Inst.Project.Tracks[part.TrackNo].Singer;
             if (singer == null || !singer.Loaded) return;
             UNote previousNote = null;
             foreach (UNote note in part.Notes) {
@@ -90,24 +91,24 @@ namespace LibreUtau.Core {
                     var lastPhoneme = previousNote.Phoneme;
                     int gapTick = phoneme.Parent.PosTick - lastPhoneme.Parent.PosTick -
                                   lastPhoneme.DurTick;
-                    double gapMs = DocManager.Inst.Project.TickToMillisecond(gapTick);
-                    if (gapMs < phoneme.Preutter) {
+                    double gapMs = CommandDispatcher.Inst.Project.TickToMillisecond(gapTick);
+                    if (gapMs < phoneme.PreUtter) {
                         phoneme.Overlapped = true;
-                        double lastDurMs = DocManager.Inst.Project.TickToMillisecond(lastPhoneme.DurTick);
+                        double lastDurMs = CommandDispatcher.Inst.Project.TickToMillisecond(lastPhoneme.DurTick);
                         double correctionRatio =
-                            (lastDurMs + Math.Min(0, gapMs)) / 2 / (phoneme.Preutter - phoneme.Overlap);
-                        if (phoneme.Preutter - phoneme.Overlap > gapMs + lastDurMs / 2) {
+                            (lastDurMs + Math.Min(0, gapMs)) / 2 / (phoneme.PreUtter - phoneme.Overlap);
+                        if (phoneme.PreUtter - phoneme.Overlap > gapMs + lastDurMs / 2) {
                             phoneme.OverlapCorrection = true;
-                            phoneme.Preutter = gapMs + (phoneme.Preutter - gapMs) * correctionRatio;
+                            phoneme.PreUtter = gapMs + (phoneme.PreUtter - gapMs) * correctionRatio;
                             phoneme.Overlap *= correctionRatio;
-                        } else if (phoneme.Preutter > gapMs + lastDurMs) {
+                        } else if (phoneme.PreUtter > gapMs + lastDurMs) {
                             phoneme.OverlapCorrection = true;
                             phoneme.Overlap *= correctionRatio;
-                            phoneme.Preutter = gapMs + lastDurMs;
+                            phoneme.PreUtter = gapMs + lastDurMs;
                         } else
                             phoneme.OverlapCorrection = false;
 
-                        lastPhoneme.TailIntrude = phoneme.Preutter - gapMs;
+                        lastPhoneme.TailIntrude = phoneme.PreUtter - gapMs;
                         lastPhoneme.TailOverlap = phoneme.Overlap;
                     } else {
                         phoneme.Overlapped = false;
@@ -139,15 +140,16 @@ namespace LibreUtau.Core {
             foreach (UPart part in cmd.project.Parts)
                 if (part is UVoicePart)
                     UpdatePart((UVoicePart)part);
-            cmd.project.RequireRebuild();
+            NoteCacheProvider.SetCacheDir(cmd.project.CacheDir);
+            NoteCacheProvider.CleanupCache(true);
         }
 
         # endregion
 
         # region ICmdSubscriber
 
-        public void Subscribe(ICmdPublisher publisher) {
-            if (publisher != null) publisher.Subscribe(this);
+        public void SubscribeTo(ICmdPublisher publisher) {
+            publisher?.Subscribe(this);
         }
 
         public void OnCommandExecuted(UCommand cmd, bool isUndo) {
@@ -165,17 +167,12 @@ namespace LibreUtau.Core {
                     break;
                 case NoteCommand _:
                     UpdatePart(Part);
-                    Part.RequireRebuild();
                     break;
                 case ExpCommand _:
                     UpdatePart(Part);
-                    Part.RequireRebuild();
                     break;
                 case TrackChangeSingerCommand command:
-                    foreach (var part in command.project.Parts.OfType<UVoicePart>()) {
-                        UpdatePart(part);
-                        part.RequireRebuild();
-                    }
+                    foreach (var part in command.project.Parts.OfType<UVoicePart>()) UpdatePart(part);
 
                     break;
                 case MovePartCommand command:
@@ -183,7 +180,6 @@ namespace LibreUtau.Core {
                         command.project.Tracks[command.oldTrackNo].Singer !=
                         command.project.Tracks[command.newTrackNo].Singer) {
                         UpdatePart(voicePart);
-                        voicePart.RequireRebuild();
                     }
 
                     break;

@@ -7,6 +7,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using LibreUtau.Core;
+using LibreUtau.Core.Audio.Playback;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.Formats;
 using LibreUtau.Core.USTx;
 using LibreUtau.Core.Util;
@@ -35,7 +37,7 @@ namespace LibreUtau.UI {
             ThemeManager.LoadTheme(); // TODO : move to program entry point
 
             progVM = this.Resources["progVM"] as ProgressBarViewModel;
-            progVM.Subscribe(DocManager.Inst);
+            progVM.SubscribeTo(CommandDispatcher.Inst);
             progVM.Foreground = ThemeManager.NoteFillBrushes[0];
 
             this.CloseButtonClicked += (o, e) => { CmdExit(); };
@@ -49,7 +51,7 @@ namespace LibreUtau.UI {
             trackVM.TimelineCanvas = this.timelineCanvas;
             trackVM.TrackCanvas = this.trackCanvas;
             trackVM.HeaderCanvas = this.headerCanvas;
-            trackVM.Subscribe(DocManager.Inst);
+            trackVM.SubscribeTo(CommandDispatcher.Inst);
 
             CmdNewFile();
 
@@ -81,18 +83,19 @@ namespace LibreUtau.UI {
 
         private void Window_KeyDown(object sender, KeyEventArgs e) {
             if (Keyboard.Modifiers == 0 && e.Key == Key.Delete) {
-                DocManager.Inst.StartUndoGroup();
+                CommandDispatcher.Inst.StartUndoGroup();
                 while (trackVM.SelectedParts.Count > 0)
-                    DocManager.Inst.ExecuteCmd(new RemovePartCommand(trackVM.Project, trackVM.SelectedParts.Last()));
-                DocManager.Inst.EndUndoGroup();
+                    CommandDispatcher.Inst.ExecuteCmd(new RemovePartCommand(trackVM.Project,
+                        trackVM.SelectedParts.Last()));
+                CommandDispatcher.Inst.EndUndoGroup();
             } else if (Keyboard.Modifiers == ModifierKeys.Alt && e.SystemKey == Key.F4) CmdExit();
             else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.O) CmdOpenFileDialog();
             else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z) {
                 trackVM.DeselectAll();
-                DocManager.Inst.Undo();
+                CommandDispatcher.Inst.Undo();
             } else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y) {
                 trackVM.DeselectAll();
-                DocManager.Inst.Redo();
+                CommandDispatcher.Inst.Redo();
             }
         }
 
@@ -130,11 +133,11 @@ namespace LibreUtau.UI {
 
         private void headerCanvas_MouseDown(object sender, MouseButtonEventArgs e) {
             if (e.ClickCount == 2) {
-                var project = DocManager.Inst.Project;
-                DocManager.Inst.StartUndoGroup();
-                DocManager.Inst.ExecuteCmd(
+                var project = CommandDispatcher.Inst.Project;
+                CommandDispatcher.Inst.StartUndoGroup();
+                CommandDispatcher.Inst.ExecuteCmd(
                     new AddTrackCommand(project, new UTrack {TrackNo = project.Tracks.Count()}));
-                DocManager.Inst.EndUndoGroup();
+                CommandDispatcher.Inst.EndUndoGroup();
             }
         }
 
@@ -153,7 +156,7 @@ namespace LibreUtau.UI {
         private void timelineCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             Point mousePos = e.GetPosition((UIElement)sender);
             int tick = (int)(trackVM.CanvasToSnappedQuarter(mousePos.X) * trackVM.Project.Resolution);
-            DocManager.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Math.Max(0, tick)));
+            CommandDispatcher.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Math.Max(0, tick)));
             ((Canvas)sender).CaptureMouse();
         }
 
@@ -166,7 +169,7 @@ namespace LibreUtau.UI {
             if (Mouse.LeftButton == MouseButtonState.Pressed && Mouse.Captured == timelineCanvas) {
                 int tick = (int)(trackVM.CanvasToSnappedQuarter(mousePos.X) * trackVM.Project.Resolution);
                 if (trackVM.playPosTick != tick)
-                    DocManager.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Math.Max(0, tick)));
+                    CommandDispatcher.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Math.Max(0, tick)));
             }
         }
 
@@ -237,7 +240,7 @@ namespace LibreUtau.UI {
                     if (partEl is VoicePartElement) // load part into midi window
                     {
                         if (midiWindow == null) midiWindow = new MidiWindow();
-                        DocManager.Inst.ExecuteCmd(new LoadPartNotification(partEl.Part, trackVM.Project));
+                        CommandDispatcher.Inst.ExecuteCmd(new LoadPartNotification(partEl.Part, trackVM.Project));
                         midiWindow.Show();
                         midiWindow.Focus();
                     }
@@ -258,7 +261,7 @@ namespace LibreUtau.UI {
                         _resizeMinDurTick = _partResizeShortest.GetMinDurTick();
                     }
 
-                    DocManager.Inst.StartUndoGroup();
+                    CommandDispatcher.Inst.StartUndoGroup();
                 } else // move
                 {
                     _movePartElement = true;
@@ -274,7 +277,7 @@ namespace LibreUtau.UI {
                         }
                     }
 
-                    DocManager.Inst.StartUndoGroup();
+                    CommandDispatcher.Inst.StartUndoGroup();
                 }
             } else {
                 if (trackVM.CanvasToTrack(mousePos.Y) > trackVM.Project.Tracks.Count - 1) return;
@@ -283,9 +286,9 @@ namespace LibreUtau.UI {
                     TrackNo = trackVM.CanvasToTrack(mousePos.Y),
                     DurTick = trackVM.Project.Resolution * 4 / trackVM.Project.BeatUnit * trackVM.Project.BeatPerBar
                 };
-                DocManager.Inst.StartUndoGroup();
-                DocManager.Inst.ExecuteCmd(new AddPartCommand(trackVM.Project, part));
-                DocManager.Inst.EndUndoGroup();
+                CommandDispatcher.Inst.StartUndoGroup();
+                CommandDispatcher.Inst.ExecuteCmd(new AddPartCommand(trackVM.Project, part));
+                CommandDispatcher.Inst.EndUndoGroup();
                 // Enable drag
                 trackVM.DeselectAll();
                 _movePartElement = true;
@@ -301,7 +304,7 @@ namespace LibreUtau.UI {
             _movePartElement = false;
             _resizePartElement = false;
             _hitPartElement = null;
-            DocManager.Inst.EndUndoGroup();
+            CommandDispatcher.Inst.EndUndoGroup();
             // End selection
             selectionStart = null;
             if (selectionBox != null) {
@@ -343,7 +346,7 @@ namespace LibreUtau.UI {
                         (int)(trackVM.Project.Resolution * trackVM.CanvasToSnappedQuarter(mousePos.X)) -
                         _partMoveRelativeTick);
                     if (newTrackNo != _hitPartElement.Part.TrackNo || newPosTick != _hitPartElement.Part.PosTick)
-                        DocManager.Inst.ExecuteCmd(new MovePartCommand(trackVM.Project, _hitPartElement.Part,
+                        CommandDispatcher.Inst.ExecuteCmd(new MovePartCommand(trackVM.Project, _hitPartElement.Part,
                             newPosTick, newTrackNo));
                 } else {
                     int deltaTrackNo = trackVM.CanvasToTrack(mousePos.Y) - _hitPartElement.Part.TrackNo;
@@ -355,7 +358,7 @@ namespace LibreUtau.UI {
                     bool changePosTick = deltaPosTick + _partMovePartLeft.PosTick >= 0;
                     if (changeTrackNo || changePosTick)
                         foreach (UPart part in trackVM.SelectedParts)
-                            DocManager.Inst.ExecuteCmd(new MovePartCommand(trackVM.Project, part,
+                            CommandDispatcher.Inst.ExecuteCmd(new MovePartCommand(trackVM.Project, part,
                                 changePosTick ? part.PosTick + deltaPosTick : part.PosTick,
                                 changeTrackNo ? part.TrackNo + deltaTrackNo : part.TrackNo));
                 }
@@ -366,7 +369,7 @@ namespace LibreUtau.UI {
                         (int)(trackVM.Project.Resolution * trackVM.CanvasRoundToSnappedQuarter(mousePos.X)) -
                         _hitPartElement.Part.PosTick;
                     if (newDurTick > _resizeMinDurTick && newDurTick != _hitPartElement.Part.DurTick)
-                        DocManager.Inst.ExecuteCmd(new ResizePartCommand(trackVM.Project, _hitPartElement.Part,
+                        CommandDispatcher.Inst.ExecuteCmd(new ResizePartCommand(trackVM.Project, _hitPartElement.Part,
                             newDurTick));
                 } else {
                     int deltaDurTick =
@@ -374,7 +377,7 @@ namespace LibreUtau.UI {
                         _hitPartElement.Part.EndTick;
                     if (deltaDurTick != 0 && _partResizeShortest.DurTick + deltaDurTick > _resizeMinDurTick)
                         foreach (UPart part in trackVM.SelectedParts)
-                            DocManager.Inst.ExecuteCmd(new ResizePartCommand(trackVM.Project, part,
+                            CommandDispatcher.Inst.ExecuteCmd(new ResizePartCommand(trackVM.Project, part,
                                 part.DurTick + deltaDurTick));
                 }
             } else if (Mouse.RightButton == MouseButtonState.Pressed) // Remove
@@ -384,7 +387,8 @@ namespace LibreUtau.UI {
                 var hit = result.VisualHit;
                 if (hit is DrawingVisual) {
                     PartElement partEl = ((DrawingVisual)hit).Parent as PartElement;
-                    if (partEl != null) DocManager.Inst.ExecuteCmd(new RemovePartCommand(trackVM.Project, partEl.Part));
+                    if (partEl != null)
+                        CommandDispatcher.Inst.ExecuteCmd(new RemovePartCommand(trackVM.Project, partEl.Part));
                 }
             } else if (Mouse.LeftButton == MouseButtonState.Released &&
                        Mouse.RightButton == MouseButtonState.Released) {
@@ -404,7 +408,7 @@ namespace LibreUtau.UI {
 
         private void trackCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e) {
             FocusManager.SetFocusedElement(this, null);
-            DocManager.Inst.StartUndoGroup();
+            CommandDispatcher.Inst.StartUndoGroup();
             Point mousePos = e.GetPosition((Canvas)sender);
             HitTestResult result = VisualTreeHelper.HitTest(trackCanvas, mousePos);
             if (result == null) return;
@@ -412,7 +416,7 @@ namespace LibreUtau.UI {
             if (hit is DrawingVisual) {
                 PartElement partEl = ((DrawingVisual)hit).Parent as PartElement;
                 if (partEl != null && trackVM.SelectedParts.Contains(partEl.Part))
-                    DocManager.Inst.ExecuteCmd(new RemovePartCommand(trackVM.Project, partEl.Part));
+                    CommandDispatcher.Inst.ExecuteCmd(new RemovePartCommand(trackVM.Project, partEl.Part));
                 else trackVM.DeselectAll();
             } else {
                 trackVM.DeselectAll();
@@ -426,7 +430,7 @@ namespace LibreUtau.UI {
             trackVM.UpdateViewSize();
             Mouse.OverrideCursor = null;
             ((UIElement)sender).ReleaseMouseCapture();
-            DocManager.Inst.EndUndoGroup();
+            CommandDispatcher.Inst.EndUndoGroup();
         }
 
         # endregion
@@ -437,8 +441,8 @@ namespace LibreUtau.UI {
         private void MenuOpen_Click(object sender, RoutedEventArgs e) { CmdOpenFileDialog(); }
         private void MenuSave_Click(object sender, RoutedEventArgs e) { CmdSaveFile(); }
         private void MenuExit_Click(object sender, RoutedEventArgs e) { CmdExit(); }
-        private void MenuUndo_Click(object sender, RoutedEventArgs e) { DocManager.Inst.Undo(); }
-        private void MenuRedo_Click(object sender, RoutedEventArgs e) { DocManager.Inst.Redo(); }
+        private void MenuUndo_Click(object sender, RoutedEventArgs e) { CommandDispatcher.Inst.Undo(); }
+        private void MenuRedo_Click(object sender, RoutedEventArgs e) { CommandDispatcher.Inst.Redo(); }
 
         private void MenuImportAudio_Click(object sender, RoutedEventArgs e) {
             OpenFileDialog openFileDialog = new OpenFileDialog {
@@ -456,19 +460,19 @@ namespace LibreUtau.UI {
                 CheckFileExists = true
             };
             if (openFileDialog.ShowDialog() == true) CmdImportAudio(openFileDialog.FileName);
-            var project = DocManager.Inst.Project;
+            var project = CommandDispatcher.Inst.Project;
             var parts = Midi.Load(openFileDialog.FileName, project);
 
-            DocManager.Inst.StartUndoGroup();
+            CommandDispatcher.Inst.StartUndoGroup();
             foreach (var part in parts) {
                 var track = new UTrack();
                 track.TrackNo = project.Tracks.Count;
                 part.TrackNo = track.TrackNo;
-                DocManager.Inst.ExecuteCmd(new AddTrackCommand(project, track));
-                DocManager.Inst.ExecuteCmd(new AddPartCommand(project, part));
+                CommandDispatcher.Inst.ExecuteCmd(new AddTrackCommand(project, track));
+                CommandDispatcher.Inst.ExecuteCmd(new AddPartCommand(project, part));
             }
 
-            DocManager.Inst.EndUndoGroup();
+            CommandDispatcher.Inst.EndUndoGroup();
         }
 
         private void MenuSingers_Click(object sender, RoutedEventArgs e) {
@@ -477,7 +481,7 @@ namespace LibreUtau.UI {
         }
 
         private void MenuRenderAll_Click(object sender, RoutedEventArgs e) {
-            PlaybackManager.Inst.Play(DocManager.Inst.Project);
+            PlaybackManager.Inst.Play(CommandDispatcher.Inst.Project);
         }
 
         private void MenuAbout_Click(object sender, RoutedEventArgs e) {
@@ -498,7 +502,7 @@ namespace LibreUtau.UI {
         # region application commmands
 
         private void CmdNewFile() {
-            DocManager.Inst.ExecuteCmd(new LoadProjectNotification(USTx.Create()));
+            CommandDispatcher.Inst.ExecuteCmd(new LoadProjectNotification(USTx.Create()));
         }
 
         private void CmdOpenFileDialog() {
@@ -519,14 +523,14 @@ namespace LibreUtau.UI {
         }
 
         private void CmdSaveFile() {
-            if (DocManager.Inst.Project.Saved == false) {
+            if (CommandDispatcher.Inst.Project.Saved == false) {
                 SaveFileDialog dialog = new SaveFileDialog
                     {DefaultExt = "ustx", Filter = "Project Files|*.ustx", Title = "Save File"};
                 if (dialog.ShowDialog() == true) {
-                    DocManager.Inst.ExecuteCmd(new SaveProjectNotification(dialog.FileName));
+                    CommandDispatcher.Inst.ExecuteCmd(new SaveProjectNotification(dialog.FileName));
                 }
             } else {
-                DocManager.Inst.ExecuteCmd(new SaveProjectNotification(""));
+                CommandDispatcher.Inst.ExecuteCmd(new SaveProjectNotification(""));
             }
         }
 
@@ -535,10 +539,10 @@ namespace LibreUtau.UI {
             if (part == null) return;
             int trackNo = trackVM.Project.Tracks.Count;
             part.TrackNo = trackNo;
-            DocManager.Inst.StartUndoGroup();
-            DocManager.Inst.ExecuteCmd(new AddTrackCommand(trackVM.Project, new UTrack {TrackNo = trackNo}));
-            DocManager.Inst.ExecuteCmd(new AddPartCommand(trackVM.Project, part));
-            DocManager.Inst.EndUndoGroup();
+            CommandDispatcher.Inst.StartUndoGroup();
+            CommandDispatcher.Inst.ExecuteCmd(new AddTrackCommand(trackVM.Project, new UTrack {TrackNo = trackNo}));
+            CommandDispatcher.Inst.ExecuteCmd(new AddPartCommand(trackVM.Project, part));
+            CommandDispatcher.Inst.EndUndoGroup();
         }
 
         private void CmdExit() {
@@ -556,7 +560,7 @@ namespace LibreUtau.UI {
 
         private void playButton_Click(object sender, RoutedEventArgs e) {
             if (PlaybackManager.Inst.CheckResampler()) {
-                PlaybackManager.Inst.Play(DocManager.Inst.Project);
+                PlaybackManager.Inst.Play(CommandDispatcher.Inst.Project);
             } else {
                 MessageBox.Show(
                     (string)FindResource("dialogs.noresampler.message"),

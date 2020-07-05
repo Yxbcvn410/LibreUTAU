@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LibreUtau.Core.USTx;
 
-namespace LibreUtau.Core {
+namespace LibreUtau.Core.Commands {
     public abstract class TrackCommand : UCommand {
         public UProject project;
         public UTrack track;
@@ -83,7 +80,8 @@ namespace LibreUtau.Core {
     }
 
     public class TrackChangeSingerCommand : TrackCommand {
-        USinger newSinger, oldSinger;
+        readonly USinger newSinger;
+        readonly USinger oldSinger;
 
         public TrackChangeSingerCommand(UProject project, UTrack track, USinger newSinger) {
             this.project = project;

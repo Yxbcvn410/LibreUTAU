@@ -1,51 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using LibreUtau.Core.ResamplerDriver;
 
 namespace LibreUtau.Core.ResamplerDriver.Factories {
     internal class SharpDriver : DriverModels, IResamplerDriver {
-        static Dictionary<string, Assembly> LoadTable = new Dictionary<string, Assembly>();
-        bool _isLegalPlugin = false;
+        static readonly Dictionary<string, Assembly> LoadTable = new Dictionary<string, Assembly>();
 
-        #region 对象转换接口
+        readonly Assembly asm;
+        readonly MethodInfo DoResamplerMethod;
+        readonly MethodInfo GetInformationMethod;
 
-        /// <summary>
-        /// 格式转换过程，用于强制转换结构体而不需要引用公关类
-        /// </summary>
-        /// <param name="SourceStruct"></param>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        protected static object CopyObjectToNewType(object SourceStruct, Type t) {
-            int StructSize = Marshal.SizeOf(SourceStruct);
-            IntPtr structPtr = Marshal.AllocHGlobal(StructSize);
-            Marshal.StructureToPtr(SourceStruct, structPtr, false);
-            object ret = Marshal.PtrToStructure(structPtr, t);
-            Marshal.FreeHGlobal(structPtr);
-            return ret;
-        }
-
-        #endregion
-
-        Assembly asm = null;
-        MethodInfo DoResamplerMethod = null;
-        MethodInfo GetInformationMethod = null;
-
-        public SharpDriver(string DllPath) {
-            if (LoadTable.ContainsKey(DllPath)) {
-                asm = LoadTable[DllPath];
+        public SharpDriver(string dllPath) {
+            if (LoadTable.ContainsKey(dllPath)) {
+                asm = LoadTable[dllPath];
             } else {
                 try {
-                    asm = Assembly.LoadFrom(DllPath);
+                    asm = Assembly.LoadFrom(dllPath);
                 } catch {
                 }
 
-                LoadTable.Add(DllPath, asm);
+                LoadTable.Add(dllPath, asm);
             }
 
-            if (asm == null) _isLegalPlugin = false;
+            if (asm == null) isLegalPlugin = false;
             else {
                 foreach (Type t in asm.GetExportedTypes()) {
                     if (DoResamplerMethod == null) {
@@ -63,27 +42,23 @@ namespace LibreUtau.Core.ResamplerDriver.Factories {
                     }
 
                     if ((GetInformationMethod != null) && (DoResamplerMethod != null)) {
-                        _isLegalPlugin = true;
+                        isLegalPlugin = true;
                         break;
                     }
                 }
             }
         }
 
-        public bool isLegalPlugin {
-            get {
-                return _isLegalPlugin;
-            }
-        }
+        public bool isLegalPlugin { get; }
 
-        public System.IO.Stream DoResampler(EngineInput Args) {
-            System.IO.MemoryStream ms = new System.IO.MemoryStream();
-            if (!_isLegalPlugin) return ms;
+        public Stream DoResampler(EngineInput args) {
+            MemoryStream ms = new MemoryStream();
+            if (!isLegalPlugin) return ms;
             if (DoResamplerMethod != null) {
-                object inputarg = CopyObjectToNewType(Args, DoResamplerMethod.GetParameters()[0].ParameterType);
+                object inputarg = CopyObjectToNewType(args, DoResamplerMethod.GetParameters()[0].ParameterType);
                 object ret = DoResamplerMethod.Invoke(null, new object[1] {inputarg});
                 EngineOutput Out = (EngineOutput)CopyObjectToNewType(ret, typeof(EngineOutput));
-                ms = new System.IO.MemoryStream(Out.wavData);
+                ms = new MemoryStream(Out.wavData);
             }
 
             return ms;
@@ -93,7 +68,7 @@ namespace LibreUtau.Core.ResamplerDriver.Factories {
             EngineInfo ret = new EngineInfo {
                 Version = "Error"
             };
-            if (!_isLegalPlugin) return ret;
+            if (!isLegalPlugin) return ret;
             if (GetInformationMethod != null) {
                 object Ret = GetInformationMethod.Invoke(null, new object[0]);
                 if (Ret != null) {
@@ -114,5 +89,24 @@ namespace LibreUtau.Core.ResamplerDriver.Factories {
 
             return ret;
         }
+
+        #region 对象转换接口
+
+        /// <summary>
+        ///     格式转换过程，用于强制转换结构体而不需要引用公关类
+        /// </summary>
+        /// <param name="SourceStruct"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        protected static object CopyObjectToNewType(object SourceStruct, Type t) {
+            int StructSize = Marshal.SizeOf(SourceStruct);
+            IntPtr structPtr = Marshal.AllocHGlobal(StructSize);
+            Marshal.StructureToPtr(SourceStruct, structPtr, false);
+            object ret = Marshal.PtrToStructure(structPtr, t);
+            Marshal.FreeHGlobal(structPtr);
+            return ret;
+        }
+
+        #endregion
     }
 }

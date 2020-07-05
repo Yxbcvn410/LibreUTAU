@@ -3,40 +3,39 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows;
-using LibreUtau.Core.ResamplerDriver;
+using LibreUtau.Core.Audio.Render.NAudio;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
-using LibreUtau.SimpleHelpers;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using xxHashSharp;
 using static LibreUtau.Core.ResamplerDriver.DriverModels;
 
-namespace LibreUtau.Core.Render {
+namespace LibreUtau.Core.Audio.Render {
     internal class RenderItem {
-        // TODO Delay in OffsetAudioProvider must never be negative!
-        
-        // For resampler
-        public string SourceFile;
+        public double DurMs;
+        public List<ExpPoint> Envelope;
 
         public int NoteNum;
-        public int Velocity;
-        public int Volume;
-        public string StrFlags;
-        public List<int> PitchData;
-        public int RequiredLength;
-        public double Tempo;
         public UOto Oto;
+        public List<int> PitchData;
+
+        public double PosMs;
+        public int RequiredLength;
 
         // For connector
         public double SkipOver;
 
-        public double PosMs;
-        public double DurMs;
-        public List<ExpPoint> Envelope;
-
         // Sound data
         public MemorySampleProvider Sound;
+        // TODO Delay in OffsetAudioProvider must never be negative!
+
+        // For resampler
+        public string SourceFile;
+        public string StrFlags;
+        public double Tempo;
+        public int Velocity;
+        public int Volume;
 
         public RenderItem(UPhoneme phoneme, UVoicePart part, UProject project) {
             var singer = project.Tracks[part.TrackNo].Singer;
@@ -47,8 +46,8 @@ namespace LibreUtau.Core.Render {
             var length = phoneme.Oto.Preutter * strechRatio + phoneme.Envelope.Points[4].X;
             var requiredLength = Math.Ceiling(length / 50 + 1) * 50;
             var lengthAdjustment = phoneme.TailIntrude == 0
-                ? phoneme.Preutter
-                : phoneme.Preutter - phoneme.TailIntrude + phoneme.TailOverlap;
+                ? phoneme.PreUtter
+                : phoneme.PreUtter - phoneme.TailIntrude + phoneme.TailOverlap;
 
             NoteNum = phoneme.Parent.NoteNum;
             Velocity = (int)phoneme.Parent.Expressions["velocity"].Data;
@@ -59,9 +58,9 @@ namespace LibreUtau.Core.Render {
             Oto = phoneme.Oto;
             Tempo = project.BPM;
 
-            SkipOver = phoneme.Oto.Preutter * strechRatio - phoneme.Preutter;
+            SkipOver = phoneme.Oto.Preutter * strechRatio - phoneme.PreUtter;
             PosMs = project.TickToMillisecond(phoneme.Parent.PosTick + part.PosTick) -
-                    phoneme.Preutter;
+                    phoneme.PreUtter;
             DurMs = project.TickToMillisecond(phoneme.DurTick) + lengthAdjustment;
             Envelope = phoneme.Envelope.Points;
             if (PosMs < 0) {
@@ -87,7 +86,7 @@ namespace LibreUtau.Core.Render {
             return new OffsetSampleProvider(envelopeSampleProvider) {
                 DelayBySamples = (int)(PosMs * sampleRate / 1000),
                 TakeSamples = (int)(DurMs * sampleRate / 1000),
-                SkipOverSamples = (int)(SkipOver * sampleRate / 1000),
+                SkipOverSamples = (int)(SkipOver * sampleRate / 1000)
             };
         }
 
@@ -126,7 +125,8 @@ namespace LibreUtau.Core.Render {
             double vibratoEndMs = 0;
 
             if (lastNoteInvolved) {
-                var offsetMs = DocManager.Inst.Project.TickToMillisecond(phoneme.Parent.PosTick - lastNote.PosTick);
+                var offsetMs =
+                    CommandDispatcher.Inst.Project.TickToMillisecond(phoneme.Parent.PosTick - lastNote.PosTick);
                 foreach (var pp in lastNote.PitchBend.Points) {
                     var newpp = pp.Clone();
                     newpp.X -= offsetMs;
@@ -135,7 +135,7 @@ namespace LibreUtau.Core.Render {
                 }
 
                 if (lastNote.Vibrato.Depth != 0) {
-                    lastVibratoStartMs = -DocManager.Inst.Project.TickToMillisecond(lastNote.DurTick) *
+                    lastVibratoStartMs = -CommandDispatcher.Inst.Project.TickToMillisecond(lastNote.DurTick) *
                         lastNote.Vibrato.Length / 100;
                     lastVibratoEndMs = 0;
                 }
@@ -146,12 +146,13 @@ namespace LibreUtau.Core.Render {
             }
 
             if (phoneme.Parent.Vibrato.Depth != 0) {
-                vibratoEndMs = DocManager.Inst.Project.TickToMillisecond(phoneme.Parent.DurTick);
+                vibratoEndMs = CommandDispatcher.Inst.Project.TickToMillisecond(phoneme.Parent.DurTick);
                 vibratoStartMs = vibratoEndMs * (1 - phoneme.Parent.Vibrato.Length / 100);
             }
 
             if (nextNoteInvolved) {
-                var offsetMs = DocManager.Inst.Project.TickToMillisecond(phoneme.Parent.PosTick - nextNote.PosTick);
+                var offsetMs =
+                    CommandDispatcher.Inst.Project.TickToMillisecond(phoneme.Parent.PosTick - nextNote.PosTick);
                 foreach (var pp in nextNote.PitchBend.Points) {
                     var newpp = pp.Clone();
                     newpp.X -= offsetMs;
@@ -161,9 +162,9 @@ namespace LibreUtau.Core.Render {
             }
 
             var startMs = -phoneme.Oto.Preutter;
-            var endMs = DocManager.Inst.Project.TickToMillisecond(phoneme.DurTick) -
+            var endMs = CommandDispatcher.Inst.Project.TickToMillisecond(phoneme.DurTick) -
                         (nextNote != null && nextNote.Phoneme.Overlapped
-                            ? nextNote.Phoneme.Preutter - nextNote.Phoneme.Overlap
+                            ? nextNote.Phoneme.PreUtter - nextNote.Phoneme.Overlap
                             : 0);
             if (pps.Count > 0) {
                 if (pps.First().X > startMs) {
@@ -179,7 +180,7 @@ namespace LibreUtau.Core.Render {
 
             // Interpolation
             const int intervalTick = 5;
-            var intervalMs = DocManager.Inst.Project.TickToMillisecond(intervalTick);
+            var intervalMs = CommandDispatcher.Inst.Project.TickToMillisecond(intervalTick);
             var currMs = startMs;
             var i = 0;
 
@@ -208,7 +209,8 @@ namespace LibreUtau.Core.Render {
         }
 
         private double InterpolateVibrato(VibratoExpression vibrato, double posMs) {
-            var lengthMs = vibrato.Length / 100 * DocManager.Inst.Project.TickToMillisecond(vibrato.Parent.DurTick);
+            var lengthMs = vibrato.Length / 100 *
+                           CommandDispatcher.Inst.Project.TickToMillisecond(vibrato.Parent.DurTick);
             var inMs = lengthMs * vibrato.In / 100;
             var outMs = lengthMs * vibrato.Out / 100;
 

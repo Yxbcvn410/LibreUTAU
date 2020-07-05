@@ -1,21 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
+using System.Windows;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 
 namespace LibreUtau.Core.Formats {
-    public enum ProjectFormats { Unknown, Vsq3, Vsq4, Ust, Ustx };
+    public enum ProjectFormat { Unknown, Vsq3, Vsq4, Ust, Ustx }
 
     static class Formats {
         const string ustMatch = "[#SETTING]";
         const string vsq3Match = VSQx.vsq3NameSpace;
         const string vsq4Match = VSQx.vsq4NameSpace;
 
-        public static ProjectFormats DetectProjectFormat(string file) {
-            if (!IsTextFile(file)) return ProjectFormats.Unknown;
+        public static ProjectFormat DetectProjectFormat(string file) {
+            if (!IsTextFile(file)) return ProjectFormat.Unknown;
             string contents = "";
             StreamReader streamReader = null;
             try {
@@ -26,28 +24,28 @@ namespace LibreUtau.Core.Formats {
                 }
             } catch (Exception e) {
                 if (streamReader != null) streamReader.Dispose();
-                System.Windows.MessageBox.Show(e.GetType().ToString() + "\n" + e.Message);
-                return ProjectFormats.Unknown;
+                MessageBox.Show(e.GetType() + "\n" + e.Message);
+                return ProjectFormat.Unknown;
             }
 
-            if (contents.Contains(ustMatch)) return ProjectFormats.Ust;
-            else if (contents.Length > 0 && contents[0] == '{') return ProjectFormats.Ustx;
-            else if (contents.Contains(vsq3Match)) return ProjectFormats.Vsq3;
-            else if (contents.Contains(vsq4Match)) return ProjectFormats.Vsq4;
-            else return ProjectFormats.Unknown;
+            if (contents.Contains(ustMatch)) return ProjectFormat.Ust;
+            if (contents.Length > 0 && contents[0] == '{') return ProjectFormat.Ustx;
+            if (contents.Contains(vsq3Match)) return ProjectFormat.Vsq3;
+            if (contents.Contains(vsq4Match)) return ProjectFormat.Vsq4;
+            return ProjectFormat.Unknown;
         }
 
         public static void LoadProject(string file) {
-            ProjectFormats format = DetectProjectFormat(file);
+            ProjectFormat format = DetectProjectFormat(file);
             UProject project = null;
 
-            if (format == ProjectFormats.Ustx) { project = USTx.Load(file); } else if (
-                format == ProjectFormats.Vsq3 || format == ProjectFormats.Vsq4) { project = VSQx.Load(file); } else if (
-                format == ProjectFormats.Ust) { project = Ust.Load(file); } else {
-                System.Windows.MessageBox.Show("Unknown file format");
+            if (format == ProjectFormat.Ustx) { project = USTx.Load(file); } else if (
+                format == ProjectFormat.Vsq3 || format == ProjectFormat.Vsq4) { project = VSQx.Load(file); } else if (
+                format == ProjectFormat.Ust) { project = Ust.Load(file); } else {
+                MessageBox.Show("Unknown file format");
             }
 
-            if (project != null) { DocManager.Inst.ExecuteCmd(new LoadProjectNotification(project)); }
+            if (project != null) { CommandDispatcher.Inst.ExecuteCmd(new LoadProjectNotification(project)); }
         }
 
         public static bool IsTextFile(string file) {

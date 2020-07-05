@@ -1,11 +1,75 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
-using LibreUtau.Core.ResamplerDriver;
 
 namespace LibreUtau.Core.ResamplerDriver.Factories {
     internal class CppDriver : DriverModels, IResamplerDriver {
+        readonly string DllPath = string.Empty;
+
+        public CppDriver(string dllPath) {
+            IntPtr hModule = LoadLibrary(dllPath);
+            if (hModule == IntPtr.Zero) {
+                isLegalPlugin = false;
+            } else {
+                IntPtr Resp = GetProcAddress(hModule, "DoResampler");
+                IntPtr Infp = GetProcAddress(hModule, "GetInformation");
+                if (Resp != IntPtr.Zero && Infp != IntPtr.Zero) {
+                    this.DllPath = dllPath;
+                    isLegalPlugin = true;
+                }
+
+                FreeLibrary(hModule);
+            }
+        }
+
+        public bool isLegalPlugin { get; private set; }
+
+        public Stream DoResampler(EngineInput args) {
+            MemoryStream ms = new MemoryStream();
+            if (!isLegalPlugin) return ms;
+            try {
+                IntPtr hModule = LoadLibrary(DllPath);
+                if (hModule == IntPtr.Zero) isLegalPlugin = false;
+                else {
+                    IntPtr m = GetProcAddress(hModule, "DoResampler");
+                    if (m != IntPtr.Zero) {
+                        DoResamplerDelegate g =
+                            (DoResamplerDelegate)Marshal.GetDelegateForFunctionPointer(m, typeof(DoResamplerDelegate));
+                        EngineOutput Output = Intptr2EngineOutput(g(args));
+                        ms = new MemoryStream(Output.wavData);
+                    }
+
+                    FreeLibrary(hModule);
+                }
+            } catch { ; }
+
+            return ms;
+        }
+
+        public EngineInfo GetInfo() {
+            EngineInfo ret = new EngineInfo {
+                Version = "Error"
+            };
+            if (!isLegalPlugin) return ret;
+            try {
+                IntPtr hModule = LoadLibrary(DllPath);
+                if (hModule == IntPtr.Zero) isLegalPlugin = false;
+                else {
+                    IntPtr m = GetProcAddress(hModule, "GetInformation");
+                    if (m != IntPtr.Zero) {
+                        GetInformationDelegate g =
+                            (GetInformationDelegate)Marshal.GetDelegateForFunctionPointer(m,
+                                typeof(GetInformationDelegate));
+                        ret = Intptr2EngineInformation(g());
+                    }
+
+                    FreeLibrary(hModule);
+                }
+            } catch { ; }
+
+            return ret;
+        }
+
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, EntryPoint = "LoadLibrary", SetLastError = true)]
         static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpLibFileName);
 
@@ -18,27 +82,27 @@ namespace LibreUtau.Core.ResamplerDriver.Factories {
         #region CppIO模块
 
         /// <summary>
-        /// Cpp指针转换用中间层
+        ///     Cpp指针转换用中间层
         /// </summary>
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         struct EngineOutput_Cpp {
-            public int nWavData;
-            public IntPtr wavData;
+            public readonly int nWavData;
+            public readonly IntPtr wavData;
         }
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         struct EngineInformation_Cpp {
-            public string Name;
-            public string Version;
-            public string Author;
-            public string Usuage;
-            public int FlagItemCount;
+            public readonly string Name;
+            public readonly string Version;
+            public readonly string Author;
+            public readonly string Usuage;
+            public readonly int FlagItemCount;
             public IntPtr FlgItem;
         }
 
         /// <summary>
-        /// Cpp指针转换过程-EngineOutput
+        ///     Cpp指针转换过程-EngineOutput
         /// </summary>
         /// <param name="Ptr"></param>
         /// <returns></returns>
@@ -60,7 +124,7 @@ namespace LibreUtau.Core.ResamplerDriver.Factories {
         }
 
         /// <summary>
-        /// Cpp指针转换过程-EngineInformation
+        ///     Cpp指针转换过程-EngineInformation
         /// </summary>
         /// <param name="Ptr"></param>
         /// <returns></returns>
@@ -92,89 +156,18 @@ namespace LibreUtau.Core.ResamplerDriver.Factories {
         }
 
         /// <summary>
-        /// 信息获取执行委托
+        ///     信息获取执行委托
         /// </summary>
         /// <returns></returns>
         delegate IntPtr GetInformationDelegate();
 
         /// <summary>
-        /// 引擎执行过程委托
+        ///     引擎执行过程委托
         /// </summary>
         /// <param name="Input"></param>
         /// <returns></returns>
         delegate IntPtr DoResamplerDelegate(EngineInput Input);
 
         #endregion
-
-        string DllPath = string.Empty;
-        bool _isLegalPlugin = false;
-
-        public CppDriver(string DllPath) {
-            IntPtr hModule = LoadLibrary(DllPath);
-            if (hModule == IntPtr.Zero) {
-                _isLegalPlugin = false;
-            } else {
-                IntPtr Resp = GetProcAddress(hModule, "DoResampler");
-                IntPtr Infp = GetProcAddress(hModule, "GetInformation");
-                if (Resp != IntPtr.Zero && Infp != IntPtr.Zero) {
-                    this.DllPath = DllPath;
-                    _isLegalPlugin = true;
-                }
-
-                FreeLibrary(hModule);
-            }
-        }
-
-        public bool isLegalPlugin {
-            get {
-                return _isLegalPlugin;
-            }
-        }
-
-        public System.IO.Stream DoResampler(EngineInput Args) {
-            System.IO.MemoryStream ms = new System.IO.MemoryStream();
-            if (!_isLegalPlugin) return ms;
-            try {
-                IntPtr hModule = LoadLibrary(DllPath);
-                if (hModule == IntPtr.Zero) _isLegalPlugin = false;
-                else {
-                    IntPtr m = GetProcAddress(hModule, "DoResampler");
-                    if (m != IntPtr.Zero) {
-                        DoResamplerDelegate g =
-                            (DoResamplerDelegate)Marshal.GetDelegateForFunctionPointer(m, typeof(DoResamplerDelegate));
-                        EngineOutput Output = Intptr2EngineOutput(g(Args));
-                        ms = new System.IO.MemoryStream(Output.wavData);
-                    }
-
-                    FreeLibrary(hModule);
-                }
-            } catch { ; }
-
-            return ms;
-        }
-
-        public EngineInfo GetInfo() {
-            EngineInfo ret = new EngineInfo {
-                Version = "Error"
-            };
-            if (!_isLegalPlugin) return ret;
-            try {
-                IntPtr hModule = LoadLibrary(DllPath);
-                if (hModule == IntPtr.Zero) _isLegalPlugin = false;
-                else {
-                    IntPtr m = GetProcAddress(hModule, "GetInformation");
-                    if (m != IntPtr.Zero) {
-                        GetInformationDelegate g =
-                            (GetInformationDelegate)Marshal.GetDelegateForFunctionPointer(m,
-                                typeof(GetInformationDelegate));
-                        ret = Intptr2EngineInformation(g());
-                    }
-
-                    FreeLibrary(hModule);
-                }
-            } catch { ; }
-
-            return ret;
-        }
     }
 }

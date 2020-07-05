@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LibreUtau.Core.USTx;
+﻿using System.Collections.Generic;
+using LibreUtau.Core.Audio.Render.NAudio;
 using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
 
-namespace LibreUtau.Core.Render {
+namespace LibreUtau.Core.Audio.Render {
     class RenderDispatcher {
         public List<RenderItem> RenderItems = new List<RenderItem>();
-
-        public RenderDispatcher() { }
 
         public void WriteToFile(string file) {
             WaveFileWriter.CreateWaveFile16(file, GetMixingSampleProvider());

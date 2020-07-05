@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using LibreUtau.Core;
 using LibreUtau.Core.Formats;
+using LibreUtau.Core.ResamplerDriver;
+using LibreUtau.Core.Util;
 
 namespace LibreUtau.UI.Dialogs {
     /// <summary>
-    /// Interaction logic for Preferences.xaml
+    ///     Interaction logic for Preferences.xaml
     /// </summary>
     public partial class PreferencesDialog : Window {
-        private Grid _selectedGrid = null;
-        private List<string> singerPaths;
+        private Grid _selectedGrid;
 
         private List<string> engines;
+        private List<string> singerPaths;
 
         public PreferencesDialog() {
             InitializeComponent();
@@ -45,12 +48,12 @@ namespace LibreUtau.UI.Dialogs {
         # region Paths
 
         private void UpdateSingerPaths() {
-            singerPaths = Core.Util.Preferences.GetSingerSearchPaths();
+            singerPaths = Preferences.GetSingerSearchPaths();
             singerPathsList.ItemsSource = singerPaths;
         }
 
         private void singerPathAddButton_Click(object sender, RoutedEventArgs e) {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            var dialog = new FolderBrowserDialog();
             var result = dialog.ShowDialog();
             if (result == System.Windows.Forms.DialogResult.OK) {
                 PathManager.Inst.AddSingerSearchPath(dialog.SelectedPath);
@@ -90,7 +93,7 @@ namespace LibreUtau.UI.Dialogs {
 
         private void UpdateEngines() {
             var enginesInfo =
-                Core.ResamplerDriver.ResamplerDriver.SearchEngines(PathManager.Inst.GetEngineSearchPath());
+                ResamplerDriver.SearchEngines(PathManager.Inst.GetEngineSearchPath());
             engines = enginesInfo.Select(x => x.Name).ToList();
             if (engines.Count == 0) {
                 previewEngineCombo.IsEnabled = false;
@@ -99,21 +102,20 @@ namespace LibreUtau.UI.Dialogs {
                 previewEngineCombo.ItemsSource = engines;
                 exportEngineCombo.ItemsSource = engines;
                 previewEngineCombo.SelectedIndex =
-                    Math.Max(0, engines.IndexOf(Core.Util.Preferences.Default.ExternalPreviewEngine));
+                    Math.Max(0, engines.IndexOf(Preferences.Default.ExternalPreviewEngine));
                 exportEngineCombo.SelectedIndex =
-                    Math.Max(0, engines.IndexOf(Core.Util.Preferences.Default.ExternalExportEngine));
+                    Math.Max(0, engines.IndexOf(Preferences.Default.ExternalExportEngine));
             }
         }
 
         private void previewEngineCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            Core.Util.Preferences.Default.ExternalPreviewEngine = engines[previewEngineCombo.SelectedIndex];
-            DocManager.Inst.Project.RequireRebuild();
-            Core.Util.Preferences.Save();
+            Preferences.Default.ExternalPreviewEngine = engines[previewEngineCombo.SelectedIndex];
+            Preferences.Save();
         }
 
         private void exportEngineCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            Core.Util.Preferences.Default.ExternalExportEngine = engines[exportEngineCombo.SelectedIndex];
-            Core.Util.Preferences.Save();
+            Preferences.Default.ExternalExportEngine = engines[exportEngineCombo.SelectedIndex];
+            Preferences.Save();
         }
 
         # endregion

@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using LibreUtau.Core.Render;
+using LibreUtau.Core.Audio.Render.NAudio;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.ResamplerDriver;
 using LibreUtau.Core.USTx;
 
-namespace LibreUtau.Core {
+namespace LibreUtau.Core.Audio.Build {
     public class ProjectBuilder : BackgroundWorker {
-        private UProject _project;
+        private readonly UProject _project;
 
         public ProjectBuilder(UProject project) {
             _project = project;
@@ -25,11 +26,11 @@ namespace LibreUtau.Core {
             this.RunWorkerCompleted += (s, e) => {
                 if (e.Result == null)
                     return;
-                DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Format(string.Empty)));
+                CommandDispatcher.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Format(string.Empty)));
                 FinishCallback(e.Result as List<TrackSampleProvider>);
             };
             this.ProgressChanged += (s, e) => {
-                DocManager.Inst.ExecuteCmd(
+                CommandDispatcher.Inst.ExecuteCmd(
                     new ProgressBarNotification(e.ProgressPercentage, "Building audio..."), true);
             };
             this.RunWorkerAsync();
@@ -51,23 +52,21 @@ namespace LibreUtau.Core {
             double maxProgress =
                     project.Parts.Sum(part => part is UVoicePart voicePart ? voicePart.ProgressWeight : 0),
                 currentProgress = 0;
-            FileInfo ResamplerFile =
+            FileInfo resamplerFile =
                 new FileInfo(PathManager.Inst.GetPreviewEnginePath());
             IResamplerDriver engine =
-                ResamplerDriver.ResamplerDriver.LoadEngine(ResamplerFile.FullName);
+                ResamplerDriver.ResamplerDriver.LoadEngine(resamplerFile.FullName);
 
             foreach (UPart part in project.Parts) {
-                if (part is UVoicePart voicePart){
+                if (part is UVoicePart voicePart) {
                     var progress = currentProgress;
 
                     void ReportProgress(double p) {
                         this.ReportProgress((int)(100 * (progress + p * voicePart.ProgressWeight) / maxProgress));
                     }
 
-                    if (!voicePart.IsBuilt || forceRebuild) {
-                        voicePart.Build(ReportProgress, new BuildContext {Driver = engine, Project = project});
-                        currentProgress += voicePart.ProgressWeight;
-                    }
+                    voicePart.Build(ReportProgress, new BuildContext {Driver = engine, Project = project});
+                    currentProgress += voicePart.ProgressWeight;
                 }
 
                 trackSources[part.TrackNo].AddSource(part.RenderedTrack);

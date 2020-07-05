@@ -1,24 +1,10 @@
-﻿using LibreUtau.Core;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using System.Windows.Media;
+using LibreUtau.Core.Commands;
 
 namespace LibreUtau.UI.Models {
     class ProgressBarViewModel : INotifyPropertyChanged, ICmdSubscriber {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string name) {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null) {
-                handler(this, new PropertyChangedEventArgs(name));
-            }
-        }
-
-        object lockObject = new object();
+        readonly object lockObject = new object();
         Brush _foreground;
 
         public Brush Foreground {
@@ -32,6 +18,23 @@ namespace LibreUtau.UI.Models {
         public int Progress { set; get; }
         public string Info { set; get; }
 
+        public void SubscribeTo(ICmdPublisher publisher) {
+            if (publisher != null) publisher.Subscribe(this);
+        }
+
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
+            if (cmd is ProgressBarNotification) Update((ProgressBarNotification)cmd);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string name) {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null) {
+                handler(this, new PropertyChangedEventArgs(name));
+            }
+        }
+
         public void Update(ProgressBarNotification cmd) {
             lock (lockObject) {
                 Info = cmd.Info;
@@ -40,14 +43,6 @@ namespace LibreUtau.UI.Models {
 
             OnPropertyChanged("Progress");
             OnPropertyChanged("Info");
-        }
-
-        public void Subscribe(ICmdPublisher publisher) {
-            if (publisher != null) publisher.Subscribe(this);
-        }
-
-        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
-            if (cmd is ProgressBarNotification) Update((ProgressBarNotification)cmd);
         }
     }
 }

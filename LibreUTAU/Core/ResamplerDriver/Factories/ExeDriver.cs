@@ -10,10 +10,10 @@ namespace LibreUtau.Core.ResamplerDriver.Factories {
     internal class ExeDriver : DriverModels, IResamplerDriver {
         readonly string ExePath = "";
 
-        public ExeDriver(string ExePath) {
-            if (File.Exists(ExePath)) {
-                if (Path.GetExtension(ExePath).ToLower() == ".exe") {
-                    this.ExePath = ExePath;
+        public ExeDriver(string exePath) {
+            if (File.Exists(exePath)) {
+                if (Path.GetExtension(exePath).ToLower() == ".exe") {
+                    this.ExePath = exePath;
                     isLegalPlugin = true;
                 }
             }
@@ -21,13 +21,13 @@ namespace LibreUtau.Core.ResamplerDriver.Factories {
 
         public bool isLegalPlugin { get; }
 
-        public Stream DoResampler(EngineInput Args) {
+        public Stream DoResampler(EngineInput args) {
             MemoryStream ms = new MemoryStream();
             if (!isLegalPlugin) return ms;
             try {
                 string tmpFile = Path.GetTempFileName();
                 string ArgParam =
-                    $"\"{Args.inputWaveFile}\" \"{tmpFile}\" {Args.NoteString} {Args.Velocity} \"{Args.StrFlags}\" {Args.Offset} {Args.RequiredLength} {Args.Consonant} {Args.Cutoff} {Args.Volume} {Args.Modulation} !{Args.Tempo} {Base64.Base64EncodeInt12(Args.pitchBend)}";
+                    $"\"{args.inputWaveFile}\" \"{tmpFile}\" {args.NoteString} {args.Velocity} \"{args.StrFlags}\" {args.Offset} {args.RequiredLength} {args.Consonant} {args.Cutoff} {args.Volume} {args.Modulation} !{args.Tempo} {Base64.Base64EncodeInt12(args.pitchBend)}";
 
                 var p = Process.Start(new ProcessStartInfo(ExePath, ArgParam)
                     {UseShellExecute = false, CreateNoWindow = true});

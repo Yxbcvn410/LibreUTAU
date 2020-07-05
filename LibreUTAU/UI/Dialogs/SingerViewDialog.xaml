@@ -17,7 +17,7 @@
                     <GridViewColumn Header="Offset" DisplayMemberBinding="{Binding Offset}" />
                     <GridViewColumn Header="Consonant" DisplayMemberBinding="{Binding Consonant}" />
                     <GridViewColumn Header="Cutoff" DisplayMemberBinding="{Binding Cutoff}" />
-                    <GridViewColumn Header="Preutter" DisplayMemberBinding="{Binding Preutter}" />
+                    <GridViewColumn Header="PreUtter" DisplayMemberBinding="{Binding Preutter}" />
                     <GridViewColumn Header="Overlap" DisplayMemberBinding="{Binding Overlap}" />
                 </GridView>
             </ListView.View>

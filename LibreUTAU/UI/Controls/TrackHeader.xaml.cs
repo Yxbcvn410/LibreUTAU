@@ -1,27 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using LibreUtau.Core;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.Formats;
 using LibreUtau.Core.USTx;
 
 namespace LibreUtau.UI.Controls {
     /// <summary>
-    /// Interaction logic for TrackHeader.xaml
+    ///     Interaction logic for TrackHeader.xaml
     /// </summary>
     public partial class TrackHeader : UserControl {
         UTrack _track;
+
+        ContextMenu changeSingerMenu;
+
+        long clickTimeMs;
+
+        ContextMenu headerMenu;
+
+        public TrackHeader() {
+            InitializeComponent();
+        }
 
         public UTrack Track {
             set {
@@ -31,18 +33,12 @@ namespace LibreUtau.UI.Controls {
             get { return _track; }
         }
 
-        [System.Runtime.InteropServices.DllImport("User32.dll")]
+        [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
         public void setCursorPos(Point point) {
             SetCursorPos((int)(PointToScreen(point).X), (int)(PointToScreen(point).Y));
         }
-
-        public TrackHeader() {
-            InitializeComponent();
-        }
-
-        long clickTimeMs = 0;
 
         private void faderSlider_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
             var slider = sender as Slider;
@@ -83,25 +79,24 @@ namespace LibreUtau.UI.Controls {
         private void buildChangeSingerMenuItems() {
             changeSingerMenu.Items.Clear();
             foreach (var pair in UtauSoundbank.GetAllSingers()) {
-                var menuItem = new MenuItem() {Header = pair.Value.Name};
+                var menuItem = new MenuItem {Header = pair.Value.Name};
                 menuItem.Click += (_o, _e) => {
                     if (this.Track.Singer != pair.Value) {
-                        DocManager.Inst.StartUndoGroup();
-                        DocManager.Inst.ExecuteCmd(new TrackChangeSingerCommand(DocManager.Inst.Project, this.Track,
+                        CommandDispatcher.Inst.StartUndoGroup();
+                        CommandDispatcher.Inst.ExecuteCmd(new TrackChangeSingerCommand(CommandDispatcher.Inst.Project,
+                            this.Track,
                             pair.Value));
-                        DocManager.Inst.EndUndoGroup();
+                        CommandDispatcher.Inst.EndUndoGroup();
                     }
                 };
                 changeSingerMenu.Items.Add(menuItem);
             }
         }
 
-        ContextMenu changeSingerMenu;
-
         private void singerNameButton_Click(object sender, RoutedEventArgs e) {
             if (changeSingerMenu == null) {
                 changeSingerMenu = new ContextMenu();
-                changeSingerMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+                changeSingerMenu.Placement = PlacementMode.Bottom;
                 changeSingerMenu.PlacementTarget = (Button)sender;
                 changeSingerMenu.HorizontalOffset = -10;
             }
@@ -118,17 +113,16 @@ namespace LibreUtau.UI.Controls {
             this.singerNameButton.GetBindingExpression(ContentProperty).UpdateTarget();
         }
 
-        ContextMenu headerMenu;
-
         private void Grid_MouseDown(object sender, MouseButtonEventArgs e) {
             if (e.RightButton == MouseButtonState.Pressed) {
                 if (headerMenu == null) {
                     headerMenu = new ContextMenu();
-                    var item = new MenuItem() {Header = "Remove track"};
+                    var item = new MenuItem {Header = "Remove track"};
                     item.Click += (_o, _e) => {
-                        DocManager.Inst.StartUndoGroup();
-                        DocManager.Inst.ExecuteCmd(new RemoveTrackCommand(DocManager.Inst.Project, this.Track));
-                        DocManager.Inst.EndUndoGroup();
+                        CommandDispatcher.Inst.StartUndoGroup();
+                        CommandDispatcher.Inst.ExecuteCmd(new RemoveTrackCommand(CommandDispatcher.Inst.Project,
+                            this.Track));
+                        CommandDispatcher.Inst.EndUndoGroup();
                     };
                     headerMenu.Items.Add(item);
                 }
@@ -140,7 +134,7 @@ namespace LibreUtau.UI.Controls {
         }
 
         private void faderSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
-            DocManager.Inst.ExecuteCmd(new VolumeChangeNotification(this.Track.TrackNo, ((Slider)sender).Value));
+            CommandDispatcher.Inst.ExecuteCmd(new VolumeChangeNotification(this.Track.TrackNo, ((Slider)sender).Value));
         }
     }
 }

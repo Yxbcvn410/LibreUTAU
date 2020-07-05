@@ -1,20 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
+using System.ComponentModel;
+using System.Diagnostics;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
-using NAudio;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
 namespace LibreUtau.Core.Formats {
     static class Wave {
         public static UWavePart CreatePart(string filepath) {
-            foreach (var part in DocManager.Inst.Project.Parts) {
+            foreach (var part in CommandDispatcher.Inst.Project.Parts) {
                 var _part = part as UWavePart;
                 if (_part != null && _part.FilePath == filepath) {
-                    return new UWavePart() {
+                    return new UWavePart {
                         FilePath = filepath,
                         FileDurTick = _part.FileDurTick,
                         DurTick = _part.DurTick,
@@ -32,9 +30,9 @@ namespace LibreUtau.Core.Formats {
             }
 
             int durTick =
-                DocManager.Inst.Project.MillisecondToTick(1000.0 * stream.Length /
-                                                          stream.WaveFormat.AverageBytesPerSecond);
-            UWavePart uwavepart = new UWavePart() {
+                CommandDispatcher.Inst.Project.MillisecondToTick(1000.0 * stream.Length /
+                                                                 stream.WaveFormat.AverageBytesPerSecond);
+            UWavePart uwavepart = new UWavePart {
                 FilePath = filepath,
                 FileDurTick = durTick,
                 DurTick = durTick,
@@ -44,9 +42,9 @@ namespace LibreUtau.Core.Formats {
             return uwavepart;
         }
 
-        public static float[] BuildPeaks(UWavePart part, System.ComponentModel.BackgroundWorker worker) {
+        public static float[] BuildPeaks(UWavePart part, BackgroundWorker worker) {
             const double peaksRate = 4000;
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            Stopwatch sw = new Stopwatch();
             sw.Start();
             float[] peaks;
             using (var stream = new AudioFileReader(part.FilePath)) {
@@ -94,7 +92,7 @@ namespace LibreUtau.Core.Formats {
             }
 
             sw.Stop();
-            System.Diagnostics.Debug.WriteLine("Build peaks {0} ms", sw.Elapsed.TotalMilliseconds);
+            Debug.WriteLine("Build peaks {0} ms", sw.Elapsed.TotalMilliseconds);
             return peaks;
         }
     }

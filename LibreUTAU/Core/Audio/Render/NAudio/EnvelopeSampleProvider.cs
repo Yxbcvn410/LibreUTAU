@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LibreUtau.Core.USTx;
 using NAudio.Wave;
 
-namespace LibreUtau.Core.Render {
+namespace LibreUtau.Core.Audio.Render.NAudio {
     class EnvelopeSampleProvider : ISampleProvider {
+        private readonly List<ExpPoint> envelope = new List<ExpPoint>();
         private readonly object lockObject = new object();
         private readonly ISampleProvider source;
-        private readonly List<ExpPoint> envelope = new List<ExpPoint>();
-        private int samplePosition = 0;
+        private int nextPoint;
+        private int samplePosition;
+
+        private int x0, x1;
+        private float y0, y1;
 
         public EnvelopeSampleProvider(ISampleProvider source, List<ExpPoint> envelope, double skipOver) {
             this.source = source;
@@ -29,6 +30,10 @@ namespace LibreUtau.Core.Render {
             return sourceSamplesRead;
         }
 
+        public WaveFormat WaveFormat {
+            get { return source.WaveFormat; }
+        }
+
         private void ApplyEnvelope(float[] buffer, int offset, int sourceSamplesRead) {
             int sample = 0;
             while (sample < sourceSamplesRead) {
@@ -42,14 +47,6 @@ namespace LibreUtau.Core.Render {
             }
         }
 
-        public WaveFormat WaveFormat {
-            get { return source.WaveFormat; }
-        }
-
-        private int x0, x1;
-        private float y0, y1;
-        private int nextPoint = 0;
-
         private float GetGain() {
             while (nextPoint < envelope.Count() && samplePosition >= envelope[nextPoint].X) {
                 nextPoint++;
@@ -62,8 +59,8 @@ namespace LibreUtau.Core.Render {
             }
 
             if (nextPoint == 0) return (float)envelope[0].Y;
-            else if (nextPoint == envelope.Count()) return (float)envelope.Last().Y;
-            else return y0 + (y1 - y0) * (samplePosition - x0) / (x1 - x0);
+            if (nextPoint == envelope.Count()) return (float)envelope.Last().Y;
+            return y0 + (y1 - y0) * (samplePosition - x0) / (x1 - x0);
         }
 
         private void ConvertEnvelope(int skipOverSamples) {

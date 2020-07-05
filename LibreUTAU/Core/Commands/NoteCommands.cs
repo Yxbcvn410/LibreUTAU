@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LibreUtau.Core.USTx;
 
-namespace LibreUtau.Core {
+namespace LibreUtau.Core.Commands {
     public abstract class NoteCommand : UCommand {
         protected UNote[] Notes;
         public UVoicePart Part;
@@ -14,7 +11,7 @@ namespace LibreUtau.Core {
     public class AddNoteCommand : NoteCommand {
         public AddNoteCommand(UVoicePart part, UNote note) {
             this.Part = part;
-            this.Notes = new UNote[] {note};
+            this.Notes = new[] {note};
         }
 
         public AddNoteCommand(UVoicePart part, List<UNote> notes) {
@@ -40,7 +37,7 @@ namespace LibreUtau.Core {
     public class RemoveNoteCommand : NoteCommand {
         public RemoveNoteCommand(UVoicePart part, UNote note) {
             this.Part = part;
-            this.Notes = new UNote[] {note};
+            this.Notes = new[] {note};
         }
 
         public RemoveNoteCommand(UVoicePart part, List<UNote> notes) {
@@ -106,7 +103,7 @@ namespace LibreUtau.Core {
     }
 
     public class ResizeNoteCommand : NoteCommand {
-        int DeltaDur;
+        readonly int DeltaDur;
 
         public ResizeNoteCommand(UVoicePart part, List<UNote> notes, int deltaDur) {
             this.Part = part;
@@ -116,7 +113,7 @@ namespace LibreUtau.Core {
 
         public ResizeNoteCommand(UVoicePart part, UNote note, int deltaDur) {
             this.Part = part;
-            this.Notes = new UNote[] {note};
+            this.Notes = new[] {note};
             this.DeltaDur = deltaDur;
         }
 
@@ -136,8 +133,9 @@ namespace LibreUtau.Core {
     }
 
     public class ChangeNoteLyricCommand : NoteCommand {
+        readonly string NewLyric;
+        readonly string OldLyric;
         public UNote Note;
-        string NewLyric, OldLyric;
 
         public ChangeNoteLyricCommand(UVoicePart part, UNote note, string newLyric) {
             this.Part = part;

@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.IO;
 using System.Threading;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 using LibreUtau.SimpleHelpers;
 
 namespace LibreUtau.Core.Formats {
     public static class Ust {
-        private enum UstVersion { Early, V1_0, V1_1, V1_2, Unknown };
-
-        private enum UstBlock { Version, Setting, Note, Trackend, None };
-
         private const string versionTag = "[#VERSION]";
         private const string settingTag = "[#SETTING]";
         private const string endTag = "[#TRACKEND]";
@@ -21,14 +18,14 @@ namespace LibreUtau.Core.Formats {
         public static void Load(string[] files) {
             bool ustTracks = true;
             foreach (string file in files) {
-                if (Formats.DetectProjectFormat(file) != ProjectFormats.Ust) {
+                if (Formats.DetectProjectFormat(file) != ProjectFormat.Ust) {
                     ustTracks = false;
                     break;
                 }
             }
 
             if (!ustTracks) {
-                DocManager.Inst.ExecuteCmd(new UserMessageNotification("Multiple files must be all Ust files"));
+                CommandDispatcher.Inst.ExecuteCmd(new UserMessageNotification("Multiple files must be all Ust files"));
                 return;
             }
 
@@ -38,7 +35,7 @@ namespace LibreUtau.Core.Formats {
             }
 
             double bpm = projects.First().BPM;
-            UProject project = new UProject() {BPM = bpm, Name = "Merged Project", Saved = false};
+            UProject project = new UProject {BPM = bpm, Name = "Merged Project", Saved = false};
             foreach (UProject p in projects) {
                 var _track = p.Tracks[0];
                 var _part = p.Parts[0];
@@ -48,7 +45,7 @@ namespace LibreUtau.Core.Formats {
                 project.Parts.Add(_part);
             }
 
-            if (project != null) DocManager.Inst.ExecuteCmd(new LoadProjectNotification(project));
+            if (project != null) CommandDispatcher.Inst.ExecuteCmd(new LoadProjectNotification(project));
         }
 
         public static UProject Load(string file, Encoding encoding = null) {
@@ -61,7 +58,7 @@ namespace LibreUtau.Core.Formats {
                 if (encoding == null) lines = File.ReadAllLines(file, FileEncoding.DetectFileEncoding(file));
                 else lines = File.ReadAllLines(file, encoding);
             } catch (Exception e) {
-                DocManager.Inst.ExecuteCmd(new UserMessageNotification(e.GetType().ToString() + "\n" + e.Message));
+                CommandDispatcher.Inst.ExecuteCmd(new UserMessageNotification(e.GetType() + "\n" + e.Message));
                 return null;
             }
 
@@ -77,7 +74,7 @@ namespace LibreUtau.Core.Formats {
             var _track = new UTrack();
             project.Tracks.Add(_track);
             _track.TrackNo = 0;
-            UVoicePart part = new UVoicePart() {TrackNo = 0, PosTick = 0};
+            UVoicePart part = new UVoicePart {TrackNo = 0, PosTick = 0};
             project.Parts.Add(part);
 
             List<string> currentLines = new List<string>();
@@ -95,7 +92,7 @@ namespace LibreUtau.Core.Formats {
                                 currentNoteIndex =
                                     int.Parse(line.Replace("[#", string.Empty).Replace("]", string.Empty));
                             } catch {
-                                DocManager.Inst.ExecuteCmd(new UserMessageNotification("Unknown ust format"));
+                                CommandDispatcher.Inst.ExecuteCmd(new UserMessageNotification("Unknown ust format"));
                                 return null;
                             }
 
@@ -143,7 +140,7 @@ namespace LibreUtau.Core.Formats {
                         if (line.StartsWith("VoiceDir=")) {
                             string singerpath = line.Trim().Replace("VoiceDir=", string.Empty);
                             var singer = UtauSoundbank.GetSinger(singerpath, FileEncoding.DetectFileEncoding(file));
-                            if (singer == null) singer = new USinger() {Name = "", Path = singerpath};
+                            if (singer == null) singer = new USinger {Name = "", Path = singerpath};
                             project.Tracks[0].Singer = singer;
                         }
                     } else if (currentBlock == UstBlock.Note) {
@@ -155,7 +152,7 @@ namespace LibreUtau.Core.Formats {
             }
 
             if (currentBlock != UstBlock.Trackend)
-                DocManager.Inst.ExecuteCmd(new UserMessageNotification("Unexpected ust file end"));
+                CommandDispatcher.Inst.ExecuteCmd(new UserMessageNotification("Unexpected ust file end"));
             part.DurTick = currentTick;
             return project;
         }
@@ -184,7 +181,7 @@ namespace LibreUtau.Core.Formats {
                     if (line.Trim() == "PreUtterance=") note.Phoneme.AutoEnvelope = true;
                     else {
                         note.Phoneme.AutoEnvelope = false;
-                        note.Phoneme.Preutter = double.Parse(line.Trim().Replace("PreUtterance=", ""));
+                        note.Phoneme.PreUtter = double.Parse(line.Trim().Replace("PreUtterance=", ""));
                     }
                 }
 
@@ -267,5 +264,9 @@ namespace LibreUtau.Core.Formats {
             };
             return string.Join(",", args.ToArray());
         }
+
+        private enum UstVersion { Early, V1_0, V1_1, V1_2, Unknown }
+
+        private enum UstBlock { Version, Setting, Note, Trackend, None }
     }
 }

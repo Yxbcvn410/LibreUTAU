@@ -1,18 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using LibreUtau.Core;
-using LibreUtau.UI.Models;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
+using LibreUtau.UI.Models;
 
 namespace LibreUtau.UI.Controls {
     class NotesElement : ExpElement {
+        double _quarterWidth;
+
+        bool _showPitch = true;
+
+        double _trackHeight;
+        protected Dictionary<string, double> fTextHeights = new Dictionary<string, double>();
+
+        protected Dictionary<string, FormattedText> fTextPool = new Dictionary<string, FormattedText>();
+        protected Dictionary<string, double> fTextWidths = new Dictionary<string, double>();
+
+        public MidiViewModel midiVM;
+
+        protected Pen penPit;
+
+        public NotesElement() {
+            penPit = new Pen(ThemeManager.WhiteKeyNameBrushNormal, 1);
+            penPit.Freeze();
+            this.IsHitTestVisible = false;
+        }
+
         public new double X {
             set {
                 if (tTrans.X != Math.Round(value)) {
@@ -30,8 +48,6 @@ namespace LibreUtau.UI.Controls {
             get { return tTrans.Y; }
         }
 
-        double _trackHeight;
-
         public double TrackHeight {
             set {
                 if (_trackHeight != value) {
@@ -42,8 +58,6 @@ namespace LibreUtau.UI.Controls {
             get { return _trackHeight; }
         }
 
-        double _quarterWidth;
-
         public double QuarterWidth {
             set {
                 if (_quarterWidth != value) {
@@ -53,8 +67,6 @@ namespace LibreUtau.UI.Controls {
             }
             get { return _quarterWidth; }
         }
-
-        bool _showPitch = true;
 
         public bool ShowPitch {
             set {
@@ -73,20 +85,6 @@ namespace LibreUtau.UI.Controls {
                 MarkUpdate();
             }
             get { return _part; }
-        }
-
-        public MidiViewModel midiVM;
-
-        protected Pen penPit;
-
-        protected Dictionary<string, FormattedText> fTextPool = new Dictionary<string, FormattedText>();
-        protected Dictionary<string, double> fTextWidths = new Dictionary<string, double>();
-        protected Dictionary<string, double> fTextHeights = new Dictionary<string, double>();
-
-        public NotesElement() {
-            penPit = new Pen(ThemeManager.WhiteKeyNameBrushNormal, 1);
-            penPit.Freeze();
-            this.IsHitTestVisible = false;
         }
 
         public override void RedrawIfUpdated() {
@@ -129,14 +127,16 @@ namespace LibreUtau.UI.Controls {
         }
 
         private void DrawNoteBody(UNote note, DrawingContext cxt) {
-            double left = note.PosTick * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution + 1;
+            double left = note.PosTick * midiVM.QuarterWidth / CommandDispatcher.Inst.Project.Resolution + 1;
             double top = midiVM.TrackHeight * ((double)UIConstants.MaxNoteNum - 1 - note.NoteNum) + 1;
-            double width = Math.Max(2, note.DurTick * midiVM.QuarterWidth / DocManager.Inst.Project.Resolution - 1);
+            double width = Math.Max(2,
+                note.DurTick * midiVM.QuarterWidth / CommandDispatcher.Inst.Project.Resolution - 1);
             double height = Math.Max(2, midiVM.TrackHeight - 2);
             cxt.DrawRoundedRectangle(
                 note.Error ? midiVM.SelectedNotes.Contains(note) ? ThemeManager.NoteFillSelectedErrorBrush :
                 ThemeManager.NoteFillErrorBrushes[0] :
-                midiVM.SelectedNotes.Contains(note) ? ThemeManager.NoteFillSelectedBrush : ThemeManager.NoteFillBrushes[0],
+                midiVM.SelectedNotes.Contains(note) ? ThemeManager.NoteFillSelectedBrush :
+                ThemeManager.NoteFillBrushes[0],
                 null, new Rect(new Point(left, top), new Size(width, height)), 2, 2);
             if (height >= 10) {
                 if (note.Lyric.Length == 0) return;
@@ -160,7 +160,7 @@ namespace LibreUtau.UI.Controls {
         protected virtual void AddToFormattedTextPool(string text) {
             var fText = new FormattedText(
                 text,
-                System.Threading.Thread.CurrentThread.CurrentUICulture,
+                Thread.CurrentThread.CurrentUICulture,
                 FlowDirection.LeftToRight, SystemFonts.CaptionFontFamily.GetTypefaces().First(),
                 12,
                 Brushes.White);
@@ -172,13 +172,13 @@ namespace LibreUtau.UI.Controls {
         private void DrawVibrato(UNote note, DrawingContext cxt) {
             if (note.Vibrato == null) return;
             var vibrato = note.Vibrato;
-            double periodPix = DocManager.Inst.Project.MillisecondToTick(vibrato.Period) * midiVM.QuarterWidth /
-                               DocManager.Inst.Project.Resolution;
+            double periodPix = CommandDispatcher.Inst.Project.MillisecondToTick(vibrato.Period) * midiVM.QuarterWidth /
+                               CommandDispatcher.Inst.Project.Resolution;
             double lengthPix = note.DurTick * vibrato.Length / 100 * midiVM.QuarterWidth /
-                               DocManager.Inst.Project.Resolution;
+                               CommandDispatcher.Inst.Project.Resolution;
 
             double startX = (note.PosTick + note.DurTick * (1 - vibrato.Length / 100)) * midiVM.QuarterWidth /
-                            DocManager.Inst.Project.Resolution;
+                            CommandDispatcher.Inst.Project.Resolution;
             double startY = TrackHeight * (UIConstants.MaxNoteNum - 1.0 - note.NoteNum) + TrackHeight / 2;
             double inPix = lengthPix * vibrato.In / 100;
             double outPix = lengthPix * vibrato.Out / 100;
@@ -201,11 +201,11 @@ namespace LibreUtau.UI.Controls {
             if (_pts.Count < 2) return;
 
             Point GetPitchPointLocation(PitchPoint _pt) {
-                double tick = note.PosTick + MusicMath.MillisecondToTick(_pt.X, DocManager.Inst.Project.BPM,
-                    DocManager.Inst.Project.BeatUnit, DocManager.Inst.Project.Resolution);
+                double tick = note.PosTick + MusicMath.MillisecondToTick(_pt.X, CommandDispatcher.Inst.Project.BPM,
+                    CommandDispatcher.Inst.Project.BeatUnit, CommandDispatcher.Inst.Project.Resolution);
                 double pitch = note.NoteNum + _pt.Y / 10.0;
 
-                double _X = midiVM.QuarterWidth * tick / DocManager.Inst.Project.Resolution;
+                double _X = midiVM.QuarterWidth * tick / CommandDispatcher.Inst.Project.Resolution;
                 double _Y = TrackHeight * (UIConstants.MaxNoteNum - 1.0 - pitch) + TrackHeight / 2;
                 return new Point(_X, _Y);
             }

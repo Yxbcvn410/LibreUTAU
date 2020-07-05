@@ -1,27 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using LibreUtau.Core.Commands;
 
 namespace LibreUtau.Core.USTx {
     public class UProject {
-        public double BPM = 120;
+        public readonly Dictionary<string, UExpression> ExpressionTable = new Dictionary<string, UExpression>();
         public int BeatPerBar = 4;
         public int BeatUnit = 4;
-        public int Resolution = 480;
+        public double BPM = 120;
+        public string CacheDir = "UCache";
+        public string Comment = string.Empty;
+        public string FilePath;
 
         public string Name = "New Project";
-        public string Comment = string.Empty;
         public string OutputDir = "Vocal";
-        public string CacheDir = "UCache";
-        public string FilePath;
+        public List<UPart> Parts = new List<UPart>();
+        public int Resolution = 480;
         public bool Saved = false;
 
         public List<UTrack> Tracks = new List<UTrack>();
-        public List<UPart> Parts = new List<UPart>();
-
-        public readonly Dictionary<string, UExpression> ExpressionTable = new Dictionary<string, UExpression>();
 
         public void RegisterExpression(UExpression exp) {
             if (!ExpressionTable.ContainsKey(exp.Name))
@@ -42,14 +39,9 @@ namespace LibreUtau.Core.USTx {
             note.NoteNum = noteNum;
             note.PosTick = posTick;
             note.DurTick = durTick;
-            note.PitchBend.Points[1].X = Math.Min(25, DocManager.Inst.Project.TickToMillisecond(note.DurTick) / 2);
+            note.PitchBend.Points[1].X =
+                Math.Min(25, CommandDispatcher.Inst.Project.TickToMillisecond(note.DurTick) / 2);
             return note;
-        }
-
-        public void RequireRebuild() {
-            foreach ( var part in Parts)
-                if (part is UVoicePart voicePart)
-                    voicePart.RequireRebuild();
         }
 
         public int MillisecondToTick(double ms) {

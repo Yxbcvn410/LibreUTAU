@@ -26,6 +26,12 @@ Current status: Unstable
     * Different buttons for Play and Pause
 * Misc UI bugs
     * Expression controls are not properly updated sometimes
+    * Horizontal scrolling in track viewer/midi viewer do not work 
+    
+#### Plan for the nearest release
+* Fix all bugs
+* Export audio
+* Export project in any format
     
 #### Features yet to implement (sometime in the future)
 * Automatic updater

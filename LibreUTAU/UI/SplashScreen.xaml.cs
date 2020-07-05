@@ -3,6 +3,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
+using System.Windows.Threading;
+using LibreUtau.Core.Audio.Build;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.Formats;
 
 namespace LibreUtau.UI {
@@ -33,7 +36,10 @@ namespace LibreUtau.UI {
             worker.ReportProgress(0, "Loading singers...");
             UtauSoundbank.FindAllSingers();
 
-            var partManager = new Core.PartManager();
+            worker.ReportProgress(0, "Clearing old caches...");
+            NoteCacheProvider.CleanupCache(true);
+
+            var projectWatcher = new ProjectWatcher();
             worker.ReportProgress(0, "Loading UI...");
         }
 
@@ -43,7 +49,7 @@ namespace LibreUtau.UI {
                 mw.Show();
                 var dispatcher = this.Dispatcher;
                 dispatcher?.Invoke(this.Hide);
-                System.Windows.Threading.Dispatcher.Run();
+                Dispatcher.Run();
             }));
             t.SetApartmentState(ApartmentState.STA);
             t.Start();

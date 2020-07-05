@@ -67,14 +67,25 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
-using LibreUtau.Core.Render;
+using LibreUtau.Core.Audio.Render;
 
 namespace LibreUtau.Core.ResamplerDriver {
     public class DriverModels {
+        #region 输出模型
+
+        /// <summary>
+        ///     真实输出模型
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        protected struct EngineOutput {
+            public int nWavData;
+            public byte[] wavData;
+        }
+
+        #endregion
+
         #region 信息模型
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -102,7 +113,7 @@ namespace LibreUtau.Core.ResamplerDriver {
         #region 输入模型
 
         /// <summary>
-        /// 参数输入模型
+        ///     参数输入模型
         /// </summary>
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public struct EngineInput {
@@ -119,10 +130,21 @@ namespace LibreUtau.Core.ResamplerDriver {
             public double Tempo; //13
             public int nPitchBend; //13
             public int[] pitchBend; //13
+
+            public string GetUUID() {
+                double hash = Velocity;
+                foreach (double value in new[]
+                    {Offset, RequiredLength, Consonant, Cutoff, Volume, Modulation, Tempo, nPitchBend})
+                    hash = hash * 31 + value * 23;
+                long integerHash = (long)hash;
+                foreach (int value in pitchBend) integerHash = integerHash * 31 + value * 23;
+                return
+                    $"{inputWaveFile.Replace(Path.DirectorySeparatorChar, '_')}_{NoteString}_{StrFlags}_{integerHash}";
+            }
         }
 
         /// <summary>
-        /// 参数初始化过程
+        ///     参数初始化过程
         /// </summary>
         /// <returns></returns>
         public static EngineInput CreateInputModel() {
@@ -145,7 +167,7 @@ namespace LibreUtau.Core.ResamplerDriver {
         }
 
         /// <summary>
-        /// 从RenderItem初始化过程
+        ///     从RenderItem初始化过程
         /// </summary>
         /// <returns></returns>
         internal static EngineInput CreateInputModel(RenderItem renderItem, double Modulation) {
@@ -165,19 +187,6 @@ namespace LibreUtau.Core.ResamplerDriver {
                 Tempo = renderItem.Tempo
             };
             return Ret;
-        }
-
-        #endregion
-
-        #region 输出模型
-
-        /// <summary>
-        /// 真实输出模型
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        protected struct EngineOutput {
-            public int nWavData;
-            public byte[] wavData;
         }
 
         #endregion

@@ -1,36 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LibreUtau.Core.Lib;
 using LibreUtau.Core.USTx;
-using LibreUtau.Core;
+using LibreUtau.Core.Util;
 
-namespace LibreUtau.Core {
+namespace LibreUtau.Core.Commands {
     /// <summary>
-    /// DocManager class
-    /// Controls actions performed on the project
-    /// TODO:
-    /// Why play position is here?
-    /// Maybe, rename to CommandDispatcher?
+    ///     CommandDispatcher class
+    ///     Controls actions performed on the project
+    ///     TODO:
+    ///     Why playback position is here?
     /// </summary>
-    class DocManager : ICmdPublisher {
-        DocManager() {
-            Project = new UProject();
-        }
-
-        static DocManager _s;
-
-        static DocManager GetInst() {
-            return _s ?? (_s = new DocManager());
-        }
-
-        public static DocManager Inst { get { return GetInst(); } }
+    class CommandDispatcher : ICmdPublisher {
+        static CommandDispatcher _s;
 
         public int playPosTick;
 
+        CommandDispatcher() {
+            Project = new UProject();
+        }
+
+        public static CommandDispatcher Inst { get { return GetInst(); } }
+
         public UProject Project { get; private set; }
+
+        static CommandDispatcher GetInst() {
+            return _s ?? (_s = new CommandDispatcher());
+        }
 
         # region Command Queue
 
@@ -69,28 +65,30 @@ namespace LibreUtau.Core {
                 }
 
                 Publish(cmd);
-                if (!quiet) System.Diagnostics.Debug.WriteLine($"Publish notification {cmd}");
+                if (!quiet) Debug.WriteLine($"Publish notification {cmd}");
                 return;
-            } else if (undoGroup == null) {
-                System.Diagnostics.Debug.WriteLine("Null undoGroup");
-                return;
-            } else {
-                undoGroup.Commands.Add(cmd);
-                cmd.Execute();
-                Publish(cmd);
             }
 
-            if (!quiet) System.Diagnostics.Debug.WriteLine($"ExecuteCmd {cmd}");
+            if (undoGroup == null) {
+                Debug.WriteLine("Null undoGroup");
+                return;
+            }
+
+            undoGroup.Commands.Add(cmd);
+            cmd.Execute();
+            Publish(cmd);
+
+            if (!quiet) Debug.WriteLine($"ExecuteCmd {cmd}");
         }
 
         public void StartUndoGroup() {
             if (undoGroup != null) {
-                System.Diagnostics.Debug.WriteLine("undoGroup already started");
+                Debug.WriteLine("undoGroup already started");
                 EndUndoGroup();
             }
 
             undoGroup = new UCommandGroup();
-            System.Diagnostics.Debug.WriteLine("undoGroup started");
+            Debug.WriteLine("undoGroup started");
         }
 
         public void EndUndoGroup() {
@@ -99,9 +97,9 @@ namespace LibreUtau.Core {
                 redoQueue.Clear();
             }
 
-            if (undoQueue.Count > Util.Preferences.Default.UndoLimit) undoQueue.RemoveFromFront();
+            if (undoQueue.Count > Preferences.Default.UndoLimit) undoQueue.RemoveFromFront();
             undoGroup = null;
-            System.Diagnostics.Debug.WriteLine("undoGroup ended");
+            Debug.WriteLine("undoGroup ended");
         }
 
         public void Undo() {

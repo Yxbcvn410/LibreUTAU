@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.IO;
+using System.Windows.Media.Imaging;
 using LibreUtau.Core.USTx;
+using LibreUtau.Core.Util;
 using LibreUtau.SimpleHelpers;
 using Serilog;
 
 namespace LibreUtau.Core.Formats {
     public static class UtauSoundbank {
-        private static Dictionary<string, USinger> allSingers = new Dictionary<string, USinger>();
+        private static readonly Dictionary<string, USinger> allSingers = new Dictionary<string, USinger>();
 
         public static void FindAllSingers() {
-            var singerSearchPaths = Util.Preferences.GetSingerSearchPaths();
+            var singerSearchPaths = Preferences.GetSingerSearchPaths();
             foreach (string searchPath in singerSearchPaths) {
                 if (!Directory.Exists(searchPath)) continue;
                 foreach (var dirpath in Directory.EnumerateDirectories(searchPath)) {
@@ -21,7 +24,7 @@ namespace LibreUtau.Core.Formats {
                     try {
                         singer = LoadSinger(dirpath);
                         if (singer == null) {
-                            System.Diagnostics.Debug.WriteLine($"Error: Unable to load singer from '{dirpath}'");
+                            Debug.WriteLine($"Error: Unable to load singer from '{dirpath}'");
                         } else allSingers.Add(singer.Path, singer);
                     } catch (Exception e) { throw e; }
                 }
@@ -33,12 +36,14 @@ namespace LibreUtau.Core.Formats {
         public static USinger GetSinger(string path, Encoding ustEncoding) {
             var absPath = DetectSingerPath(path, ustEncoding);
             if (absPath == "") return null;
-            else if (allSingers.ContainsKey(absPath)) return allSingers[absPath];
-            else {
-                var singer = LoadSinger(absPath);
-                allSingers.Add(absPath, singer);
-                return singer;
-            }
+            if (allSingers.ContainsKey(absPath)) return allSingers[absPath];
+
+            var singer = LoadSinger(absPath);
+            if (singer == null) {
+                Debug.WriteLine($"Error: Unable to load singer from '{absPath}'");
+            } else allSingers.Add(singer.Path, singer);
+
+            return singer;
         }
 
         static string DetectSingerPath(string path, Encoding ustEncoding) {
@@ -72,7 +77,7 @@ namespace LibreUtau.Core.Formats {
                             Path.Combine(singer.Path,
                                 FileEncoding.ConvertEncoding(fileEnc, pathEnc, imageFile)),
                             UriKind.RelativeOrAbsolute);
-                        singer.Avatar = new System.Windows.Media.Imaging.BitmapImage(imagepath);
+                        singer.Avatar = new BitmapImage(imagepath);
                         singer.Avatar.Freeze();
                     }
 
@@ -80,10 +85,10 @@ namespace LibreUtau.Core.Formats {
                     if (line.StartsWith("web=")) singer.Website = line.Trim().Replace("web=", "");
                     if (line.StartsWith("web:")) singer.Website = line.Trim().Replace("web:", "");
                 }
-                
+
                 LoadPrefixMap(singer);
             } catch { return null; }
-            
+
             singer.Loaded = true;
 
             return singer.AliasMap.Count == 0 ? null : singer;
@@ -121,10 +126,10 @@ namespace LibreUtau.Core.Formats {
             string[] lines = File.ReadAllLines(otoFile, fileEncoding);
             List<string> errorLines = new List<string>();
             foreach (var line in lines) {
-                var s = line.Split(new[] {'='});
+                var s = line.Split('=');
                 if (s.Count() == 2) {
                     string wavfile = s[0];
-                    var args = s[1].Split(new[] {','});
+                    var args = s[1].Split(',');
                     if (singer.AliasMap.ContainsKey(args[0])) continue;
                     try {
                         singer.AliasMap.Add(args[0], new UOto {
@@ -143,7 +148,7 @@ namespace LibreUtau.Core.Formats {
             }
 
             if (errorLines.Count > 0)
-                System.Diagnostics.Debug.WriteLine(
+                Debug.WriteLine(
                     $"Oto file {otoFile} has following errors:\n{string.Join("\n", errorLines.ToArray())}");
         }
 

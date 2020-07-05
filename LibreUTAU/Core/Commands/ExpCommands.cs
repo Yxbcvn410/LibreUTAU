@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using LibreUtau.Core.USTx;
 
-namespace LibreUtau.Core {
+namespace LibreUtau.Core.Commands {
     public abstract class ExpCommand : UCommand {
-        public UVoicePart Part;
-        public UNote Note;
         public string Key;
+        public UNote Note;
+        public UVoicePart Part;
     }
 
     public class SetIntExpCommand : ExpCommand {
@@ -48,9 +44,9 @@ namespace LibreUtau.Core {
     }
 
     public class ChangePitchPointShapeCommand : PitchExpCommand {
-        readonly PitchPoint Point;
         readonly PitchPointShape NewShape;
         readonly PitchPointShape OldShape;
+        readonly PitchPoint Point;
 
         public ChangePitchPointShapeCommand(PitchPoint point, PitchPointShape shape) {
             this.Point = point;
@@ -107,8 +103,8 @@ namespace LibreUtau.Core {
     }
 
     public class MovePitchPointCommand : PitchExpCommand {
-        readonly PitchPoint Point;
         readonly double DeltaX, DeltaY;
+        readonly PitchPoint Point;
 
         public MovePitchPointCommand(PitchPoint point, double deltaX, double deltaY) {
             this.Point = point;

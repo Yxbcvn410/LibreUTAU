@@ -1,9 +1,9 @@
 ﻿using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace LibreUtau.Core.Render {
+namespace LibreUtau.Core.Audio.Render.NAudio {
     internal class RenderItemSampleProvider : ISampleProvider {
-        private ISampleProvider signalChain;
+        private readonly ISampleProvider signalChain;
 
         public RenderItemSampleProvider(RenderItem renderItem) {
             RenderItem = renderItem;

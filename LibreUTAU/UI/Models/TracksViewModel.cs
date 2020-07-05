@@ -1,21 +1,79 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Windows.Controls;
 using System.ComponentModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using LibreUtau.Core;
-using LibreUtau.UI.Controls;
+using LibreUtau.Core.Audio.Playback;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
-using LibreUtau.UI.Models;
+using LibreUtau.UI.Controls;
 
 namespace LibreUtau.UI.Models {
     class TracksViewModel : INotifyPropertyChanged, ICmdSubscriber {
+        readonly List<PartElement> PartElements = new List<PartElement>();
+        readonly List<TrackHeader> TrackHeaders = new List<TrackHeader>();
+
+        public PartElement GetPartElement(UPart part) {
+            foreach (PartElement partEl in PartElements) {
+                if (partEl.Part == part) return partEl;
+            }
+
+            return null;
+        }
+
+        public TrackHeader GetTrackHeader(UTrack track) {
+            foreach (var trackHeader in TrackHeaders) {
+                if (trackHeader.Track == track) return trackHeader;
+            }
+
+            return null;
+        }
+
+        public void RedrawIfUpdated() {
+            if (_updated) {
+                foreach (PartElement partElement in PartElements) {
+                    if (partElement.Modified) partElement.Redraw();
+                    partElement.X = -OffsetX + partElement.Part.PosTick * QuarterWidth / Project.Resolution;
+                    partElement.Y = -OffsetY + partElement.Part.TrackNo * TrackHeight + 1;
+                    partElement.VisualHeight = TrackHeight - 2;
+                    partElement.ScaleX = QuarterWidth / Project.Resolution;
+                    partElement.CanvasWidth = this.TrackCanvas.ActualWidth;
+                }
+
+                foreach (TrackHeader trackHeader in TrackHeaders) {
+                    Canvas.SetTop(trackHeader, -OffsetY + TrackHeight * trackHeader.Track.TrackNo);
+                    trackHeader.Height = TrackHeight;
+                }
+
+                UpdatePlayPosMarker();
+            }
+
+            _updated = false;
+            PlaybackManager.Inst.UpdatePlayPos();
+        }
+
+        public void UpdateViewSize() {
+            double quarterCount = UIConstants.MinQuarterCount;
+            if (Project != null)
+                foreach (UPart part in Project.Parts)
+                    quarterCount = Math.Max(quarterCount,
+                        (part.DurTick + part.PosTick) / Project.Resolution + UIConstants.SpareQuarterCount);
+            QuarterCount = quarterCount;
+
+            int trackCount = UIConstants.MinTrackCount;
+            if (Project != null)
+                foreach (UPart part in Project.Parts)
+                    trackCount = Math.Max(trackCount, part.TrackNo + 1 + UIConstants.SpareTrackCount);
+            TrackCount = trackCount;
+        }
+
+        public int GetPartMinDurTick(UPart part) {
+            return part.GetMinDurTick();
+        }
+
         # region Properties
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -27,23 +85,23 @@ namespace LibreUtau.UI.Models {
             }
         }
 
-        public UProject Project { get { return DocManager.Inst.Project; } }
+        public UProject Project { get { return CommandDispatcher.Inst.Project; } }
         public Canvas TimelineCanvas;
         public Canvas TrackCanvas;
         public Canvas HeaderCanvas;
 
-        protected bool _updated = false;
+        protected bool _updated;
         public void MarkUpdate() { _updated = true; }
 
         double _trackHeight = UIConstants.TrackDefaultHeight;
         double _trackCount = UIConstants.MinTrackCount;
         double _quarterCount = UIConstants.MinQuarterCount;
         double _quarterWidth = UIConstants.TrackQuarterDefaultWidth;
-        double _viewWidth = 0;
-        double _viewHeight = 0;
-        double _offsetX = 0;
-        double _offsetY = 0;
-        double _quarterOffset = 0;
+        double _viewWidth;
+        double _viewHeight;
+        double _offsetX;
+        double _offsetY;
+        double _quarterOffset;
         double _minTickWidth = UIConstants.TrackTickMinWidth;
         int _beatPerBar = 4;
         int _beatUnit = 4;
@@ -51,7 +109,7 @@ namespace LibreUtau.UI.Models {
         public string Title {
             get {
                 if (Project != null) return "LibreUTAU - [" + Project.Name + "]";
-                else return "LibreUTAU";
+                return "LibreUTAU";
             }
         }
 
@@ -134,14 +192,14 @@ namespace LibreUtau.UI.Models {
         public double ViewportSizeX {
             get {
                 if (TotalWidth <= 0) return 10000;
-                else return ViewWidth * (TotalWidth + ViewWidth) / TotalWidth;
+                return ViewWidth * (TotalWidth + ViewWidth) / TotalWidth;
             }
         }
 
         public double ViewportSizeY {
             get {
                 if (TotalHeight <= 0) return 10000;
-                else return ViewHeight * (TotalHeight + ViewHeight) / TotalHeight;
+                return ViewHeight * (TotalHeight + ViewHeight) / TotalHeight;
             }
         }
 
@@ -210,15 +268,10 @@ namespace LibreUtau.UI.Models {
 
         # endregion
 
-        List<PartElement> PartElements = new List<PartElement>();
-        List<TrackHeader> TrackHeaders = new List<TrackHeader>();
-
-        public TracksViewModel() { }
-
         # region Selection
 
         public List<UPart> SelectedParts = new List<UPart>();
-        List<UPart> TempSelectedParts = new List<UPart>();
+        readonly List<UPart> TempSelectedParts = new List<UPart>();
 
         public void UpdateSelectedVisual() {
             foreach (PartElement partEl in PartElements) {
@@ -279,80 +332,22 @@ namespace LibreUtau.UI.Models {
 
         # endregion
 
-        public PartElement GetPartElement(UPart part) {
-            foreach (PartElement partEl in PartElements) {
-                if (partEl.Part == part) return partEl;
-            }
-
-            return null;
-        }
-
-        public TrackHeader GetTrackHeader(UTrack track) {
-            foreach (var trackHeader in TrackHeaders) {
-                if (trackHeader.Track == track) return trackHeader;
-            }
-
-            return null;
-        }
-
-        public void RedrawIfUpdated() {
-            if (_updated) {
-                foreach (PartElement partElement in PartElements) {
-                    if (partElement.Modified) partElement.Redraw();
-                    partElement.X = -OffsetX + partElement.Part.PosTick * QuarterWidth / Project.Resolution;
-                    partElement.Y = -OffsetY + partElement.Part.TrackNo * TrackHeight + 1;
-                    partElement.VisualHeight = TrackHeight - 2;
-                    partElement.ScaleX = QuarterWidth / Project.Resolution;
-                    partElement.CanvasWidth = this.TrackCanvas.ActualWidth;
-                }
-
-                foreach (TrackHeader trackHeader in TrackHeaders) {
-                    Canvas.SetTop(trackHeader, -OffsetY + TrackHeight * trackHeader.Track.TrackNo);
-                    trackHeader.Height = TrackHeight;
-                }
-
-                UpdatePlayPosMarker();
-            }
-
-            _updated = false;
-            PlaybackManager.Inst.UpdatePlayPos();
-        }
-
-        public void UpdateViewSize() {
-            double quarterCount = UIConstants.MinQuarterCount;
-            if (Project != null)
-                foreach (UPart part in Project.Parts)
-                    quarterCount = Math.Max(quarterCount,
-                        (part.DurTick + part.PosTick) / Project.Resolution + UIConstants.SpareQuarterCount);
-            QuarterCount = quarterCount;
-
-            int trackCount = UIConstants.MinTrackCount;
-            if (Project != null)
-                foreach (UPart part in Project.Parts)
-                    trackCount = Math.Max(trackCount, part.TrackNo + 1 + UIConstants.SpareTrackCount);
-            TrackCount = trackCount;
-        }
-
-        public int GetPartMinDurTick(UPart part) {
-            return part.GetMinDurTick();
-        }
-
         # region PlayPosMarker
 
-        public int playPosTick = 0;
+        public int playPosTick;
         Path playPosMarker;
         Rectangle playPosMarkerHighlight;
 
         private void initPlayPosMarker() {
             playPosTick = 0;
             if (playPosMarker == null) {
-                playPosMarker = new Path() {
+                playPosMarker = new Path {
                     Fill = ThemeManager.TickLineBrushDark,
                     Data = Geometry.Parse("M 0 0 L 13 0 L 13 3 L 6.5 9 L 0 3 Z")
                 };
                 TimelineCanvas.Children.Add(playPosMarker);
 
-                playPosMarkerHighlight = new Rectangle() {
+                playPosMarkerHighlight = new Rectangle {
                     Fill = ThemeManager.TickLineBrushDark,
                     Opacity = 0.25,
                     Width = 32
@@ -362,7 +357,7 @@ namespace LibreUtau.UI.Models {
         }
 
         public void UpdatePlayPosMarker() {
-            double quarter = (double)playPosTick / DocManager.Inst.Project.Resolution;
+            double quarter = (double)playPosTick / CommandDispatcher.Inst.Project.Resolution;
             int playPosMarkerOffset = (int)Math.Round(QuarterToCanvas(quarter) + 0.5);
             Canvas.SetLeft(playPosMarker, playPosMarkerOffset - 6);
             playPosMarkerHighlight.Height = TrackCanvas.ActualHeight;
@@ -408,7 +403,7 @@ namespace LibreUtau.UI.Models {
         # region Cmd Handling
 
         private void OnTrackAdded(UTrack track, List<UPart> addedParts = null) {
-            var trackHeader = new TrackHeader() {Track = track, Height = TrackHeight};
+            var trackHeader = new TrackHeader {Track = track, Height = TrackHeight};
             TrackHeaders.Add(trackHeader);
             HeaderCanvas.Children.Add(trackHeader);
             Canvas.SetTop(trackHeader, -OffsetY + TrackHeight * trackHeader.Track.TrackNo);
@@ -432,7 +427,7 @@ namespace LibreUtau.UI.Models {
         private void OnPartAdded(UPart part) {
             PartElement partElement;
             if (part is UWavePart) partElement = new WavePartElement(part) {Project = Project};
-            else partElement = new VoicePartElement() {Part = part, Project = Project};
+            else partElement = new VoicePartElement {Part = part, Project = Project};
 
             partElement.Redraw();
             PartElements.Add(partElement);
@@ -494,7 +489,7 @@ namespace LibreUtau.UI.Models {
 
         # region ICmdSubscriber
 
-        public void Subscribe(ICmdPublisher publisher) {
+        public void SubscribeTo(ICmdPublisher publisher) {
             if (publisher != null) publisher.Subscribe(this);
         }
 

@@ -1,26 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using LibreUtau.Core;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 
 namespace LibreUtau.UI.Models {
     public class PitchPointHitTestResult {
-        public UNote Note;
         public int Index;
+        public UNote Note;
         public bool OnPoint;
         public double X;
         public double Y;
     }
 
     class MidiViewHitTest : ICmdSubscriber {
-        MidiViewModel midiVM;
-        UProject Project { get { return DocManager.Inst.Project; } }
+        readonly MidiViewModel midiVM;
 
         public MidiViewHitTest(MidiViewModel midiVM) { this.midiVM = midiVM; }
+        UProject Project { get { return CommandDispatcher.Inst.Project; } }
 
         public UNote HitTestNoteX(double x) {
             int tick = (int)(midiVM.CanvasToQuarter(x) * Project.Resolution);
@@ -68,8 +65,8 @@ namespace LibreUtau.UI.Models {
                         double x = midiVM.TickToCanvas(posTick);
                         double y = midiVM.NoteNumToCanvas(noteNum) + midiVM.TrackHeight / 2;
                         if (Math.Abs(mousePos.X - x) < 4 && Math.Abs(mousePos.Y - y) < 4)
-                            return new PitchPointHitTestResult() {Note = note, Index = i, OnPoint = true};
-                        else if (mousePos.X < x && i > 0 && mousePos.X > last.X) {
+                            return new PitchPointHitTestResult {Note = note, Index = i, OnPoint = true};
+                        if (mousePos.X < x && i > 0 && mousePos.X > last.X) {
                             // Hit test curve
                             var lastPit = note.PitchBend.Points[i - 1];
                             double castY = MusicMath.InterpolateShape(last, new Point(x, y), mousePos.X, lastShape) -
@@ -86,13 +83,15 @@ namespace LibreUtau.UI.Models {
                                 ? Math.Abs(castY)
                                 : Math.Cos(Math.Atan2(Math.Abs(castY), Math.Abs(castX))) * Math.Abs(castY);
                             if (dis < 3) {
-                                double msX = DocManager.Inst.Project.TickToMillisecond(
-                                    midiVM.CanvasToQuarter(mousePos.X) * DocManager.Inst.Project.Resolution -
+                                double msX = CommandDispatcher.Inst.Project.TickToMillisecond(
+                                    midiVM.CanvasToQuarter(mousePos.X) * CommandDispatcher.Inst.Project.Resolution -
                                     note.PosTick);
                                 double msY = (midiVM.CanvasToPitch(mousePos.Y) - note.NoteNum) * 10;
-                                return (new PitchPointHitTestResult()
+                                return (new PitchPointHitTestResult
                                     {Note = note, Index = i - 1, OnPoint = false, X = msX, Y = msY});
-                            } else break;
+                            }
+
+                            break;
                         }
 
                         last = new Point(x, y);
@@ -106,7 +105,7 @@ namespace LibreUtau.UI.Models {
 
         # region ICmdSubscriber
 
-        public void Subscribe(ICmdPublisher publisher) {
+        public void SubscribeTo(ICmdPublisher publisher) {
             if (publisher != null) publisher.Subscribe(this);
         }
 

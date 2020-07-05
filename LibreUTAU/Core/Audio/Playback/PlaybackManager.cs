@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
-using LibreUtau.Core.Render;
-using LibreUtau.Core.ResamplerDriver;
+using LibreUtau.Core.Audio.Build;
+using LibreUtau.Core.Audio.Render.NAudio;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace LibreUtau.Core {
+namespace LibreUtau.Core.Audio.Playback {
     class PlaybackManager : ICmdSubscriber {
         MixingSampleProvider masterMix;
         private WaveOut outDevice;
@@ -62,8 +60,8 @@ namespace LibreUtau.Core {
             if (outDevice != null && outDevice.PlaybackState == PlaybackState.Playing) {
                 double ms = outDevice.GetPosition() * 1000.0 / masterMix.WaveFormat.BitsPerSample /
                     masterMix.WaveFormat.Channels * 8 / masterMix.WaveFormat.SampleRate;
-                int tick = DocManager.Inst.Project.MillisecondToTick(ms);
-                DocManager.Inst.ExecuteCmd(new SetPlayPosTickNotification(tick), true);
+                int tick = CommandDispatcher.Inst.Project.MillisecondToTick(ms);
+                CommandDispatcher.Inst.ExecuteCmd(new SetPlayPosTickNotification(tick), true);
             }
         }
 
@@ -76,7 +74,7 @@ namespace LibreUtau.Core {
 
         #region Singleton
 
-        private PlaybackManager() { this.Subscribe(DocManager.Inst); }
+        private PlaybackManager() { this.SubscribeTo(CommandDispatcher.Inst); }
 
         private static PlaybackManager _s;
 
@@ -92,7 +90,7 @@ namespace LibreUtau.Core {
 
         # region ICmdSubscriber
 
-        public void Subscribe(ICmdPublisher publisher) {
+        public void SubscribeTo(ICmdPublisher publisher) {
             if (publisher != null) publisher.Subscribe(this);
         }
 
@@ -100,7 +98,7 @@ namespace LibreUtau.Core {
             if (cmd is SeekPlayPosTickNotification) {
                 StopPlayback();
                 int tick = ((SeekPlayPosTickNotification)cmd).playPosTick;
-                DocManager.Inst.ExecuteCmd(new SetPlayPosTickNotification(tick));
+                CommandDispatcher.Inst.ExecuteCmd(new SetPlayPosTickNotification(tick));
             } else if (cmd is VolumeChangeNotification) {
                 var _cmd = cmd as VolumeChangeNotification;
                 if (trackSources != null && trackSources.Count > _cmd.TrackNo) {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LibreUtau.Core.Render;
+using LibreUtau.Core.Audio.Build;
+using LibreUtau.Core.Audio.Render;
+using LibreUtau.Core.Audio.Render.NAudio;
 using LibreUtau.Core.ResamplerDriver;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
@@ -18,13 +18,13 @@ namespace LibreUtau.Core.USTx {
     }
 
     public abstract class UPart {
-        public string Name = "New Part";
         public string Comment = string.Empty;
-
-        public abstract ISampleProvider RenderedTrack { get; }
+        public string Name = "New Part";
+        public int PosTick = 0;
 
         public int TrackNo;
-        public int PosTick = 0;
+
+        public abstract ISampleProvider RenderedTrack { get; }
         public virtual int DurTick { set; get; }
         public int EndTick { get { return PosTick + DurTick; } }
 
@@ -34,54 +34,39 @@ namespace LibreUtau.Core.USTx {
     public class UVoicePart : UPart {
         public SortedSet<UNote> Notes = new SortedSet<UNote>();
 
-        private Dictionary<RenderItem, Stream> _builtState = new Dictionary<RenderItem, Stream>();
+        private SequencingSampleProvider sequence;
 
-        private bool _needsRebuild = true;
-
-        public void RequireRebuild() => _needsRebuild = true;
-
-        public override ISampleProvider RenderedTrack {
-            get {
-                foreach (var renderPair in _builtState) {
-                    renderPair.Value.Position = 0;
-                    renderPair.Key.Sound = MemorySampleProvider.FromStream(renderPair.Value);
-                }
-
-                return new SequencingSampleProvider(from renderPair in _builtState
-                    select new RenderItemSampleProvider(renderPair.Key));
-            }
-        }
+        public override ISampleProvider RenderedTrack { get => sequence; }
 
         public double ProgressWeight { get { return Notes.Count; } }
 
-        public bool IsBuilt { get { return !_needsRebuild; } }
-
         public void Build(Action<double> ProgressChangedCallback, BuildContext buildContext) {
             var context = buildContext is BuildContext context1 ? context1 : default;
-            _needsRebuild = false;
-            _builtState.Clear();
             var watch = new Stopwatch();
             watch.Start();
             Log.Information("Resampling start.");
+            var renderItems = new List<RenderItem>();
             lock (this) {
                 var cacheDir = PathManager.Inst.GetCachePath(context.Project.FilePath);
-                var cacheFiles = Directory.EnumerateFiles(cacheDir).ToArray();
+                NoteCacheProvider.SetCacheDir(cacheDir);
                 int count = Notes.Count, phonemeProgress = 0;
 
                 foreach (var note in Notes) {
                     if (note.Phoneme.PhonemeError) {
                         Log.Warning($"Phoneme error in note {note}");
                         continue;
-                    } else if (string.IsNullOrEmpty(note.Phoneme.Oto.File)) {
+                    }
+
+                    if (string.IsNullOrEmpty(note.Phoneme.Oto.File)) {
                         Log.Warning($"Invalid wave location in note {note}");
                         continue;
                     }
 
                     var item = new RenderItem(note.Phoneme, this, context.Project);
                     var engineArgs = DriverModels.CreateInputModel(item, 0);
-                    var output = context.Driver.DoResampler(engineArgs);
+                    var output = NoteCacheProvider.LazyResample(engineArgs, context.Driver);
                     item.Sound = MemorySampleProvider.FromStream(output);
-                    _builtState.Add(item, output);
+                    renderItems.Add(item);
 
                     phonemeProgress++;
                     ProgressChangedCallback(phonemeProgress / (double)count);
@@ -90,6 +75,8 @@ namespace LibreUtau.Core.USTx {
 
             watch.Stop();
             Log.Information($"Resampling end, total time {watch.Elapsed}");
+            sequence = new SequencingSampleProvider(from renderItem in renderItems
+                select new RenderItemSampleProvider(renderItem));
         }
 
         public override int GetMinDurTick() {
@@ -100,6 +87,13 @@ namespace LibreUtau.Core.USTx {
     public class UWavePart : UPart {
         string _filePath;
 
+        public int Channels;
+        public int FileDurTick;
+        public int HeadTrimTick = 0;
+
+        public float[] Peaks;
+        public int TailTrimTick;
+
         public string FilePath {
             set {
                 _filePath = value;
@@ -107,13 +101,6 @@ namespace LibreUtau.Core.USTx {
             }
             get { return _filePath; }
         }
-
-        public float[] Peaks;
-
-        public int Channels;
-        public int FileDurTick;
-        public int HeadTrimTick = 0;
-        public int TailTrimTick;
 
         public override ISampleProvider RenderedTrack {
             get {

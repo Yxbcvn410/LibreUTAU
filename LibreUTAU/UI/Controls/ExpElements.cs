@@ -1,26 +1,38 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Shapes;
-using LibreUtau.Core;
+using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 using LibreUtau.UI.Models;
 
 namespace LibreUtau.UI.Controls {
-    enum ExpDisMode { Hidden, Visible, Shadow };
+    enum ExpDisMode { Hidden, Visible, Shadow }
 
     class ExpElement : FrameworkElement {
+        protected UVoicePart _part;
+
+        protected double _scaleX;
+
+        protected bool _updated;
+
+        protected double _visualHeight;
+
+        ExpDisMode displayMode;
+
+        public string Key;
+        protected TranslateTransform tTrans;
         protected DrawingVisual visual;
 
-        protected override int VisualChildrenCount { get { return 1; } }
-        protected override Visual GetVisualChild(int index) { return visual; }
+        public ExpElement() {
+            tTrans = new TranslateTransform();
+            this.RenderTransform = tTrans;
+            visual = new DrawingVisual();
+            MarkUpdate();
+            this.AddVisualChild(visual);
+        }
 
-        protected UVoicePart _part;
+        protected override int VisualChildrenCount { get { return 1; } }
 
         public virtual UVoicePart Part {
             set {
@@ -29,11 +41,6 @@ namespace LibreUtau.UI.Controls {
             }
             get { return _part; }
         }
-
-        public string Key;
-        protected TranslateTransform tTrans;
-
-        protected double _visualHeight;
 
         public double VisualHeight {
             set {
@@ -45,8 +52,6 @@ namespace LibreUtau.UI.Controls {
             get { return _visualHeight; }
         }
 
-        protected double _scaleX;
-
         public double ScaleX {
             set {
                 if (_scaleX != value) {
@@ -57,22 +62,12 @@ namespace LibreUtau.UI.Controls {
             get { return _scaleX; }
         }
 
-        public ExpElement() {
-            tTrans = new TranslateTransform();
-            this.RenderTransform = tTrans;
-            visual = new DrawingVisual();
-            MarkUpdate();
-            this.AddVisualChild(visual);
-        }
-
         public double X {
             set {
                 if (tTrans.X != Math.Round(value)) { tTrans.X = Math.Round(value); }
             }
             get { return tTrans.X; }
         }
-
-        ExpDisMode displayMode;
 
         public ExpDisMode DisplayMode {
             set {
@@ -90,17 +85,17 @@ namespace LibreUtau.UI.Controls {
             get { return displayMode; }
         }
 
-        protected bool _updated = false;
+        protected override Visual GetVisualChild(int index) { return visual; }
         public void MarkUpdate() { _updated = true; }
 
         public virtual void RedrawIfUpdated() { }
     }
 
     class FloatExpElement : ExpElement {
-        public MidiViewModel midiVM;
+        readonly Pen pen2;
 
-        Pen pen3;
-        Pen pen2;
+        readonly Pen pen3;
+        public MidiViewModel midiVM;
 
         public FloatExpElement() {
             pen3 = new Pen(ThemeManager.NoteFillBrushes[0], 3);
@@ -117,7 +112,7 @@ namespace LibreUtau.UI.Controls {
                     if (!midiVM.NoteIsInView(note)) continue;
                     if (note.Expressions.ContainsKey(Key)) {
                         var _exp = note.Expressions[Key] as IntExpression;
-                        var _expTemplate = DocManager.Inst.Project.ExpressionTable[Key] as IntExpression;
+                        var _expTemplate = CommandDispatcher.Inst.Project.ExpressionTable[Key] as IntExpression;
                         double x1 = Math.Round(ScaleX * note.PosTick);
                         double x2 = Math.Round(ScaleX * note.EndTick);
                         double valueHeight = Math.Round(VisualHeight - VisualHeight *

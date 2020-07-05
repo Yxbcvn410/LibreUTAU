@@ -1,32 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.ComponentModel;
 using System.Collections.ObjectModel;
-using System.Windows.Media;
+using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
+using LibreUtau.Core.Commands;
 using LibreUtau.UI.Controls;
-using LibreUtau.Core;
-using LibreUtau.Core.USTx;
 
 namespace LibreUtau.UI.Models {
     class ExpComboBoxViewModel : INotifyPropertyChanged, ICmdSubscriber {
-        public event PropertyChangedEventHandler PropertyChanged;
+        ExpDisMode _displayMode = ExpDisMode.Hidden;
 
-        protected void OnPropertyChanged(string name) {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null) {
-                handler(this, new PropertyChangedEventArgs(name));
-            }
-        }
+        int _selectedIndex;
 
         public int Index;
 
-        int _selectedIndex;
+        public ExpComboBoxViewModel() { this.SubscribeTo(CommandDispatcher.Inst); }
 
         public int SelectedIndex {
             set {
@@ -36,10 +25,7 @@ namespace LibreUtau.UI.Models {
             get { return _selectedIndex; }
         }
 
-        ObservableCollection<string> _keys = new ObservableCollection<string>();
-        public ObservableCollection<string> Keys { get { return _keys; } }
-
-        ExpDisMode _displayMode = ExpDisMode.Hidden;
+        public ObservableCollection<string> Keys { get; private set; } = new ObservableCollection<string>();
 
         public ExpDisMode DisplayMode {
             set {
@@ -76,7 +62,14 @@ namespace LibreUtau.UI.Models {
             }
         }
 
-        public ExpComboBoxViewModel() { this.Subscribe(DocManager.Inst); }
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string name) {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null) {
+                handler(this, new PropertyChangedEventArgs(name));
+            }
+        }
 
         public void CreateBindings(ExpComboBox box) {
             box.DataContext = this;
@@ -92,26 +85,29 @@ namespace LibreUtau.UI.Models {
 
         void box_Click(object sender, EventArgs e) {
             if (DisplayMode != ExpDisMode.Visible)
-                DocManager.Inst.ExecuteCmd(new SelectExpressionNotification(Keys[SelectedIndex], this.Index, true));
+                CommandDispatcher.Inst.ExecuteCmd(new SelectExpressionNotification(Keys[SelectedIndex], this.Index,
+                    true));
         }
 
         void box_SelectionChanged(object sender, EventArgs e) {
             if (DisplayMode != ExpDisMode.Visible)
-                DocManager.Inst.ExecuteCmd(new SelectExpressionNotification(Keys[SelectedIndex], this.Index, true));
+                CommandDispatcher.Inst.ExecuteCmd(new SelectExpressionNotification(Keys[SelectedIndex], this.Index,
+                    true));
             else
-                DocManager.Inst.ExecuteCmd(new SelectExpressionNotification(Keys[SelectedIndex], this.Index, false));
+                CommandDispatcher.Inst.ExecuteCmd(new SelectExpressionNotification(Keys[SelectedIndex], this.Index,
+                    false));
         }
 
         # region ICmdSubscriber
 
-        public void Subscribe(ICmdPublisher publisher) {
+        public void SubscribeTo(ICmdPublisher publisher) {
             if (publisher != null) publisher.Subscribe(this);
         }
 
         public void OnCommandExecuted(UCommand cmd, bool isUndo) {
             if (cmd is ChangeExpressionListNotification || cmd is LoadProjectNotification) OnListChange();
             else if (cmd is LoadPartNotification) {
-                if (_keys.Count == 0) OnListChange();
+                if (Keys.Count == 0) OnListChange();
             } else if (cmd is SelectExpressionNotification) OnSelectExp((SelectExpressionNotification)cmd);
         }
 
@@ -120,8 +116,8 @@ namespace LibreUtau.UI.Models {
         # region Cmd Handling
 
         private void OnListChange() {
-            _keys = new ObservableCollection<string>(DocManager.Inst.Project.ExpressionTable.Keys);
-            if (_keys.Count > 0) SelectedIndex = Index % _keys.Count;
+            Keys = new ObservableCollection<string>(CommandDispatcher.Inst.Project.ExpressionTable.Keys);
+            if (Keys.Count > 0) SelectedIndex = Index % Keys.Count;
             OnPropertyChanged("Keys");
         }
 
