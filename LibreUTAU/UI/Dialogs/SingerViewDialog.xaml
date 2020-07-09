@@ -1,7 +1,8 @@
 ﻿<Window x:Class="LibreUtau.UI.Dialogs.SingerViewDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SingerViewDialog" Height="600" Width="500" Background="White" ResizeMode="NoResize">
+        Title="{StaticResource dialogs.singers.title}" Height="600" Width="500" Background="White"
+        ResizeMode="NoResize">
     <Grid>
         <Image x:Name="avatar" Width="100" Height="100" HorizontalAlignment="Left" VerticalAlignment="Top"
                Margin="10,10,0,0" />

@@ -140,7 +140,7 @@ namespace LibreUtau.Core.Commands {
             foreach (UPart part in cmd.project.Parts)
                 if (part is UVoicePart)
                     UpdatePart((UVoicePart)part);
-            NoteCacheProvider.SetCacheDir(cmd.project.CacheDir);
+            NoteCacheProvider.SetCacheDir(PathManager.Inst.GetCachePath(cmd.project));
             NoteCacheProvider.CleanupCache(true);
         }
 

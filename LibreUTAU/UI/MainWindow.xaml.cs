@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
@@ -7,7 +8,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using LibreUtau.Core;
+using LibreUtau.Core.Audio.Build;
 using LibreUtau.Core.Audio.Playback;
+using LibreUtau.Core.Audio.Render;
+using LibreUtau.Core.Audio.Render.NAudio;
 using LibreUtau.Core.Commands;
 using LibreUtau.Core.Formats;
 using LibreUtau.Core.USTx;
@@ -481,7 +485,15 @@ namespace LibreUtau.UI {
         }
 
         private void MenuRenderAll_Click(object sender, RoutedEventArgs e) {
-            PlaybackManager.Inst.Play(CommandDispatcher.Inst.Project);
+            SaveFileDialog saveFileDialog = new SaveFileDialog {
+                Filter = FilterDispatcher.GetFilter()
+            };
+            ProjectBuilder builder = new ProjectBuilder(CommandDispatcher.Inst.Project);
+            if (saveFileDialog.ShowDialog() == true)
+                builder.StartBuilding(true, delegate(List<TrackSampleProvider> list) {
+                    RenderDispatcher.ExportSound(saveFileDialog.FileName, list,
+                        (ExportFormat)(saveFileDialog.FilterIndex - 1));
+                });
         }
 
         private void MenuAbout_Click(object sender, RoutedEventArgs e) {
@@ -526,9 +538,8 @@ namespace LibreUtau.UI {
             if (CommandDispatcher.Inst.Project.Saved == false) {
                 SaveFileDialog dialog = new SaveFileDialog
                     {DefaultExt = "ustx", Filter = "Project Files|*.ustx", Title = "Save File"};
-                if (dialog.ShowDialog() == true) {
+                if (dialog.ShowDialog() == true)
                     CommandDispatcher.Inst.ExecuteCmd(new SaveProjectNotification(dialog.FileName));
-                }
             } else {
                 CommandDispatcher.Inst.ExecuteCmd(new SaveProjectNotification(""));
             }

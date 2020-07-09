@@ -15,6 +15,7 @@ Current status: Unstable
 * Feature-rich MIDI editor
 * Loading UST/VSQx projects
 * Exporting USTx projects
+* Exporting rendered audio
 
 ## Development plan
 #### Known bugs and issues
@@ -30,7 +31,7 @@ Current status: Unstable
     
 #### Plan for the nearest release
 * Fix all bugs
-* Export audio
+* Sophisticated export audio dialog
 * Export project in any format
     
 #### Features yet to implement (sometime in the future)

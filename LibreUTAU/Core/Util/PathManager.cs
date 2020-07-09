@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using LibreUtau.Core.USTx;
 using LibreUtau.Core.Util;
 using Serilog;
 
@@ -27,7 +28,7 @@ namespace LibreUtau.Core {
             }
         }
 
-        public string HomePath { get; private set; }
+        public string HomePath { get; }
 
         public string TryMakeRelative(string path) {
             if (path.StartsWith(HomePath, StringComparison.Ordinal)) {
@@ -79,12 +80,12 @@ namespace LibreUtau.Core {
             }
         }
 
-        public string GetCachePath(string filepath) {
+        public string GetCachePath(UProject project) {
             string cachepath;
-            if (string.IsNullOrEmpty(filepath)) {
+            if (string.IsNullOrEmpty(project.FilePath)) {
                 cachepath = Path.Combine(HomePath, DefaultCachePath);
             } else {
-                cachepath = Path.Combine(Path.GetDirectoryName(filepath), DefaultCachePath);
+                cachepath = Path.Combine(Path.GetDirectoryName(project.FilePath), DefaultCachePath);
             }
 
             if (!Directory.Exists(cachepath)) {

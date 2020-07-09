@@ -13,7 +13,8 @@ namespace LibreUtau.Core.Audio.Build {
 
         public static void setCacheLimit(int limit) => maxCachedNotes = limit;
 
-        public static Stream LazyResample(DriverModels.EngineInput input, IResamplerDriver driver) {
+        public static Stream IntelligentResample(DriverModels.EngineInput input, IResamplerDriver driver,
+            bool force = false) {
             if (!Directory.Exists(UCacheDir))
                 return driver.DoResampler(input);
 
@@ -21,9 +22,15 @@ namespace LibreUtau.Core.Audio.Build {
                 driver.GetInfo().Name + input.GetUUID();
             var cachedNotePath = Path.Combine(UCacheDir, cacheFilename);
 
-            if (File.Exists(cachedNotePath))
-                return new MemoryStream(File.ReadAllBytes(cachedNotePath));
+            return File.Exists(cachedNotePath) && !force
+                ? new MemoryStream(File.ReadAllBytes(cachedNotePath))
+                : ForceResample(input, driver);
+        }
 
+        public static Stream ForceResample(DriverModels.EngineInput input, IResamplerDriver driver) {
+            var cacheFilename =
+                driver.GetInfo().Name + input.GetUUID();
+            var cachedNotePath = Path.Combine(UCacheDir, cacheFilename);
             // Render note and save it to cache
             var stream = driver.DoResampler(input);
             var sampleData = new byte[stream.Length];

@@ -40,14 +40,14 @@ namespace LibreUtau.Core.USTx {
 
         public double ProgressWeight { get { return Notes.Count; } }
 
-        public void Build(Action<double> ProgressChangedCallback, BuildContext buildContext) {
+        public void Build(Action<double> ProgressChangedCallback, BuildContext buildContext, bool force) {
             var context = buildContext is BuildContext context1 ? context1 : default;
             var watch = new Stopwatch();
             watch.Start();
             Log.Information("Resampling start.");
             var renderItems = new List<RenderItem>();
             lock (this) {
-                var cacheDir = PathManager.Inst.GetCachePath(context.Project.FilePath);
+                var cacheDir = PathManager.Inst.GetCachePath(context.Project);
                 NoteCacheProvider.SetCacheDir(cacheDir);
                 int count = Notes.Count, phonemeProgress = 0;
 
@@ -64,7 +64,7 @@ namespace LibreUtau.Core.USTx {
 
                     var item = new RenderItem(note.Phoneme, this, context.Project);
                     var engineArgs = DriverModels.CreateInputModel(item, 0);
-                    var output = NoteCacheProvider.LazyResample(engineArgs, context.Driver);
+                    var output = NoteCacheProvider.IntelligentResample(engineArgs, context.Driver, force);
                     item.Sound = MemorySampleProvider.FromStream(output);
                     renderItems.Add(item);
 

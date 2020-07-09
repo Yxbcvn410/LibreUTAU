@@ -135,5 +135,12 @@ namespace LibreUtau.Core {
         public static double LinearToDecibel(double v) {
             return Math.Log10(v) * 20;
         }
+
+        public static float DecibelToVolume(double db) {
+            return (db <= -24)
+                ? 0
+                : (float)((db < -16) ? DecibelToLinear(db * 2 + 16) : DecibelToLinear(db));
+            //TODO Что за костыль?
+        }
     }
 }

@@ -33,7 +33,7 @@ namespace LibreUtau.Core.Audio.Playback {
             }
 
             ProjectBuilder builder = new ProjectBuilder(project);
-            builder.Start(tracks => StartPlayback(tracks));
+            builder.StartBuilding(false, tracks => StartPlayback(tracks));
         }
 
         public void StopPlayback() {
@@ -63,13 +63,6 @@ namespace LibreUtau.Core.Audio.Playback {
                 int tick = CommandDispatcher.Inst.Project.MillisecondToTick(ms);
                 CommandDispatcher.Inst.ExecuteCmd(new SetPlayPosTickNotification(tick), true);
             }
-        }
-
-        private float DecibelToVolume(double db) {
-            return (db == -24)
-                ? 0
-                : (float)((db < -16) ? MusicMath.DecibelToLinear(db * 2 + 16) : MusicMath.DecibelToLinear(db));
-            //TODO Что за костыль?
         }
 
         #region Singleton
@@ -102,7 +95,7 @@ namespace LibreUtau.Core.Audio.Playback {
             } else if (cmd is VolumeChangeNotification) {
                 var _cmd = cmd as VolumeChangeNotification;
                 if (trackSources != null && trackSources.Count > _cmd.TrackNo) {
-                    trackSources[_cmd.TrackNo].Volume = DecibelToVolume(_cmd.Volume);
+                    trackSources[_cmd.TrackNo].Volume = MusicMath.DecibelToVolume(_cmd.Volume);
                 }
             }
         }

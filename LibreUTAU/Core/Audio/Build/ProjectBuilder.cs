@@ -11,17 +11,22 @@ using LibreUtau.Core.USTx;
 namespace LibreUtau.Core.Audio.Build {
     public class ProjectBuilder : BackgroundWorker {
         private readonly UProject _project;
+        private Action<int> ProgressReportCallback;
 
         public ProjectBuilder(UProject project) {
             _project = project;
             WorkerReportsProgress = true;
+            ProgressReportCallback = progress => CommandDispatcher.Inst.ExecuteCmd(
+                new ProgressBarNotification(progress, "Building audio..."), true);
         }
 
-        public void Start(Action<List<TrackSampleProvider>> FinishCallback) {
+        public void SetProgressReportCallback(Action<int> callback) => ProgressReportCallback = callback;
+
+        public void StartBuilding(bool force, Action<List<TrackSampleProvider>> FinishCallback) {
             if (this.IsBusy)
                 return;
             this.DoWork += (s, e) => {
-                e.Result = BuildAudio(_project);
+                e.Result = BuildAudio(_project, force);
             };
             this.RunWorkerCompleted += (s, e) => {
                 if (e.Result == null)
@@ -30,23 +35,16 @@ namespace LibreUtau.Core.Audio.Build {
                 FinishCallback(e.Result as List<TrackSampleProvider>);
             };
             this.ProgressChanged += (s, e) => {
-                CommandDispatcher.Inst.ExecuteCmd(
-                    new ProgressBarNotification(e.ProgressPercentage, "Building audio..."), true);
+                ProgressReportCallback(e.ProgressPercentage);
             };
             this.RunWorkerAsync();
         }
 
-        private float DecibelToVolume(double db) {
-            return (db <= -24)
-                ? 0
-                : (float)((db < -16) ? MusicMath.DecibelToLinear(db * 2 + 16) : MusicMath.DecibelToLinear(db));
-            //TODO Что за костыль?
-        }
 
-        private List<TrackSampleProvider> BuildAudio(UProject project, bool forceRebuild = false) {
+        private List<TrackSampleProvider> BuildAudio(UProject project, bool force) {
             var trackSources = new List<TrackSampleProvider>();
             foreach (UTrack track in project.Tracks) {
-                trackSources.Add(new TrackSampleProvider {Volume = DecibelToVolume(track.Volume)});
+                trackSources.Add(new TrackSampleProvider {Volume = MusicMath.DecibelToVolume(track.Volume)});
             }
 
             double maxProgress =
@@ -65,7 +63,7 @@ namespace LibreUtau.Core.Audio.Build {
                         this.ReportProgress((int)(100 * (progress + p * voicePart.ProgressWeight) / maxProgress));
                     }
 
-                    voicePart.Build(ReportProgress, new BuildContext {Driver = engine, Project = project});
+                    voicePart.Build(ReportProgress, new BuildContext {Driver = engine, Project = project}, force);
                     currentProgress += voicePart.ProgressWeight;
                 }
 

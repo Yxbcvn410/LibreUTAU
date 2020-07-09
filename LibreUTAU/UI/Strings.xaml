@@ -33,7 +33,7 @@
     <system:String x:Key="menu.help.about">About LibreUTAU</system:String>
 
     <system:String x:Key="menu.updateavail">Update Available</system:String>
-    
+
     <!-- Context Menu -->
     <system:String x:Key="contextmenu.easein">Ease In</system:String>
     <system:String x:Key="contextmenu.easeout">Ease Out</system:String>
@@ -43,7 +43,7 @@
     <system:String x:Key="contextmenu.delpitchpoint">Remove Point</system:String>
     <system:String x:Key="contextmenu.snappoint">Snap to Previous Note</system:String>
     <system:String x:Key="contextmenu.unsnappoint">Unsnap from Previous Note</system:String>
-    
+
 
     <!-- Preferences -->
     <system:String x:Key="prefs.caption">Preferences</system:String>
@@ -63,6 +63,7 @@
     <system:String x:Key="prefs.appearance">Appearance</system:String>
 
     <!-- Dialogs -->
+    <system:String x:Key="dialogs.singers.title">Singers</system:String>
     <system:String x:Key="dialogs.noresampler.caption">No resampler</system:String>
     <system:String x:Key="dialogs.noresampler.message">No resampler! Put your favourite resampler exe or dll in the Resamplers folder!</system:String>
     <system:String x:Key="dialogs.about.caption">About LibreUTAU</system:String>
