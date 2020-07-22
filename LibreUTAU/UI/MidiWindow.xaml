@@ -26,9 +26,9 @@
             <MenuItem x:Name="PitchCxtMenuItem_AddPoint" Header="{StaticResource contextmenu.addpitchpoint}"
                       Click="PitchCxtMenuItem_AddPoint_Click" Loaded="PitchCxtMenuItem_AddPoint_Update" />
             <MenuItem x:Name="PitchCxtMenuItem_DeletePoint" Header="{StaticResource contextmenu.delpitchpoint}"
-                      Click="PitchCxtMenuItem_DeletePoint_Click" Loaded="PitchCxtMenuItem_DelPoint_Update"/>
+                      Click="PitchCxtMenuItem_DeletePoint_Click" Loaded="PitchCxtMenuItem_DelPoint_Update" />
             <MenuItem x:Name="PitchCxtMenuItem_SnapPoint" Header="{StaticResource contextmenu.snappoint}"
-                      Click="PitchCxtMenuItem_SnapPoint_Click" Loaded="PitchCxtMenuItem_SnapPoint_Update"/>
+                      Click="PitchCxtMenuItem_SnapPoint_Click" Loaded="PitchCxtMenuItem_SnapPoint_Update" />
         </ContextMenu>
     </Window.Resources>
     <local:BorderlessWindow.MenuContent>
@@ -74,55 +74,68 @@
             </ToggleButton>
         </Grid>
     </local:BorderlessWindow.MenuContent>
-    <Grid>
-        <Grid Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" MinHeight="200" />
-                <RowDefinition Height="10" />
-                <RowDefinition Height="150" MinHeight="100" MaxHeight="450" />
-            </Grid.RowDefinitions>
-            <Button x:Name="mainButton" Grid.Row="0" Style="{StaticResource MidiWindowMainButton}"
-                    HorizontalAlignment="Left" VerticalAlignment="Top" Height="21" Width="21" Margin="14,7,0,0"
-                    Click="mainButton_Click" />
-            <Grid Grid.Row="0" VerticalAlignment="Top" Height="20" Margin="48,20,20,0"
-                  ClipToBounds="True">
-                <local:TimelineBackground x:Name="timelineBackground"
-                                          QuarterOffset="{Binding QuarterOffset, Source={StaticResource midiVM}}"
-                                          QuarterWidth="{Binding QuarterWidth, Source={StaticResource midiVM}}"
-                                          OffsetX="{Binding OffsetX, Source={StaticResource midiVM}}"
-                                          MinTickWidth="{Binding MinTickWidth, Source={StaticResource midiVM}}"
-                                          BeatPerBar="{Binding BeatPerBar, Source={StaticResource midiVM}}"
-                                          BeatUnit="{Binding BeatUnit, Source={StaticResource midiVM}}" />
-            </Grid>
-            <Canvas x:Name="timelineCanvas" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
-                    Height="20" Margin="48,20,20,0"
-                    Background="Transparent" ClipToBounds="True"
-                    MouseWheel="timelineCanvas_MouseWheel" MouseLeftButtonDown="timelineCanvas_MouseLeftButtonDown"
-                    MouseMove="timelineCanvas_MouseMove" MouseLeftButtonUp="timelineCanvas_MouseLeftButtonUp" />
-            <Grid Grid.Row="0" ClipToBounds="True" Margin="48,40,20,0">
-                <local:KeyTrackBackground x:Name="keyTrackBackground"
-                                          TrackHeight="{Binding TrackHeight, Source={StaticResource midiVM}}"
-                                          OffsetY="{Binding OffsetY, Source={StaticResource midiVM}}"
-                                          local:SizeObserver.Observe="True"
-                                          local:SizeObserver.ObservedHeight="{Binding ViewHeight, Source={StaticResource midiVM}, Mode=OneWayToSource}"
-                                          local:SizeObserver.ObservedWidth="{Binding ViewWidth, Source={StaticResource midiVM}, Mode=OneWayToSource}" />
-                <local:TickBackground x:Name="tickBackground"
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="*" MinHeight="200" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="150" MinHeight="100" MaxHeight="450" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="70" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="20" />
+        </Grid.ColumnDefinitions>
+        <Button x:Name="mainButton" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"
+                Style="{StaticResource MidiWindowMainButton}"
+                HorizontalAlignment="Center" VerticalAlignment="Center" Height="21" Width="21"
+                Click="mainButton_Click" />
+        <Grid Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" Height="20"
+              ClipToBounds="True">
+            <local:TimelineBackground x:Name="timelineBackground"
                                       QuarterOffset="{Binding QuarterOffset, Source={StaticResource midiVM}}"
                                       QuarterWidth="{Binding QuarterWidth, Source={StaticResource midiVM}}"
                                       OffsetX="{Binding OffsetX, Source={StaticResource midiVM}}"
                                       MinTickWidth="{Binding MinTickWidth, Source={StaticResource midiVM}}"
                                       BeatPerBar="{Binding BeatPerBar, Source={StaticResource midiVM}}"
                                       BeatUnit="{Binding BeatUnit, Source={StaticResource midiVM}}" />
-            </Grid>
-            <Canvas x:Name="notesCanvas" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                    Margin="48,40,20,0" Background="Transparent"
+            <Canvas x:Name="timelineCanvas" HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top"
+                    Height="20" Margin="0,20,20,0"
+                    Background="Transparent" ClipToBounds="True"
+                    MouseWheel="timelineCanvas_MouseWheel" MouseLeftButtonDown="timelineCanvas_MouseLeftButtonDown"
+                    MouseMove="timelineCanvas_MouseMove" MouseLeftButtonUp="timelineCanvas_MouseLeftButtonUp" />
+        </Grid>
+
+        <Grid Grid.Row="2" Grid.Column="1" ClipToBounds="True">
+            <local:KeyTrackBackground x:Name="keyTrackBackground"
+                                      TrackHeight="{Binding TrackHeight, Source={StaticResource midiVM}}"
+                                      OffsetY="{Binding OffsetY, Source={StaticResource midiVM}}"
+                                      local:SizeObserver.Observe="True"
+                                      local:SizeObserver.ObservedHeight="{Binding ViewHeight, Source={StaticResource midiVM}, Mode=OneWayToSource}"
+                                      local:SizeObserver.ObservedWidth="{Binding ViewWidth, Source={StaticResource midiVM}, Mode=OneWayToSource}" />
+            <local:TickBackground x:Name="tickBackground"
+                                  QuarterOffset="{Binding QuarterOffset, Source={StaticResource midiVM}}"
+                                  QuarterWidth="{Binding QuarterWidth, Source={StaticResource midiVM}}"
+                                  OffsetX="{Binding OffsetX, Source={StaticResource midiVM}}"
+                                  MinTickWidth="{Binding MinTickWidth, Source={StaticResource midiVM}}"
+                                  BeatPerBar="{Binding BeatPerBar, Source={StaticResource midiVM}}"
+                                  BeatUnit="{Binding BeatUnit, Source={StaticResource midiVM}}" />
+            <Canvas x:Name="notesCanvas" HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch" Background="Transparent"
                     ClipToBounds="True" SnapsToDevicePixels="True"
                     MouseLeftButtonDown="notesCanvas_MouseLeftButtonDown"
                     MouseRightButtonDown="notesCanvas_MouseRightButtonDown"
                     MouseLeftButtonUp="notesCanvas_MouseLeftButtonUp" MouseMove="notesCanvas_MouseMove"
                     MouseWheel="notesCanvas_MouseWheel" MouseRightButtonUp="notesCanvas_MouseRightButtonUp" />
-            <Rectangle x:Name="phonemeCanvasShadow" Grid.Row="0" HorizontalAlignment="Stretch"
-                       VerticalAlignment="Bottom" Margin="48,40,20,48" Height="5"
+            <Canvas x:Name="phonemeCanvas" HorizontalAlignment="Stretch"
+                    VerticalAlignment="Bottom"
+                    Height="48"
+                    ClipToBounds="True" SnapsToDevicePixels="True" Background="White" Opacity="0.75"
+                    Visibility="{Binding PhonemeVisibility, Source={StaticResource midiVM}}" />
+            <Rectangle x:Name="phonemeCanvasShadow" HorizontalAlignment="Stretch"
+                       VerticalAlignment="Bottom" Margin="0,0,0,48" Height="5"
                        SnapsToDevicePixels="True" Opacity="0.15" IsHitTestVisible="False"
                        Visibility="{Binding PhonemeVisibility, Source={StaticResource midiVM}}">
                 <Rectangle.Fill>
@@ -132,106 +145,122 @@
                     </LinearGradientBrush>
                 </Rectangle.Fill>
             </Rectangle>
-            <Canvas x:Name="phonemeCanvas" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
-                    Margin="48,40,20,0" Height="48"
-                    ClipToBounds="True" SnapsToDevicePixels="True" Background="White" Opacity="0.75"
-                    Visibility="{Binding PhonemeVisibility, Source={StaticResource midiVM}}" />
-            <ScrollBar x:Name="horizontalScroll" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
-                       Height="20" Margin="48,0,20,0" Orientation="Horizontal" Minimum="0"
-                       Maximum="{Binding TotalWidth, Mode=OneWay, Source={StaticResource midiVM}}"
-                       Value="{Binding OffsetX, Mode=TwoWay, Source={StaticResource midiVM}, UpdateSourceTrigger=PropertyChanged}"
-                       ViewportSize="{Binding ViewportSizeX, Source={StaticResource midiVM}}"
-                       LargeChange="{Binding ViewportSizeX, Source={StaticResource midiVM}}"
-                       SmallChange="{Binding SmallChangeX, Source={StaticResource midiVM}}">
-                <i:Interaction.Behaviors>
-                    <ib:ScrollbarBehavior />
-                </i:Interaction.Behaviors>
-            </ScrollBar>
-            <ScrollBar x:Name="verticalScroll" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Stretch"
-                       Width="20" Margin="48,40,0,0" Orientation="Vertical" Minimum="0"
-                       Maximum="{Binding TotalHeight, Mode=OneWay, Source={StaticResource midiVM}}"
-                       Value="{Binding OffsetY, Mode=TwoWay, Source={StaticResource midiVM}, UpdateSourceTrigger=PropertyChanged}"
-                       ViewportSize="{Binding ViewportSizeY, Source={StaticResource midiVM}}"
-                       LargeChange="{Binding ViewportSizeY, Source={StaticResource midiVM}}"
-                       SmallChange="{Binding SmallChangeY, Source={StaticResource midiVM}}">
-                <i:Interaction.Behaviors>
-                    <ib:ScrollbarBehavior />
-                </i:Interaction.Behaviors>
-            </ScrollBar>
-            <local:NavigateDrag x:Name="navigateDrag" HorizontalAlignment="Right" VerticalAlignment="Top" Width="20"
-                                Height="20" Margin="0,0,0,0" NavDrag="navigateDrag_NavDrag" />
-            <local:ViewScaler x:Name="viewScaler" HorizontalAlignment="Right" VerticalAlignment="Top" Width="20"
-                              Height="20" Margin="0,20,0,0" />
-            <Border x:Name="notesCanvasShadow" Grid.Row="0" Background="{x:Null}" HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch" Margin="48,20,20,0" BorderThickness="0" ClipToBounds="True">
-                <Border Background="{x:Null}" BorderBrush="Black" BorderThickness="1" Margin="-1">
-                    <Border.Effect>
-                        <DropShadowEffect Color="Black" ShadowDepth="0" BlurRadius="5" Opacity="0.75" />
-                    </Border.Effect>
-                    <Grid x:Name="LyricEnterGrid" Visibility="Hidden" Width="240" Height="240">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
-                        <TextBox Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
-                                 x:Name="LyricBox" FontSize="18" Margin="1"
-                                 KeyDown="LyricBox_KeyDown" KeyUp="LyricBox_KeyUp" TextChanged="LyricBox_TextChanged" />
-                        <ListBox Grid.Row="1" Grid.RowSpan="4" HorizontalAlignment="Stretch"
-                                 VerticalAlignment="Stretch" Margin="1"
-                                 x:Name="LyricVariants"
-                                 SelectionChanged="LyricVariants_OnSelected" KeyDown="LyricVariants_KeyDown"
-                                 MouseDoubleClick="LyricVariants_OnMouseDoubleClick" />
-                    </Grid>
-                </Border>
-            </Border>
-            <Grid Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"
-                  Width="48" Margin="0,40,0,0" ClipToBounds="True">
-                <local:KeyboardBackground x:Name="keyboardBackground"
-                                          TrackHeight="{Binding TrackHeight, Source={StaticResource midiVM}}"
-                                          OffsetY="{Binding OffsetY, Source={StaticResource midiVM}}" />
-                <Canvas Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"
-                        Width="48" Margin="0,40,0,0" Background="Transparent"
-                        ClipToBounds="True" MouseLeftButtonDown="keysCanvas_MouseLeftButtonDown"
-                        MouseLeftButtonUp="keysCanvas_MouseLeftButtonUp"
-                        MouseMove="keysCanvas_MouseMove" MouseWheel="keysCanvas_MouseWheel" />
-            </Grid>
-            <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="10"
-                          Margin="0,0,0,0" Background="White" Focusable="False" />
-            <Grid Grid.Row="2" ClipToBounds="True" Margin="48,0,20,1">
-                <local:TickBackground x:Name="ExpTickBackground"
-                                      QuarterOffset="{Binding QuarterOffset, Source={StaticResource midiVM}}"
-                                      QuarterWidth="{Binding QuarterWidth, Source={StaticResource midiVM}}"
-                                      OffsetX="{Binding OffsetX, Source={StaticResource midiVM}}"
-                                      MinTickWidth="{Binding MinTickWidth, Source={StaticResource midiVM}}"
-                                      BeatPerBar="{Binding BeatPerBar, Source={StaticResource midiVM}}"
-                                      BeatUnit="{Binding BeatUnit, Source={StaticResource midiVM}}" />
-            </Grid>
-            <Grid Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="48"
-                  Margin="0,0,0,1">
-                <local:ExpComboBox x:Name="expCombo0" VerticalAlignment="Top" Margin="0,0,0,0" />
-                <local:ExpComboBox x:Name="expCombo1" VerticalAlignment="Top" Margin="0,22,0,0" />
-                <local:ExpComboBox x:Name="expCombo2" VerticalAlignment="Top" Margin="0,44,0,0" />
-                <local:ExpComboBox x:Name="expCombo3" VerticalAlignment="Top" Margin="0,66,0,0" />
-            </Grid>
-            <Canvas x:Name="expCanvas" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                    Margin="48,0,20,1" Background="Transparent" ClipToBounds="True"
-                    MouseLeftButtonDown="expCanvas_MouseLeftButtonDown" MouseLeftButtonUp="expCanvas_MouseLeftButtonUp"
-                    MouseMove="expCanvas_MouseMove" />
-            <ScrollBar x:Name="expVerticalScroll" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Stretch"
-                       Width="20"
-                       Margin="0,0,0,20" Orientation="Vertical" ViewportSize="10000" />
-            <Border x:Name="expCanvasShadow" Grid.Row="2" Background="{x:Null}" HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch" Margin="48,0,20,1" BorderThickness="0" ClipToBounds="True">
-                <Border Background="{x:Null}" BorderBrush="Black" BorderThickness="1" Margin="-1">
-                    <Border.Effect>
-                        <DropShadowEffect Color="Black" ShadowDepth="0" BlurRadius="5" Opacity="0.75" />
-                    </Border.Effect>
-                </Border>
-            </Border>
-            <Grid Width="18" Height="18" />
         </Grid>
+
+        <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" x:Name="notesCanvasShadow" Background="{x:Null}"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" BorderThickness="0" ClipToBounds="True">
+            <Border Background="{x:Null}" BorderBrush="Black" BorderThickness="1" Margin="-1">
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" ShadowDepth="0" BlurRadius="5" Opacity="0.75" />
+                </Border.Effect>
+                <Grid x:Name="LyricEnterGrid" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Visibility="Hidden" Width="240" Height="240">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                             x:Name="LyricBox" FontSize="18" Margin="1"
+                             KeyDown="LyricBox_KeyDown" KeyUp="LyricBox_KeyUp" TextChanged="LyricBox_TextChanged" />
+                    <ListBox Grid.Row="1" Grid.RowSpan="4" HorizontalAlignment="Stretch"
+                             VerticalAlignment="Stretch" Margin="1"
+                             x:Name="LyricVariants"
+                             SelectionChanged="LyricVariants_OnSelected" KeyDown="LyricVariants_KeyDown"
+                             MouseDoubleClick="LyricVariants_OnMouseDoubleClick" />
+                </Grid>
+            </Border>
+        </Border>
+
+        <ScrollBar x:Name="horizontalScroll" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch"
+                   VerticalAlignment="Bottom"
+                   Height="20" Orientation="Horizontal" Minimum="0"
+                   Maximum="{Binding TotalWidth, Mode=OneWay, Source={StaticResource midiVM}}"
+                   Value="{Binding OffsetX, Mode=TwoWay, Source={StaticResource midiVM}, UpdateSourceTrigger=PropertyChanged}"
+                   ViewportSize="{Binding ViewportSizeX, Source={StaticResource midiVM}}"
+                   LargeChange="{Binding ViewportSizeX, Source={StaticResource midiVM}}"
+                   SmallChange="{Binding SmallChangeX, Source={StaticResource midiVM}}">
+            <i:Interaction.Behaviors>
+                <ib:ScrollbarBehavior />
+            </i:Interaction.Behaviors>
+        </ScrollBar>
+        <ScrollBar x:Name="verticalScroll" Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right"
+                   VerticalAlignment="Stretch"
+                   Width="20" Orientation="Vertical" Minimum="0"
+                   Maximum="{Binding TotalHeight, Mode=OneWay, Source={StaticResource midiVM}}"
+                   Value="{Binding OffsetY, Mode=TwoWay, Source={StaticResource midiVM}, UpdateSourceTrigger=PropertyChanged}"
+                   ViewportSize="{Binding ViewportSizeY, Source={StaticResource midiVM}}"
+                   LargeChange="{Binding ViewportSizeY, Source={StaticResource midiVM}}"
+                   SmallChange="{Binding SmallChangeY, Source={StaticResource midiVM}}">
+            <i:Interaction.Behaviors>
+                <ib:ScrollbarBehavior />
+            </i:Interaction.Behaviors>
+        </ScrollBar>
+        <local:NavigateDrag Grid.Row="0" Grid.Column="2" x:Name="navigateDrag" HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom" Width="20"
+                            Height="20" NavDrag="navigateDrag_NavDrag" />
+        <local:ViewScaler Grid.Row="1" Grid.Column="2" x:Name="viewScaler" HorizontalAlignment="Right"
+                          VerticalAlignment="Top" Width="20"
+                          Height="20" />
+        <Grid Grid.Row="2" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              ClipToBounds="True">
+            <local:KeyboardBackground x:Name="keyboardBackground"
+                                      TrackHeight="{Binding TrackHeight, Source={StaticResource midiVM}}"
+                                      OffsetY="{Binding OffsetY, Source={StaticResource midiVM}}" />
+            <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,40,0,0"
+                    Background="Transparent"
+                    ClipToBounds="True" MouseLeftButtonDown="keysCanvas_MouseLeftButtonDown"
+                    MouseLeftButtonUp="keysCanvas_MouseLeftButtonUp"
+                    MouseMove="keysCanvas_MouseMove" MouseWheel="keysCanvas_MouseWheel" />
+        </Grid>
+        <GridSplitter Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch" Height="10"
+                      Background="White" Focusable="False" />
+        <Grid Grid.Row="4" Grid.Column="1" ClipToBounds="True">
+            <local:TickBackground x:Name="ExpTickBackground"
+                                  QuarterOffset="{Binding QuarterOffset, Source={StaticResource midiVM}}"
+                                  QuarterWidth="{Binding QuarterWidth, Source={StaticResource midiVM}}"
+                                  OffsetX="{Binding OffsetX, Source={StaticResource midiVM}}"
+                                  MinTickWidth="{Binding MinTickWidth, Source={StaticResource midiVM}}"
+                                  BeatPerBar="{Binding BeatPerBar, Source={StaticResource midiVM}}"
+                                  BeatUnit="{Binding BeatUnit, Source={StaticResource midiVM}}" />
+        </Grid>
+        <Grid Grid.Row="4" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="22" />
+                <RowDefinition Height="22" />
+                <RowDefinition Height="22" />
+                <RowDefinition Height="22" />
+            </Grid.RowDefinitions>
+
+            <local:ExpComboBox x:Name="expCombo0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                               Grid.Row="0" />
+            <local:ExpComboBox x:Name="expCombo1" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                               Grid.Row="1" />
+            <local:ExpComboBox x:Name="expCombo2" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                               Grid.Row="2" />
+            <local:ExpComboBox x:Name="expCombo3" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                               Grid.Row="3" />
+        </Grid>
+        <Canvas x:Name="expCanvas" Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" Background="Transparent" ClipToBounds="True"
+                MouseLeftButtonDown="expCanvas_MouseLeftButtonDown" MouseLeftButtonUp="expCanvas_MouseLeftButtonUp"
+                MouseMove="expCanvas_MouseMove" />
+        <ScrollBar x:Name="expVerticalScroll" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Right"
+                   VerticalAlignment="Stretch"
+                   Width="20" Orientation="Vertical" ViewportSize="10000" />
+        <Border x:Name="expCanvasShadow" Grid.Row="4" Grid.Column="1" Background="{x:Null}"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" BorderThickness="0" ClipToBounds="True">
+            <Border Background="{x:Null}" BorderBrush="Black" BorderThickness="1" Margin="-1">
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" ShadowDepth="0" BlurRadius="5" Opacity="0.75" />
+                </Border.Effect>
+            </Border>
+        </Border>
+
     </Grid>
 </local:BorderlessWindow>

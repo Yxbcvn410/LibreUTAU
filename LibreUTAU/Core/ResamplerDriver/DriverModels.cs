@@ -173,7 +173,7 @@ namespace LibreUtau.Core.ResamplerDriver {
         internal static EngineInput CreateInputModel(RenderItem renderItem, double Modulation) {
             EngineInput Ret = new EngineInput {
                 inputWaveFile = renderItem.SourceFile,
-                NoteString = MusicMath.GetNoteString(renderItem.NoteNum),
+                NoteString = MusicMath.GetPianoKey(renderItem.NoteNum).ToString(),
                 Velocity = renderItem.Velocity,
                 StrFlags = renderItem.StrFlags,
                 Offset = renderItem.Oto.Offset,

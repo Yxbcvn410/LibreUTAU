@@ -418,6 +418,7 @@ namespace LibreUtau.UI.Models {
             double leftTick = OffsetX / QuarterWidth * Project.Resolution - 512;
             double rightTick = leftTick + ViewWidth / QuarterWidth * Project.Resolution + 512;
             return (note.PosTick < rightTick && note.EndTick > leftTick);
+            // TODO Откуда хардкодные константы?
         }
 
         # endregion

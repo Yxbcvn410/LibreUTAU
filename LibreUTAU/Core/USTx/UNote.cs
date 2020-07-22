@@ -65,7 +65,7 @@ namespace LibreUtau.Core.USTx {
                     Phoneme.PhonemeString = Phoneme.PhonemeString.Substring(1);
                     Phoneme.AutoRemapped = false;
                 } else {
-                    string noteString = MusicMath.GetNoteString(NoteNum);
+                    string noteString = MusicMath.GetPianoKey(NoteNum).ToString();
                     if (singer.PitchMap.ContainsKey(noteString))
                         Phoneme.RemappedBank = singer.PitchMap[noteString];
                 }

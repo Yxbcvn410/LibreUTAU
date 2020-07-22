@@ -4,8 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:localvm="clr-namespace:LibreUtau.UI.Models"
-             mc:Ignorable="d" x:Name="ComboBox"
-             Height="22" Width="48">
+             mc:Ignorable="d" x:Name="ComboBox">
     <UserControl.Template>
         <ControlTemplate TargetType="UserControl">
             <Grid x:Name="mainGrid" Background="{TemplateBinding Background}"

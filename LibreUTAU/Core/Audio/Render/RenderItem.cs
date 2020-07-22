@@ -77,7 +77,7 @@ namespace LibreUtau.Core.Audio.Render {
             // fresamp.exe <infile> <outfile> <tone> <velocity> <flags> <offset> <length_req>
             // <fixed_length> <endblank> <volume> <modulation> <pitch>
             return
-                $"{MusicMath.GetNoteString(NoteNum)} {Velocity:D} {StrFlags} {Oto.Offset} {RequiredLength:D} {Oto.Consonant} {Oto.Cutoff} {Volume:D} {0:D} {Tempo} {string.Join(",", PitchData)}";
+                $"{MusicMath.GetPianoKey(NoteNum)} {Velocity:D} {StrFlags} {Oto.Offset} {RequiredLength:D} {Oto.Consonant} {Oto.Cutoff} {Volume:D} {0:D} {Tempo} {string.Join(",", PitchData)}";
         }
 
         public ISampleProvider GetSampleProvider() {
@@ -93,7 +93,7 @@ namespace LibreUtau.Core.Audio.Render {
         public EngineInput ToEngineInput() {
             return new EngineInput {
                 inputWaveFile = SourceFile,
-                NoteString = MusicMath.GetNoteString(NoteNum),
+                NoteString = MusicMath.GetPianoKey(NoteNum).ToString(),
                 Velocity = Velocity,
                 StrFlags = StrFlags,
                 Offset = Oto.Offset,

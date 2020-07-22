@@ -1,35 +1,122 @@
 ﻿using System;
+using System.Linq;
+using System.Threading;
 using System.Windows;
+using System.Windows.Media;
 using LibreUtau.Core.USTx;
 
 namespace LibreUtau.Core {
-    public static class MusicMath {
-        public enum KeyColor { White, Black }
+    internal enum KeyType {
+        BLACK,
+        WHITE_UP,
+        WHITE_DOWN,
+        WHITE_UP_DOWN
+    }
 
-        public static readonly Tuple<string, KeyColor>[] KeysInOctave = {
-            Tuple.Create("C", KeyColor.White),
-            Tuple.Create("C#", KeyColor.Black),
-            Tuple.Create("D", KeyColor.White),
-            Tuple.Create("D#", KeyColor.Black),
-            Tuple.Create("E", KeyColor.White),
-            Tuple.Create("F", KeyColor.White),
-            Tuple.Create("F#", KeyColor.Black),
-            Tuple.Create("G", KeyColor.White),
-            Tuple.Create("G#", KeyColor.Black),
-            Tuple.Create("A", KeyColor.White),
-            Tuple.Create("A#", KeyColor.Black),
-            Tuple.Create("B", KeyColor.White)
+    public class PianoKey {
+        private readonly KeyType NoteKeyType;
+        private readonly string NoteStr;
+        internal int OctaveNo = -1;
+
+        internal PianoKey(string noteStr, KeyType keyType) {
+            NoteStr = noteStr;
+            NoteKeyType = keyType;
+        }
+
+        public PianoKey(PianoKey pianoKey) {
+            NoteStr = pianoKey.NoteStr;
+            NoteKeyType = pianoKey.NoteKeyType;
+            OctaveNo = pianoKey.OctaveNo;
+        }
+
+        public bool IsBlack() => NoteKeyType == KeyType.BLACK;
+
+        public void DrawKey(DrawingContext cxt, Rect rect, Brush brush, Brush textBrush, Pen pen) {
+            LineSegment GetByCoords(double x, double y) {
+                return new LineSegment(new Point(rect.Left + rect.Width * x, rect.Top + rect.Height * y), true);
+            }
+
+            double blackKeyLen = 0.6;
+            PathSegment[] segments;
+            switch (NoteKeyType) {
+                case KeyType.BLACK:
+                    segments = new[] {
+                        GetByCoords(0, 1),
+                        GetByCoords(blackKeyLen, 1),
+                        GetByCoords(blackKeyLen, 0)
+                    };
+                    break;
+                case KeyType.WHITE_UP:
+                    segments = new[] {
+                        GetByCoords(0, 1),
+                        GetByCoords(1, 1),
+                        GetByCoords(1, -0.5),
+                        GetByCoords(blackKeyLen, -0.5),
+                        GetByCoords(blackKeyLen, 0)
+                    };
+                    break;
+                case KeyType.WHITE_DOWN:
+                    segments = new[] {
+                        GetByCoords(0, 1),
+                        GetByCoords(blackKeyLen, 1),
+                        GetByCoords(blackKeyLen, 1.5),
+                        GetByCoords(1, 1.5),
+                        GetByCoords(1, 0)
+                    };
+                    break;
+                case KeyType.WHITE_UP_DOWN:
+                    segments = new[] {
+                        GetByCoords(0, 1),
+                        GetByCoords(blackKeyLen, 1),
+                        GetByCoords(blackKeyLen, 1.5),
+                        GetByCoords(1, 1.5),
+                        GetByCoords(1, -0.5),
+                        GetByCoords(blackKeyLen, -0.5),
+                        GetByCoords(blackKeyLen, 0)
+                    };
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            PathGeometry keyShape = new PathGeometry(new[] {new PathFigure(rect.Location, segments, true)});
+            cxt.DrawGeometry(brush, pen, keyShape);
+
+            FormattedText text = new FormattedText(
+                ToString(),
+                Thread.CurrentThread.CurrentUICulture,
+                FlowDirection.LeftToRight,
+                SystemFonts.CaptionFontFamily.GetTypefaces().First(),
+                12,
+                textBrush
+            );
+            cxt.DrawText(text,
+                new Point(rect.X + 5, rect.Y + (rect.Height - text.Height) / 2));
+        }
+
+        public override string ToString() => NoteStr + (OctaveNo >= 0 ? Convert.ToString(OctaveNo) : "");
+    }
+
+    public static class MusicMath {
+        public static readonly PianoKey[] KeysInOctave = {
+            new PianoKey("C", KeyType.WHITE_UP),
+            new PianoKey("C#", KeyType.BLACK),
+            new PianoKey("D", KeyType.WHITE_UP_DOWN),
+            new PianoKey("D#", KeyType.BLACK),
+            new PianoKey("E", KeyType.WHITE_DOWN),
+            new PianoKey("F", KeyType.WHITE_UP),
+            new PianoKey("F#", KeyType.BLACK),
+            new PianoKey("G", KeyType.WHITE_UP_DOWN),
+            new PianoKey("G#", KeyType.BLACK),
+            new PianoKey("A", KeyType.WHITE_UP_DOWN),
+            new PianoKey("A#", KeyType.BLACK),
+            new PianoKey("B", KeyType.WHITE_DOWN)
         };
 
         public static double[] zoomRatios = {4.0, 2.0, 1.0, 1.0 / 2, 1.0 / 4, 1.0 / 8, 1.0 / 16, 1.0 / 32, 1.0 / 64};
 
-        public static string GetNoteString(int noteNum) {
-            return noteNum < 0 ? string.Empty : KeysInOctave[noteNum % 12].Item1 + (noteNum / 12);
-        }
-
-        public static bool IsBlackKey(int noteNum) {
-            return KeysInOctave[noteNum % 12].Item2 == KeyColor.Black;
-        }
+        public static PianoKey GetPianoKey(int noteNum) =>
+            new PianoKey(KeysInOctave[noteNum % 12]) {OctaveNo = noteNum / 12};
 
         public static bool IsCenterKey(int noteNum) {
             return noteNum % 12 == 0;

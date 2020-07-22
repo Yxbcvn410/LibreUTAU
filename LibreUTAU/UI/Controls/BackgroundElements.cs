@@ -80,7 +80,7 @@ namespace LibreUtau.UI.Controls {
             while (top < _size.Height) {
                 int noteNum = UIConstants.MaxNoteNum - alt - 1;
                 drawingContext.DrawRectangle(
-                    MusicMath.IsBlackKey(noteNum)
+                    MusicMath.GetPianoKey(noteNum).IsBlack()
                         ? ThemeManager.TrackBackgroundBrushAlt
                         : ThemeManager.TrackBackgroundBrush,
                     null,
@@ -101,25 +101,15 @@ namespace LibreUtau.UI.Controls {
 
             while (top < _size.Height) {
                 int noteNum = UIConstants.MaxNoteNum - alt - 1;
-                drawingContext.DrawRectangle(
-                    MusicMath.IsBlackKey(noteNum) ? ThemeManager.BlackKeyBrushNormal :
+                var brush = MusicMath.GetPianoKey(noteNum).IsBlack() ? ThemeManager.BlackKeyBrushNormal :
                     MusicMath.IsCenterKey(noteNum) ? ThemeManager.CenterKeyBrushNormal :
-                    ThemeManager.WhiteKeyBrushNormal,
-                    new Pen(ThemeManager.BlackKeyBrushNormal, 1),
-                    new Rect(0, (int)top, _size.Width, TrackHeight));
-
-                FormattedText text = new FormattedText(
-                    MusicMath.GetNoteString(noteNum),
-                    Thread.CurrentThread.CurrentUICulture,
-                    FlowDirection.LeftToRight,
-                    SystemFonts.CaptionFontFamily.GetTypefaces().First(),
-                    12,
-                    MusicMath.IsBlackKey(noteNum) ? ThemeManager.BlackKeyNameBrushNormal :
+                    ThemeManager.WhiteKeyBrushNormal;
+                var textBrush = MusicMath.GetPianoKey(noteNum).IsBlack() ? ThemeManager.BlackKeyNameBrushNormal :
                     MusicMath.IsCenterKey(noteNum) ? ThemeManager.CenterKeyNameBrushNormal :
-                    ThemeManager.WhiteKeyNameBrushNormal
-                );
-                drawingContext.DrawText(text,
-                    new Point(_size.Width - text.Width - 5, (int)(top + (TrackHeight - text.Height) / 2)));
+                    ThemeManager.WhiteKeyNameBrushNormal;
+                MusicMath.GetPianoKey(noteNum).DrawKey(drawingContext,
+                    new Rect(0, (int)top, _size.Width, TrackHeight), brush, textBrush,
+                    new Pen(ThemeManager.BlackKeyBrushNormal, 1));
 
                 top += TrackHeight;
                 alt++;

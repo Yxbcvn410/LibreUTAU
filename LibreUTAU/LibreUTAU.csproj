@@ -160,16 +160,16 @@
       <Compile Include="Core\Util\MusicMath.cs"/>
       <Compile Include="Core\USTx\UPart.cs"/>
       <Compile Include="Core\USTx\UProject.cs"/>
-    <Compile Include="Core\USTx\UTrack.cs" />
-    <Compile Include="Core\Formats\VSQx.cs" />
-    <Compile Include="UI\Behaviors\BorderlessWindowBehavior.cs" />
-    <Compile Include="UI\Behaviors\ScrollbarBehavior.cs" />
-    <Compile Include="UI\Controls\BackgroundElements.cs" />
-    <Compile Include="UI\Controls\BorderlessWindow.cs" />
-    <Compile Include="UI\Controls\NavigateDrag.xaml.cs">
-      <DependentUpon>NavigateDrag.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Controls\PhonemesElement.cs" />
+      <Compile Include="Core\USTx\UTrack.cs"/>
+      <Compile Include="Core\Formats\VSQx.cs"/>
+      <Compile Include="UI\Behaviors\BorderlessWindowBehavior.cs"/>
+      <Compile Include="UI\Behaviors\ScrollbarBehavior.cs"/>
+      <Compile Include="UI\Controls\BackgroundElements.cs"/>
+      <Compile Include="UI\Controls\BorderlessWindow.cs"/>
+      <Compile Include="UI\Controls\NavigateDrag.xaml.cs">
+          <DependentUpon>NavigateDrag.xaml</DependentUpon>
+      </Compile>
+      <Compile Include="UI\Controls\PhonemesElement.cs"/>
     <Compile Include="UI\Controls\TrackHeader.xaml.cs">
       <DependentUpon>TrackHeader.xaml</DependentUpon>
     </Compile>
@@ -326,7 +326,7 @@
     <EmbeddedResource Include="Resources\prefs.json" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="UI\Assets\background.png" />
+      <Resource Include="UI\Assets\splash_background.png"/>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
