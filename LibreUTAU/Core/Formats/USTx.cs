@@ -1,22 +1,88 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Web.Script.Serialization;
-using System.Xml.Linq;
 using LibreUtau.Core.USTx;
-using LibreUtau.Core;
 using LibreUtau.SimpleHelpers;
 
 namespace LibreUtau.Core.Formats {
     class USTx {
+        private const string ThisUstxVersion = "0.2";
         static UProject Project;
-        private const string thisUstxVersion = "0.1";
+
+        public static UProject Create() {
+            UProject project = new UProject {Saved = false};
+            project.RegisterExpression(new IntExpression(null, "velocity", "VEL") {Data = 100, Min = 0, Max = 200});
+            project.RegisterExpression(new IntExpression(null, "volume", "VOL") {Data = 100, Min = 0, Max = 200});
+            project.RegisterExpression(new IntExpression(null, "gender", "GEN") {Data = 0, Min = -100, Max = 100});
+            project.RegisterExpression(new IntExpression(null, "lowpass", "LPF") {Data = 0, Min = 0, Max = 100});
+            project.RegisterExpression(new IntExpression(null, "highpass", "HPF") {Data = 0, Min = 0, Max = 100});
+            project.RegisterExpression(new IntExpression(null, "accent", "ACC") {Data = 100, Min = 0, Max = 200});
+            project.RegisterExpression(new IntExpression(null, "decay", "DEC") {Data = 0, Min = 0, Max = 100});
+            return project;
+        }
+
+        public static void Save(string file, UProject project) {
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.RegisterConverters(
+                new List<JavaScriptConverter> {
+                    new UProjectConvertor(),
+                    new MiscConvertor(),
+                    new UPartConvertor(),
+                    new UNoteConvertor(),
+                    new UPhonemeConverter()
+                });
+            StringBuilder str = new StringBuilder();
+            try {
+                jss.Serialize(project, str);
+                var f_out = new StreamWriter(file);
+                f_out.Write(str.ToString());
+                f_out.Close();
+                project.Saved = true;
+                project.FilePath = file;
+            } catch (Exception e) {
+                Debug.WriteLine(e.ToString());
+            }
+        }
+
+        public static UProject Load(string file) {
+            UProject project;
+
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            jss.RegisterConverters(
+                new List<JavaScriptConverter> {
+                    new UProjectConvertor(),
+                    new MiscConvertor(),
+                    new UPartConvertor(),
+                    new UNoteConvertor(),
+                    new UPhonemeConverter()
+                });
+
+            try {
+                project = jss.Deserialize(File.ReadAllText(file), typeof(UProject)) as UProject;
+                project.Saved = true;
+                project.FilePath = file;
+            } catch (Exception e) {
+                Debug.WriteLine(e.ToString());
+                return null;
+            }
+
+            // Load singers
+            foreach (var track in project.Tracks) {
+                track.Singer = UtauSoundbank.GetSinger(track.Singer.Path, FileEncoding.DetectFileEncoding(file));
+            }
+
+            return project;
+        }
 
         class UNoteConvertor : JavaScriptConverter {
+            public override IEnumerable<Type> SupportedTypes {
+                get { return new List<Type>(new[] {typeof(UNote)}); }
+            }
+
             public override object Deserialize(IDictionary<string, object> dictionary, Type type,
                 JavaScriptSerializer serializer) {
                 UNote result = Project.CreateNote();
@@ -108,13 +174,13 @@ namespace LibreUtau.Core.Formats {
 
                 return result;
             }
-
-            public override IEnumerable<Type> SupportedTypes {
-                get { return new List<Type>(new Type[] {typeof(UNote)}); }
-            }
         }
 
         class UPhonemeConverter : JavaScriptConverter {
+            public override IEnumerable<Type> SupportedTypes {
+                get { return new List<Type>(new[] {typeof(UPhoneme)}); }
+            }
+
             public override object Deserialize(IDictionary<string, object> dictionary, Type type,
                 JavaScriptSerializer serializer) {
                 UPhoneme result = new UPhoneme {
@@ -157,13 +223,13 @@ namespace LibreUtau.Core.Formats {
 
                 return result;
             }
-
-            public override IEnumerable<Type> SupportedTypes {
-                get { return new List<Type>(new Type[] {typeof(UPhoneme)}); }
-            }
         }
 
         class UPartConvertor : JavaScriptConverter {
+            public override IEnumerable<Type> SupportedTypes {
+                get { return new List<Type>(new[] {typeof(UPart), typeof(UVoicePart), typeof(UWavePart)}); }
+            }
+
             public override object Deserialize(IDictionary<string, object> dictionary, Type type,
                 JavaScriptSerializer serializer) {
                 UPart result = null;
@@ -210,13 +276,13 @@ namespace LibreUtau.Core.Formats {
 
                 return result;
             }
-
-            public override IEnumerable<Type> SupportedTypes {
-                get { return new List<Type>(new Type[] {typeof(UPart), typeof(UVoicePart), typeof(UWavePart)}); }
-            }
         }
 
         class UProjectConvertor : JavaScriptConverter {
+            public override IEnumerable<Type> SupportedTypes {
+                get { return new List<Type>(new[] {typeof(UProject)}); }
+            }
+
             public override object Deserialize(IDictionary<string, object> dictionary, Type type,
                 JavaScriptSerializer serializer) {
                 UProject result = new UProject();
@@ -236,7 +302,7 @@ namespace LibreUtau.Core.Formats {
                     var _exp = new IntExpression(null, pair.Key, exp.Abbr) {
                         Data = exp.Data,
                         Min = exp.Min,
-                        Max = exp.Max,
+                        Max = exp.Max
                     };
                     result.ExpressionTable.Add(pair.Key, _exp);
                 }
@@ -258,7 +324,7 @@ namespace LibreUtau.Core.Formats {
 
                 var _obj = obj as UProject;
                 if (_obj != null) {
-                    result.Add("ustxversion", thisUstxVersion);
+                    result.Add("ustxversion", ThisUstxVersion);
                     result.Add("name", _obj.Name);
                     result.Add("comment", _obj.Comment);
                     result.Add("output", _obj.OutputDir);
@@ -274,37 +340,49 @@ namespace LibreUtau.Core.Formats {
 
                 return result;
             }
-
-            public override IEnumerable<Type> SupportedTypes {
-                get { return new List<Type>(new Type[] {typeof(UProject)}); }
-            }
         }
 
         class MiscConvertor : JavaScriptConverter {
+            public override IEnumerable<Type> SupportedTypes {
+                get {
+                    return new List<Type>(new[] {
+                        typeof(IntExpression),
+                        typeof(UTrack),
+                        typeof(USinger)
+                    });
+                }
+            }
+
             public override object Deserialize(IDictionary<string, object> dictionary, Type type,
                 JavaScriptSerializer serializer) {
                 if (type == typeof(IntExpression)) {
                     IntExpression result = new IntExpression(null, "", dictionary["abbr"] as string) {
                         Data = dictionary["data"],
                         Min = Convert.ToInt32(dictionary["min"]),
-                        Max = Convert.ToInt32(dictionary["max"]),
+                        Max = Convert.ToInt32(dictionary["max"])
                     };
                     return result;
-                } else if (type == typeof(UTrack)) {
-                    UTrack result = new UTrack() {
+                }
+
+                if (type == typeof(UTrack)) {
+                    UTrack result = new UTrack {
                         Name = dictionary["name"] as string,
                         Comment = dictionary["comment"] as string,
                         TrackNo = Convert.ToInt32(dictionary["track_no"]),
                         Singer = serializer.ConvertToType(dictionary["singer"], typeof(USinger)) as USinger
                     };
                     return result;
-                } else if (type == typeof(USinger)) {
-                    USinger result = new USinger() {
+                }
+
+                if (type == typeof(USinger)) {
+                    USinger result = new USinger {
                         Name = dictionary["name"] as string,
                         Path = dictionary["path"] as string
                     };
                     return result;
-                } else return null;
+                }
+
+                return null;
             }
 
             public override IDictionary<string, object> Serialize(object obj, JavaScriptSerializer serializer) {
@@ -337,81 +415,6 @@ namespace LibreUtau.Core.Formats {
 
                 return result;
             }
-
-            public override IEnumerable<Type> SupportedTypes {
-                get {
-                    return new List<Type>(new[] {
-                        typeof(IntExpression),
-                        typeof(UTrack),
-                        typeof(USinger)
-                    });
-                }
-            }
-        }
-
-        public static UProject Create() {
-            UProject project = new UProject() {Saved = false};
-            project.RegisterExpression(new IntExpression(null, "velocity", "VEL") {Data = 100, Min = 0, Max = 200});
-            project.RegisterExpression(new IntExpression(null, "volume", "VOL") {Data = 100, Min = 0, Max = 200});
-            project.RegisterExpression(new IntExpression(null, "gender", "GEN") {Data = 0, Min = -100, Max = 100});
-            project.RegisterExpression(new IntExpression(null, "lowpass", "LPF") {Data = 0, Min = 0, Max = 100});
-            project.RegisterExpression(new IntExpression(null, "highpass", "HPF") {Data = 0, Min = 0, Max = 100});
-            project.RegisterExpression(new IntExpression(null, "accent", "ACC") {Data = 100, Min = 0, Max = 200});
-            project.RegisterExpression(new IntExpression(null, "decay", "DEC") {Data = 0, Min = 0, Max = 100});
-            return project;
-        }
-
-        public static void Save(string file, UProject project) {
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.RegisterConverters(
-                new List<JavaScriptConverter>() {
-                    new UProjectConvertor(),
-                    new MiscConvertor(),
-                    new UPartConvertor(),
-                    new UNoteConvertor(),
-                    new UPhonemeConverter()
-                });
-            StringBuilder str = new StringBuilder();
-            try {
-                jss.Serialize(project, str);
-                var f_out = new StreamWriter(file);
-                f_out.Write(str.ToString());
-                f_out.Close();
-                project.Saved = true;
-                project.FilePath = file;
-            } catch (Exception e) {
-                System.Diagnostics.Debug.WriteLine(e.ToString());
-            }
-        }
-
-        public static UProject Load(string file) {
-            UProject project;
-
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            jss.RegisterConverters(
-                new List<JavaScriptConverter>() {
-                    new UProjectConvertor(),
-                    new MiscConvertor(),
-                    new UPartConvertor(),
-                    new UNoteConvertor(),
-                    new UPhonemeConverter()
-                });
-
-            try {
-                project = jss.Deserialize(File.ReadAllText(file), typeof(UProject)) as UProject;
-                project.Saved = true;
-                project.FilePath = file;
-            } catch (Exception e) {
-                System.Diagnostics.Debug.WriteLine(e.ToString());
-                return null;
-            }
-            
-            // Load singers
-            foreach (var track in project.Tracks) {
-                track.Singer = UtauSoundbank.GetSinger(track.Singer.Path, FileEncoding.DetectFileEncoding(file));
-            }
-
-            return project;
         }
     }
 }

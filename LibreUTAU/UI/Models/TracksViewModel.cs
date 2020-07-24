@@ -222,7 +222,14 @@ namespace LibreUtau.UI.Models {
             get { return _minTickWidth; }
         }
 
-        public double BPM { get { return Project.BPM; } }
+        public double BPM {
+            get { return Project.BPM; }
+            set {
+                Project.BPM = value > MusicMath.MaxTempo ? MusicMath.MaxTempo :
+                    value < MusicMath.MinTempo ? MusicMath.MinTempo : value;
+                OnPropertyChanged("BPM");
+            }
+        }
 
         public int BeatPerBar {
             set {

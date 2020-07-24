@@ -1,0 +1,58 @@
+﻿<Window x:Class="LibreUtau.UI.Dialogs.BeatTempoSetupDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:LibreUtau.UI.Dialogs"
+        xmlns:models="clr-namespace:LibreUtau.UI.Models"
+        xmlns:controls="clr-namespace:LibreUtau.UI.Controls"
+        mc:Ignorable="d"
+        Title="{StaticResource dialogs.tempobeat.title}" ResizeMode="NoResize" Height="120" Width="200">
+    <Window.Resources>
+        <models:TracksViewModel x:Key="tracksVM" />
+        <models:ProgressBarViewModel x:Key="progVM" />
+        <BindingGroup x:Key="BindingGroup1" />
+    </Window.Resources>
+    <Grid Margin="2">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="BeatPerBarTextBox" Grid.Column="0" Margin="2" TextAlignment="Right"
+                     VerticalContentAlignment="Center" KeyDown="EnterKeyPressConfirm" />
+            <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Text="/" FontSize="20" />
+            <ComboBox x:Name="BeatUnitComboBox" Grid.Column="2" HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch" Margin="2" />
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TempoTextBox" Grid.Column="0" Margin="2" TextAlignment="Right"
+                     VerticalContentAlignment="Center" KeyDown="EnterKeyPressConfirm" />
+            <Button Name="TapTempoButton" Grid.Column="1" Margin="2" Content="{StaticResource dialogs.tempobeat.tap}"
+                    Click="TapTempoButton_OnClick" />
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button Name="OkButton" Grid.Column="0" Margin="2" Content="{StaticResource dialogs.ok}"
+                    Click="OkButton_OnClick" />
+            <Button Name="CancelButton" Grid.Column="1" Margin="2" Content="{StaticResource dialogs.cancel}"
+                    Click="CancelButton_OnClick" />
+        </Grid>
+    </Grid>
+</Window>

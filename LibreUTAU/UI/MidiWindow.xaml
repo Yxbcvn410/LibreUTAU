@@ -107,7 +107,6 @@
                     MouseWheel="timelineCanvas_MouseWheel" MouseLeftButtonDown="timelineCanvas_MouseLeftButtonDown"
                     MouseMove="timelineCanvas_MouseMove" MouseLeftButtonUp="timelineCanvas_MouseLeftButtonUp" />
         </Grid>
-
         <Grid Grid.Row="2" Grid.Column="1" ClipToBounds="True">
             <local:KeyTrackBackground x:Name="keyTrackBackground"
                                       TrackHeight="{Binding TrackHeight, Source={StaticResource midiVM}}"
@@ -235,7 +234,6 @@
                 <RowDefinition Height="22" />
                 <RowDefinition Height="22" />
             </Grid.RowDefinitions>
-
             <local:ExpComboBox x:Name="expCombo0" HorizontalAlignment="Stretch" VerticalAlignment="Top"
                                Grid.Row="0" />
             <local:ExpComboBox x:Name="expCombo1" HorizontalAlignment="Stretch" VerticalAlignment="Top"
@@ -261,6 +259,5 @@
                 </Border.Effect>
             </Border>
         </Border>
-
     </Grid>
 </local:BorderlessWindow>

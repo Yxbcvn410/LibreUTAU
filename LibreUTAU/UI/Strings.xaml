@@ -63,7 +63,11 @@
     <system:String x:Key="prefs.appearance">Appearance</system:String>
 
     <!-- Dialogs -->
+    <system:String x:Key="dialogs.ok">OK</system:String>
+    <system:String x:Key="dialogs.cancel">Cancel</system:String>
     <system:String x:Key="dialogs.singers.title">Singers</system:String>
+    <system:String x:Key="dialogs.tempobeat.title">Tempo and Beat</system:String>
+    <system:String x:Key="dialogs.tempobeat.tap">Tap tempo</system:String>
     <system:String x:Key="dialogs.noresampler.caption">No resampler</system:String>
     <system:String x:Key="dialogs.noresampler.message">No resampler! Put your favourite resampler exe or dll in the Resamplers folder!</system:String>
     <system:String x:Key="dialogs.about.caption">About LibreUTAU</system:String>

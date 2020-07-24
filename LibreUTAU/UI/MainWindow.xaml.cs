@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -583,8 +584,57 @@ namespace LibreUtau.UI {
             PlaybackManager.Inst.PausePlayback();
         }
 
+        #endregion
+
+        #region BPM & beat Controls
+
+        private bool BPMScrolling;
+        private Point ClickPt;
+
+        [DllImport("User32.dll")]
+        private static extern bool SetCursorPos(int x, int y);
+
+        private void SetCursorPos(Point point) =>
+            SetCursorPos((int)(PointToScreen(point).X), (int)(PointToScreen(point).Y));
+
         private void bpmText_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-            // TODO: set bpm
+            switch (e.ClickCount) {
+                case 1:
+                    UIElement el = (UIElement)sender;
+                    el.CaptureMouse();
+                    ClickPt = e.GetPosition(el);
+                    BPMScrolling = true;
+                    Mouse.OverrideCursor = Cursors.None;
+                    break;
+                case 2:
+                    var dialog = new BeatTempoSetupDialog {Owner = this};
+                    dialog.ShowDialog();
+                    trackVM.BPM = CommandDispatcher.Inst.Project.BPM;
+                    trackVM.BeatPerBar = CommandDispatcher.Inst.Project.BeatPerBar;
+                    trackVM.BeatUnit = CommandDispatcher.Inst.Project.BeatUnit;
+                    trackVM.MarkUpdate();
+                    break;
+            }
+        }
+
+        private void BpmText_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
+            if (!BPMScrolling)
+                return;
+
+            ((UIElement)sender).ReleaseMouseCapture();
+            Mouse.OverrideCursor = null;
+            BPMScrolling = false;
+        }
+
+        private void BpmText_OnMouseMove(object sender, MouseEventArgs e) {
+            if (!BPMScrolling)
+                return;
+
+            const double scrollSpeed = 0.2;
+            UIElement el = (UIElement)sender;
+            var currentPt = e.GetPosition(el);
+            trackVM.BPM -= scrollSpeed * (currentPt.Y - ClickPt.Y);
+            SetCursorPos(el.TransformToAncestor(this).Transform(ClickPt));
         }
 
         # endregion
