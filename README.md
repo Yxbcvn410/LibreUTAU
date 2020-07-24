@@ -22,12 +22,11 @@ Current status: Unstable
 * Sound control
     * Volume/pan track controls do not work
 * Wacky playback controls
-    * Project beat properties and BPM are not editable
     * Go to beginning/Go to end/Seek do not work at all
     * Different buttons for Play and Pause
 * Misc UI bugs
     * Expression controls are not properly updated sometimes
-    * Horizontal scrolling in track viewer/midi viewer do not work 
+    * Horizontal scrolling in track viewer/midi viewer do not work
     
 #### Plan for the nearest release
 * Fix all bugs

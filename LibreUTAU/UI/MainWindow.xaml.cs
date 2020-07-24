@@ -10,8 +10,8 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using LibreUtau.Core;
 using LibreUtau.Core.Audio.Build;
+using LibreUtau.Core.Audio.Export;
 using LibreUtau.Core.Audio.Playback;
-using LibreUtau.Core.Audio.Render;
 using LibreUtau.Core.Audio.Render.NAudio;
 using LibreUtau.Core.Commands;
 using LibreUtau.Core.Formats;
@@ -464,7 +464,10 @@ namespace LibreUtau.UI {
                 Multiselect = false,
                 CheckFileExists = true
             };
-            if (openFileDialog.ShowDialog() == true) CmdImportAudio(openFileDialog.FileName);
+            if (openFileDialog.ShowDialog() != true)
+                return;
+
+            CmdImportAudio(openFileDialog.FileName);
             var project = CommandDispatcher.Inst.Project;
             var parts = Midi.Load(openFileDialog.FileName, project);
 
@@ -487,13 +490,13 @@ namespace LibreUtau.UI {
 
         private void MenuRenderAll_Click(object sender, RoutedEventArgs e) {
             SaveFileDialog saveFileDialog = new SaveFileDialog {
-                Filter = FilterDispatcher.GetFilter()
+                Filter = ExportFormatDispatcher.GetFilter()
             };
             ProjectBuilder builder = new ProjectBuilder(CommandDispatcher.Inst.Project);
             if (saveFileDialog.ShowDialog() == true)
                 builder.StartBuilding(true, delegate(List<TrackSampleProvider> list) {
-                    RenderDispatcher.ExportSound(saveFileDialog.FileName, list,
-                        (ExportFormat)(saveFileDialog.FilterIndex - 1));
+                    ExportDispatcher.ExportSound(saveFileDialog.FileName, list,
+                        (ExportFormatDispatcher.ExportFormat)(saveFileDialog.FilterIndex - 1));
                 });
         }
 

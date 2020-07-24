@@ -5,15 +5,8 @@ using LibreUtau.Core.Audio.Render.NAudio;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace LibreUtau.Core.Audio.Render {
-    public enum ExportFormat {
-        WAV = 0,
-        MP3 = 1,
-        WMA = 2,
-        AAC = 3
-    }
-
-    public static class FilterDispatcher {
+namespace LibreUtau.Core.Audio.Export {
+    public static class ExportFormatDispatcher {
         private static readonly Dictionary<ExportFormat, string> FormatsMap = new Dictionary<ExportFormat, string> {
             {ExportFormat.WAV, "WAV|*.wav"},
             {ExportFormat.MP3, "MP3|*.mp3"},
@@ -23,24 +16,32 @@ namespace LibreUtau.Core.Audio.Render {
 
         public static string GetFilter() => String.Join("|",
             Enum.GetValues(typeof(ExportFormat)).Cast<ExportFormat>().ToList().Select(format => FormatsMap[format]));
+
+        internal enum ExportFormat {
+            WAV = 0,
+            MP3 = 1,
+            WMA = 2,
+            AAC = 3
+        }
     }
 
-    static class RenderDispatcher {
-        public static void ExportSound(string outputFile, List<TrackSampleProvider> tracks, ExportFormat format) {
+    static class ExportDispatcher {
+        public static void ExportSound(string outputFile, List<TrackSampleProvider> tracks,
+            ExportFormatDispatcher.ExportFormat format) {
             MixingSampleProvider master = new MixingSampleProvider(tracks);
             var masterFinal = master.FollowedBy(new SilenceProvider(master.WaveFormat).ToSampleProvider()
                 .Take(TimeSpan.FromSeconds(0.5)));
             switch (format) {
-                case ExportFormat.WAV:
+                case ExportFormatDispatcher.ExportFormat.WAV:
                     WaveFileWriter.CreateWaveFile(outputFile, new SampleToWaveProvider(masterFinal));
                     break;
-                case ExportFormat.MP3:
+                case ExportFormatDispatcher.ExportFormat.MP3:
                     MediaFoundationEncoder.EncodeToMp3(new SampleToWaveProvider(masterFinal), outputFile);
                     break;
-                case ExportFormat.AAC:
+                case ExportFormatDispatcher.ExportFormat.AAC:
                     MediaFoundationEncoder.EncodeToAac(new SampleToWaveProvider(masterFinal), outputFile);
                     break;
-                case ExportFormat.WMA:
+                case ExportFormatDispatcher.ExportFormat.WMA:
                     MediaFoundationEncoder.EncodeToWma(new SampleToWaveProvider(masterFinal), outputFile);
                     break;
             }

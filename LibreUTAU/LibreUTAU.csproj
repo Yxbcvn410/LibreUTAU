@@ -104,17 +104,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+      <Compile Include="Core\Audio\Build\NAudio\AudioStreamReader.cs"/>
+      <Compile Include="Core\Audio\Build\NAudio\EnvelopeSampleProvider.cs"/>
+      <Compile Include="Core\Audio\Build\NAudio\MemorySampleProvider.cs"/>
+      <Compile Include="Core\Audio\Build\NAudio\RenderItemSampleProvider.cs"/>
+      <Compile Include="Core\Audio\Build\NAudio\SequencingSampleProvider.cs"/>
+      <Compile Include="Core\Audio\Build\NAudio\TrackSampleProvider.cs"/>
       <Compile Include="Core\Audio\Build\NoteCacheProvider.cs"/>
       <Compile Include="Core\Audio\Build\ProjectBuilder.cs"/>
+      <Compile Include="Core\Audio\Build\RenderItem.cs"/>
       <Compile Include="Core\Audio\Playback\PlaybackManager.cs"/>
-      <Compile Include="Core\Audio\Render\NAudio\AudioStreamReader.cs"/>
-      <Compile Include="Core\Audio\Render\NAudio\EnvelopeSampleProvider.cs"/>
-      <Compile Include="Core\Audio\Render\NAudio\MemorySampleProvider.cs"/>
-      <Compile Include="Core\Audio\Render\NAudio\RenderItemSampleProvider.cs"/>
-      <Compile Include="Core\Audio\Render\NAudio\SequencingSampleProvider.cs"/>
-      <Compile Include="Core\Audio\Render\NAudio\TrackSampleProvider.cs"/>
-      <Compile Include="Core\Audio\Render\RenderDispatcher.cs"/>
-      <Compile Include="Core\Audio\Render\RenderItem.cs"/>
+      <Compile Include="Core\Audio\Export\ExportDispatcher.cs"/>
       <Compile Include="Core\Commands\TrackCommands.cs"/>
       <Compile Include="Core\Formats\Midi.cs"/>
       <Compile Include="Core\Formats\USTx.cs">
