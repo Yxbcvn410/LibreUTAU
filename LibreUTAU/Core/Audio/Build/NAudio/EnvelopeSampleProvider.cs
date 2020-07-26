@@ -3,7 +3,7 @@ using System.Linq;
 using LibreUtau.Core.USTx;
 using NAudio.Wave;
 
-namespace LibreUtau.Core.Audio.Render.NAudio {
+namespace LibreUtau.Core.Audio.Build.NAudio {
     class EnvelopeSampleProvider : ISampleProvider {
         private readonly List<ExpPoint> envelope = new List<ExpPoint>();
         private readonly object lockObject = new object();

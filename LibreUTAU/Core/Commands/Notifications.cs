@@ -82,16 +82,30 @@ namespace LibreUtau.Core.Commands {
         public override string ToString() { return "Seek play position to tick " + playPosTick; }
     }
 
-    public class ProgressBarNotification : UNotification {
+    public class ProgressIndicatorUpdateNotification : UNotification {
         public string Info;
         public int Progress;
 
-        public ProgressBarNotification(int progress, string info) {
+        public ProgressIndicatorUpdateNotification(int progress, string info) {
             Progress = progress;
             Info = info;
         }
 
-        public override string ToString() { return $"Set progress {Progress} {Info}"; }
+        public override string ToString() => $"Set progress {Progress}, info {Info}";
+    }
+
+    public class ProgressIndicatorVisibilityNotification : UNotification {
+        public bool Visible;
+
+        public ProgressIndicatorVisibilityNotification(bool visible) {
+            Visible = visible;
+        }
+
+        public override string ToString() => $"Set progressbar visibility {Visible}";
+    }
+
+    public class ProgressIndicatorCancelNotification : UNotification {
+        public override string ToString() => "Cancel background task";
     }
 
     public class VolumeChangeNotification : UNotification {

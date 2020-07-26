@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using NAudio.Utils;
 using NAudio.Wave;
 
-namespace LibreUtau.Core.Audio.Render.NAudio {
+namespace LibreUtau.Core.Audio.Build.NAudio {
     /// <summary>
     ///     A sample provider mixer, allowing RenderItemSampleProviders to be sequenced,
     ///     modified from MixingSampleProvider

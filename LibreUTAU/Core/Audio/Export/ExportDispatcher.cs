@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LibreUtau.Core.Audio.Render.NAudio;
+using LibreUtau.Core.Audio.Build.NAudio;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 

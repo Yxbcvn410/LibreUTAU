@@ -1,26 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using LibreUtau.Core.Audio.Render.NAudio;
-using LibreUtau.Core.Commands;
+using System.Windows;
+using LibreUtau.Core.Audio.Build.NAudio;
+using LibreUtau.Core.Audio.Render;
 using LibreUtau.Core.ResamplerDriver;
 using LibreUtau.Core.USTx;
+using LibreUtau.Core.Util;
+using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
+using Serilog;
 
 namespace LibreUtau.Core.Audio.Build {
-    public class ProjectBuilder : BackgroundWorker {
+    public class ProjectBuilder : ProgressNotifyingTask {
         private readonly UProject _project;
-        private Action<int> ProgressReportCallback;
 
         public ProjectBuilder(UProject project) {
             _project = project;
-            WorkerReportsProgress = true;
-            ProgressReportCallback = progress => CommandDispatcher.Inst.ExecuteCmd(
-                new ProgressBarNotification(progress, "Building audio..."), true);
         }
 
-        public void SetProgressReportCallback(Action<int> callback) => ProgressReportCallback = callback;
+        protected override string TaskInfo { get => Application.Current.Resources["tasks.build"] as string; }
 
         public void StartBuilding(bool force, Action<List<TrackSampleProvider>> FinishCallback) {
             if (this.IsBusy)
@@ -31,44 +31,74 @@ namespace LibreUtau.Core.Audio.Build {
             this.RunWorkerCompleted += (s, e) => {
                 if (e.Result == null)
                     return;
-                CommandDispatcher.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Format(string.Empty)));
                 FinishCallback(e.Result as List<TrackSampleProvider>);
-            };
-            this.ProgressChanged += (s, e) => {
-                ProgressReportCallback(e.ProgressPercentage);
             };
             this.RunWorkerAsync();
         }
 
 
         private List<TrackSampleProvider> BuildAudio(UProject project, bool force) {
-            var trackSources = new List<TrackSampleProvider>();
-            foreach (UTrack track in project.Tracks) {
-                trackSources.Add(new TrackSampleProvider {Volume = MusicMath.DecibelToVolume(track.Volume)});
-            }
+            var trackSources = project.Tracks.Select(track => new TrackSampleProvider
+                {Volume = MusicMath.DecibelToVolume(track.Volume)}).ToList();
 
             double maxProgress =
-                    project.Parts.Sum(part => part is UVoicePart voicePart ? voicePart.ProgressWeight : 0),
+                    project.Parts.Sum(part => part is UVoicePart voicePart ? voicePart.Notes.Count : 0),
                 currentProgress = 0;
             FileInfo resamplerFile =
                 new FileInfo(PathManager.Inst.GetPreviewEnginePath());
             IResamplerDriver engine =
                 ResamplerDriver.ResamplerDriver.LoadEngine(resamplerFile.FullName);
 
+            Log.Debug("Audio build start");
+
             foreach (UPart part in project.Parts) {
-                if (part is UVoicePart voicePart) {
-                    var progress = currentProgress;
+                switch (part) {
+                    case UVoicePart voicePart:
+                        var renderItems = new List<RenderItem>();
+                        lock (this) {
+                            var cacheDir = PathManager.Inst.GetCachePath(project);
+                            NoteCacheProvider.SetCacheDir(cacheDir);
 
-                    void ReportProgress(double p) {
-                        this.ReportProgress((int)(100 * (progress + p * voicePart.ProgressWeight) / maxProgress));
-                    }
+                            foreach (var note in voicePart.Notes) {
+                                if (this.CancellationPending)
+                                    return new List<TrackSampleProvider>();
 
-                    voicePart.Build(ReportProgress, new BuildContext {Driver = engine, Project = project}, force);
-                    currentProgress += voicePart.ProgressWeight;
+                                if (note.Phoneme.PhonemeError) {
+                                    Log.Warning($"Phoneme error in note {note}");
+                                    continue;
+                                }
+
+                                if (string.IsNullOrEmpty(note.Phoneme.Oto.File)) {
+                                    Log.Warning($"Invalid wave location in note {note}");
+                                    continue;
+                                }
+
+                                var item = new RenderItem(note.Phoneme, voicePart, project);
+                                var engineArgs = DriverModels.CreateInputModel(item, 0);
+                                var output = NoteCacheProvider.IntelligentResample(engineArgs, engine, force);
+                                item.Sound = MemorySampleProvider.FromStream(output);
+                                renderItems.Add(item);
+
+                                currentProgress++;
+                                this.ReportProgress(
+                                    (int)(100 * currentProgress /
+                                          maxProgress));
+                            }
+                        }
+
+                        var sequence =
+                            new SequencingSampleProvider(renderItems.Select(renderItem =>
+                                new RenderItemSampleProvider(renderItem)));
+                        trackSources[part.TrackNo].AddSource(sequence);
+                        break;
+                    case UWavePart wavePart:
+                        trackSources[part.TrackNo]
+                            .AddSource(new WaveToSampleProvider(new AudioFileReader(wavePart.FilePath)));
+                        break;
                 }
-
-                trackSources[part.TrackNo].AddSource(part.RenderedTrack);
             }
+
+            Log.Debug("Audio build done");
 
             return trackSources;
         }

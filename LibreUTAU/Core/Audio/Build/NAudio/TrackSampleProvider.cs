@@ -2,7 +2,7 @@
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace LibreUtau.Core.Audio.Render.NAudio {
+namespace LibreUtau.Core.Audio.Build.NAudio {
     public class TrackSampleProvider : ISampleProvider {
         private readonly MixingSampleProvider mix;
         private readonly VolumeSampleProvider volume;

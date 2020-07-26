@@ -2,7 +2,7 @@
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace LibreUtau.Core.Audio.Render.NAudio {
+namespace LibreUtau.Core.Audio.Build.NAudio {
     class AudioStreamReader : WaveStream, ISampleProvider {
         private readonly int destBytesPerSample;
         private readonly object lockObject;

@@ -75,4 +75,7 @@
         LibreUTAU aims to be an open source editing environment for UTAU community, with a modern user experience and intelligent phonological support. Based on OpenUtau.
     </system:String>
 
+    <!-- Tasks -->
+    <system:String x:Key="tasks.build">Building audio...</system:String>
+
 </ResourceDictionary>

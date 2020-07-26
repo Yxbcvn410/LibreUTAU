@@ -6,7 +6,7 @@ using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using Serilog;
 
-namespace LibreUtau.Core.Audio.Render.NAudio {
+namespace LibreUtau.Core.Audio.Build.NAudio {
     internal class MemorySampleProvider : ISampleProvider {
         private float[] data;
         private int position;

@@ -8,11 +8,6 @@
         xmlns:controls="clr-namespace:LibreUtau.UI.Controls"
         mc:Ignorable="d"
         Title="{StaticResource dialogs.tempobeat.title}" ResizeMode="NoResize" Height="120" Width="200">
-    <Window.Resources>
-        <models:TracksViewModel x:Key="tracksVM" />
-        <models:ProgressBarViewModel x:Key="progVM" />
-        <BindingGroup x:Key="BindingGroup1" />
-    </Window.Resources>
     <Grid Margin="2">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />

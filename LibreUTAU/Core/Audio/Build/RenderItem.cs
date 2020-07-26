@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using LibreUtau.Core.Audio.Render.NAudio;
+using LibreUtau.Core.Audio.Build.NAudio;
 using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 using NAudio.Wave;

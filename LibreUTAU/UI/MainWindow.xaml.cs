@@ -10,9 +10,9 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using LibreUtau.Core;
 using LibreUtau.Core.Audio.Build;
+using LibreUtau.Core.Audio.Build.NAudio;
 using LibreUtau.Core.Audio.Export;
 using LibreUtau.Core.Audio.Playback;
-using LibreUtau.Core.Audio.Render.NAudio;
 using LibreUtau.Core.Commands;
 using LibreUtau.Core.Formats;
 using LibreUtau.Core.USTx;
@@ -28,7 +28,7 @@ namespace LibreUtau.UI {
     ///     Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : BorderlessWindow {
-        readonly ProgressBarViewModel progVM;
+        readonly ProgressViewModel progVM;
         readonly TracksViewModel trackVM;
         MidiWindow midiWindow;
 
@@ -41,7 +41,7 @@ namespace LibreUtau.UI {
 
             ThemeManager.LoadTheme(); // TODO : move to program entry point
 
-            progVM = this.Resources["progVM"] as ProgressBarViewModel;
+            progVM = this.Resources["progVM"] as ProgressViewModel;
             progVM.SubscribeTo(CommandDispatcher.Inst);
             progVM.Foreground = ThemeManager.NoteFillBrushes[0];
 
@@ -144,6 +144,10 @@ namespace LibreUtau.UI {
                     new AddTrackCommand(project, new UTrack {TrackNo = project.Tracks.Count()}));
                 CommandDispatcher.Inst.EndUndoGroup();
             }
+        }
+
+        private void CancelButton_OnClick(object sender, RoutedEventArgs e) {
+            ProgressViewModel.Cancel();
         }
 
         # region Timeline Canvas
