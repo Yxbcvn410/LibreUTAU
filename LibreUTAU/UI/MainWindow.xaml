@@ -14,7 +14,7 @@
     </i:Interaction.Behaviors>
     <Window.Resources>
         <localvm:TracksViewModel x:Key="tracksVM" />
-        <localvm:ProgressBarViewModel x:Key="progVM" />
+        <localvm:ProgressViewModel x:Key="progVM" />
     </Window.Resources>
     <local:BorderlessWindow.MenuContent>
         <Menu x:Name="mainMenu" IsMainMenu="True" VerticalAlignment="Top" HorizontalAlignment="Left" Background="White">
@@ -186,11 +186,29 @@
                 </Border>
             </Grid>
         </Grid>
-        <ProgressBar x:Name="progrss" Style="{StaticResource WindowBottomProgressBarStyle}"
-                     HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
-                     Margin="0,0,0,0" Height="5" Value="{Binding Progress, Source={StaticResource progVM}}"
-                     Foreground="{Binding Foreground, Source={StaticResource progVM}}" />
-        <TextBlock x:Name="progressText" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="4,0,4,5"
-                   Text="{Binding Info, Source={StaticResource progVM}}" />
+        <Grid Visibility="{Binding Visibility, Source={StaticResource progVM}}">
+            <Grid Background="Black" Opacity="0.5" ZIndex="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+            <Grid Margin="6" HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="2" Opacity="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="20" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Grid.RowSpan="4" CornerRadius="4" BorderThickness="1" BorderBrush="LightGray"
+                        Background="White" />
+                <TextBlock Grid.Row="0" HorizontalAlignment="Stretch"
+                           VerticalAlignment="Stretch"
+                           Margin="2" TextWrapping="Wrap" Text="{Binding Info, Source={StaticResource progVM}}" />
+                <TextBlock Grid.Row="1" HorizontalAlignment="Stretch"
+                           VerticalAlignment="Center"
+                           Margin="2" Text="{Binding EtaString, Source={StaticResource progVM}}" />
+                <ProgressBar Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                             Margin="2" Minimum="0" Maximum="100"
+                             Value="{Binding Progress, Source={StaticResource progVM}}" />
+                <Button Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2"
+                        Content="{StaticResource dialogs.cancel}" Click="CancelButton_OnClick" />
+            </Grid>
+        </Grid>
     </Grid>
 </local:BorderlessWindow>
