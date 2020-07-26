@@ -34,6 +34,10 @@ namespace LibreUtau.UI.Models {
             ;
         }
 
+        public bool MenuEnabled {
+            get => !Visible;
+        }
+
         public void SubscribeTo(ICmdPublisher publisher) {
             publisher?.Subscribe(this);
         }
@@ -61,6 +65,7 @@ namespace LibreUtau.UI.Models {
                     }
 
                     OnPropertyChanged("Visibility");
+                    OnPropertyChanged("MenuEnabled");
                     break;
             }
         }
