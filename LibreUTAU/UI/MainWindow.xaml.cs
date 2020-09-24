@@ -9,10 +9,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using LibreUtau.Core;
+using LibreUtau.Core.Audio;
 using LibreUtau.Core.Audio.Build;
-using LibreUtau.Core.Audio.Build.NAudio;
-using LibreUtau.Core.Audio.Export;
-using LibreUtau.Core.Audio.Playback;
+using LibreUtau.Core.Audio.NAudio;
 using LibreUtau.Core.Commands;
 using LibreUtau.Core.Formats;
 using LibreUtau.Core.USTx;
@@ -21,6 +20,7 @@ using LibreUtau.UI.Controls;
 using LibreUtau.UI.Dialogs;
 using LibreUtau.UI.Models;
 using Microsoft.Win32;
+using NAudio.Wave;
 using WinInterop = System.Windows.Interop;
 
 namespace LibreUtau.UI {
@@ -28,7 +28,6 @@ namespace LibreUtau.UI {
     ///     Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : BorderlessWindow {
-        readonly ProgressViewModel progVM;
         readonly TracksViewModel trackVM;
         MidiWindow midiWindow;
 
@@ -41,9 +40,8 @@ namespace LibreUtau.UI {
 
             ThemeManager.LoadTheme(); // TODO : move to program entry point
 
-            progVM = this.Resources["progVM"] as ProgressViewModel;
-            progVM.SubscribeTo(CommandDispatcher.Inst);
-            progVM.Foreground = ThemeManager.NoteFillBrushes[0];
+            if (this.Resources["progressModel"] is ProgressModel progressModel)
+                progressModel.Foreground = ThemeManager.NoteFillBrushes[0];
 
             this.CloseButtonClicked += (o, e) => { CmdExit(); };
             CompositionTargetEx.FrameUpdating += RenderLoop;
@@ -56,7 +54,7 @@ namespace LibreUtau.UI {
             trackVM.TimelineCanvas = this.timelineCanvas;
             trackVM.TrackCanvas = this.trackCanvas;
             trackVM.HeaderCanvas = this.headerCanvas;
-            trackVM.SubscribeTo(CommandDispatcher.Inst);
+            CommandDispatcher.Inst.AddSubscriber(trackVM);
 
             CmdNewFile();
 
@@ -147,7 +145,7 @@ namespace LibreUtau.UI {
         }
 
         private void CancelButton_OnClick(object sender, RoutedEventArgs e) {
-            ProgressViewModel.Cancel();
+            ProgressModel.Inst.Cancel();
         }
 
         # region Timeline Canvas
@@ -239,8 +237,8 @@ namespace LibreUtau.UI {
                 }
 
                 Mouse.OverrideCursor = Cursors.Cross;
-            } else if (hit is DrawingVisual) {
-                PartElement partEl = ((DrawingVisual)hit).Parent as PartElement;
+            } else if (hit is DrawingVisual visual) {
+                PartElement partEl = visual.Parent as PartElement;
                 _hitPartElement = partEl;
 
                 if (!trackVM.SelectedParts.Contains(_hitPartElement.Part)) trackVM.DeselectAll();
@@ -416,14 +414,15 @@ namespace LibreUtau.UI {
         }
 
         private void trackCanvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e) {
-            FocusManager.SetFocusedElement(this, null);
-            CommandDispatcher.Inst.StartUndoGroup();
-            Point mousePos = e.GetPosition((Canvas)sender);
+            Point mousePos = e.GetPosition(sender as Canvas);
             HitTestResult result = VisualTreeHelper.HitTest(trackCanvas, mousePos);
             if (result == null) return;
+
             var hit = result.VisualHit;
-            if (hit is DrawingVisual) {
-                PartElement partEl = ((DrawingVisual)hit).Parent as PartElement;
+            FocusManager.SetFocusedElement(this, null);
+            CommandDispatcher.Inst.StartUndoGroup();
+            if (hit is DrawingVisual visual) {
+                PartElement partEl = visual.Parent as PartElement;
                 if (partEl != null && trackVM.SelectedParts.Contains(partEl.Part))
                     CommandDispatcher.Inst.ExecuteCmd(new RemovePartCommand(trackVM.Project, partEl.Part));
                 else trackVM.DeselectAll();
@@ -431,7 +430,7 @@ namespace LibreUtau.UI {
                 trackVM.DeselectAll();
             }
 
-            ((UIElement)sender).CaptureMouse();
+            (sender as UIElement).CaptureMouse();
             Mouse.OverrideCursor = Cursors.No;
         }
 
@@ -498,7 +497,7 @@ namespace LibreUtau.UI {
             };
             ProjectBuilder builder = new ProjectBuilder(CommandDispatcher.Inst.Project);
             if (saveFileDialog.ShowDialog() == true)
-                builder.StartBuilding(true, delegate(List<TrackSampleProvider> list) {
+                builder.StartBuilding(true, delegate(List<SampleToWaveStream> list) {
                     ExportDispatcher.ExportSound(saveFileDialog.FileName, list,
                         (ExportFormatDispatcher.ExportFormat)(saveFileDialog.FilterIndex - 1));
                 });
@@ -577,18 +576,25 @@ namespace LibreUtau.UI {
 
         # region Playback controls
 
-        private void playButton_Click(object sender, RoutedEventArgs e) {
-            if (PlaybackManager.Inst.CheckResampler()) {
-                PlaybackManager.Inst.Play(CommandDispatcher.Inst.Project);
+        private void PlayPauseButton_Click(object sender, RoutedEventArgs e) {
+            if (PlaybackManager.Inst.PlaybackState == PlaybackState.Playing) {
+                PlaybackManager.Inst.OnClickPause();
+                return;
+            }
+
+            if (CommandDispatcher.Inst.Project.Built) {
+                PlaybackManager.Inst.OnClickPlay();
             } else {
-                MessageBox.Show(
-                    (string)FindResource("dialogs.noresampler.message"),
-                    (string)FindResource("dialogs.noresampler.caption"));
+                ProjectBuilder builder = new ProjectBuilder(CommandDispatcher.Inst.Project);
+                builder.StartBuilding(false, tracks => {
+                    PlaybackManager.Inst.Load(tracks);
+                    PlaybackManager.Inst.OnClickPlay();
+                });
             }
         }
 
         private void pauseButton_Click(object sender, RoutedEventArgs e) {
-            PlaybackManager.Inst.PausePlayback();
+            PlaybackManager.Inst.OnClickPause();
         }
 
         #endregion

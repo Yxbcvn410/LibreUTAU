@@ -7,6 +7,7 @@
                         xmlns:ic="clr-namespace:Microsoft.Expression.Interactivity.Core;assembly=Microsoft.Expression.Interactions"
                         xmlns:il="clr-namespace:Microsoft.Expression.Interactivity.Layout;assembly=Microsoft.Expression.Interactions"
                         xmlns:ib="clr-namespace:LibreUtau.UI.Behaviors"
+                        xmlns:audio="clr-namespace:LibreUtau.Core.Audio"
                         Style="{StaticResource UBorderlessWindow}" Title="LibreUTAU" KeyDown="Window_KeyDown"
                         Activated="Window_Activated">
     <i:Interaction.Behaviors>
@@ -14,11 +15,12 @@
     </i:Interaction.Behaviors>
     <Window.Resources>
         <localvm:TracksViewModel x:Key="tracksVM" />
-        <localvm:ProgressViewModel x:Key="progVM" />
+        <x:Static Member="localvm:ProgressModel.Inst" x:Key="progressModel" />
+        <x:Static Member="audio:PlaybackManager.Inst" x:Key="playbackManager" />
     </Window.Resources>
     <local:BorderlessWindow.MenuContent>
         <Menu x:Name="mainMenu" IsMainMenu="True" VerticalAlignment="Top" HorizontalAlignment="Left" Background="White"
-              IsEnabled="{Binding MenuEnabled, Source={StaticResource progVM}}">
+              IsEnabled="{Binding MenuEnabled, Source={StaticResource progressModel}}">
             <MenuItem Header="{StaticResource menu.file}">
                 <MenuItem Header="{StaticResource menu.file.new}" InputGestureText="Ctrl+N" Click="MenuNew_Click" />
                 <MenuItem Header="{StaticResource menu.file.open}" InputGestureText="Ctrl+O" Click="MenuOpen_Click" />
@@ -91,17 +93,24 @@
                                Text="{Binding Path=PlayPosTime, Source={StaticResource tracksVM}, StringFormat={}{0:mm\\:ss\\.fff}}" />
                 </Grid>
                 <Grid x:Name="playbackButtonGrid" Height="20" Width="88" HorizontalAlignment="Left" Margin="84,0,0,0">
-                    <Button x:Name="seekHomeButton" Style="{StaticResource SeekHomeButtonStyle}" Margin="4,0,0,0"
-                            HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <Button x:Name="playButton" Style="{StaticResource PlayButtonStyle}" Margin="24,0,0,0"
-                            HorizontalAlignment="Left" VerticalAlignment="Top"
-                            Click="playButton_Click" />
-                    <Button x:Name="pauseButton" Style="{StaticResource PauseButtonStyle}" Margin="44,0,0,0"
-                            HorizontalAlignment="Left" VerticalAlignment="Top"
-                            Click="pauseButton_Click" />
-                    <Button x:Name="seekEndButton" Style="{StaticResource SeekEndButtonStyle}" Margin="64,0,0,0"
-                            HorizontalAlignment="Left" VerticalAlignment="Top" />
-                    <Border CornerRadius="4" BorderThickness="1" BorderBrush="LightGray" />
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="seekHomeButton" Style="{StaticResource SeekHomeButtonStyle}" Grid.Column="0"
+                            HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <Button x:Name="playPauseButton"
+                            Style="{Binding Path=PlayPauseButtonStyle, Source={StaticResource playbackManager}}"
+                            Grid.Column="1"
+                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Click="PlayPauseButton_Click" />
+                    <Button x:Name="stopButton" Style="{StaticResource StopButtonStyle}" Grid.Column="2"
+                            HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <Button x:Name="seekEndButton" Style="{StaticResource SeekEndButtonStyle}" Grid.Column="3"
+                            HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <Border CornerRadius="4" BorderThickness="1" BorderBrush="LightGray" Grid.ColumnSpan="4" />
                 </Grid>
             </Grid>
             <Grid x:Name="HeaderGrid" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -187,7 +196,8 @@
                 </Border>
             </Grid>
         </Grid>
-        <Grid Visibility="{Binding Visibility, Source={StaticResource progVM}}">
+        <!-- Progress indicator -->
+        <Grid Visibility="{Binding Visibility, Source={StaticResource progressModel}}">
             <Grid Background="Black" Opacity="0.5" ZIndex="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             <Grid Margin="6" HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="2" Opacity="1">
                 <Grid.RowDefinitions>
@@ -200,15 +210,16 @@
                         Background="White" />
                 <TextBlock Grid.Row="0" HorizontalAlignment="Stretch"
                            VerticalAlignment="Stretch"
-                           Margin="2" TextWrapping="Wrap" Text="{Binding Info, Source={StaticResource progVM}}" />
+                           Margin="2" TextWrapping="Wrap" Text="{Binding Info, Source={StaticResource progressModel}}" />
                 <TextBlock Grid.Row="1" HorizontalAlignment="Stretch"
                            VerticalAlignment="Center"
-                           Margin="2" Text="{Binding EtaString, Source={StaticResource progVM}}" />
+                           Margin="2" Text="{Binding EtaString, Source={StaticResource progressModel}}" />
                 <ProgressBar Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                              Margin="2" Minimum="0" Maximum="100"
-                             Value="{Binding Progress, Source={StaticResource progVM}}" />
+                             Value="{Binding Progress, Source={StaticResource progressModel}}" />
                 <Button Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2"
-                        Content="{StaticResource dialogs.cancel}" Click="CancelButton_OnClick" />
+                        Content="{StaticResource dialogs.cancel}"
+                        Click="CancelButton_OnClick" />
             </Grid>
         </Grid>
     </Grid>

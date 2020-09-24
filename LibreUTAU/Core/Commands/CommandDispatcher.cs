@@ -8,25 +8,17 @@ namespace LibreUtau.Core.Commands {
     /// <summary>
     ///     CommandDispatcher class
     ///     Controls actions performed on the project
-    ///     TODO:
-    ///     Why playback position is here?
     /// </summary>
     class CommandDispatcher : ICmdPublisher {
         static CommandDispatcher _s;
-
-        public int playPosTick;
 
         CommandDispatcher() {
             Project = new UProject();
         }
 
-        public static CommandDispatcher Inst { get { return GetInst(); } }
+        public static CommandDispatcher Inst { get => _s ?? (_s = new CommandDispatcher()); }
 
         public UProject Project { get; private set; }
-
-        static CommandDispatcher GetInst() {
-            return _s ?? (_s = new CommandDispatcher());
-        }
 
         # region Command Queue
 
@@ -57,10 +49,8 @@ namespace LibreUtau.Core.Commands {
                         undoGroup = null;
                         savedPoint = null;
                         this.Project = loadNotification.project;
-                        this.playPosTick = 0;
                         break;
                     case SetPlayPosTickNotification setPlayPosNotification:
-                        this.playPosTick = setPlayPosNotification.playPosTick;
                         break;
                 }
 

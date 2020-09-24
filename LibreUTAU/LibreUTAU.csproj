@@ -104,17 +104,17 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Core\Audio\Build\NAudio\AudioStreamReader.cs"/>
-        <Compile Include="Core\Audio\Build\NAudio\EnvelopeSampleProvider.cs"/>
-        <Compile Include="Core\Audio\Build\NAudio\MemorySampleProvider.cs"/>
-        <Compile Include="Core\Audio\Build\NAudio\RenderItemSampleProvider.cs"/>
-        <Compile Include="Core\Audio\Build\NAudio\SequencingSampleProvider.cs"/>
-        <Compile Include="Core\Audio\Build\NAudio\TrackSampleProvider.cs"/>
         <Compile Include="Core\Audio\Build\NoteCacheProvider.cs"/>
         <Compile Include="Core\Audio\Build\ProjectBuilder.cs"/>
         <Compile Include="Core\Audio\Build\RenderItem.cs"/>
-        <Compile Include="Core\Audio\Playback\PlaybackManager.cs"/>
-        <Compile Include="Core\Audio\Export\ExportDispatcher.cs"/>
+        <Compile Include="Core\Audio\ExportDispatcher.cs"/>
+        <Compile Include="Core\Audio\NAudio\AudioStreamReader.cs"/>
+        <Compile Include="Core\Audio\NAudio\EnvelopeSampleProvider.cs"/>
+        <Compile Include="Core\Audio\NAudio\MemorySampleProvider.cs"/>
+        <Compile Include="Core\Audio\NAudio\RenderItemSampleProvider.cs"/>
+        <Compile Include="Core\Audio\NAudio\SampleToWaveStream.cs"/>
+        <Compile Include="Core\Audio\NAudio\SequencingSampleProvider.cs"/>
+        <Compile Include="Core\Audio\PlaybackManager.cs"/>
         <Compile Include="Core\Commands\TrackCommands.cs"/>
         <Compile Include="Core\Formats\Midi.cs"/>
         <Compile Include="Core\Formats\USTx.cs">
@@ -129,7 +129,7 @@
         <Compile Include="Core\ResamplerDriver\Factories\SharpDriver.cs"/>
         <Compile Include="Core\USTx\UExpression.cs"/>
         <Compile Include="Core\Commands\NoteCommands.cs"/>
-        <Compile Include="Core\Util\ProgressNotifyingTask.cs"/>
+        <Compile Include="Properties\Annotations.cs"/>
         <Compile Include="ThirdParty\Deque.cs"/>
         <Compile Include="Core\Commands\CommandDispatcher.cs"/>
         <Compile Include="Core\Commands\Notifications.cs"/>
@@ -150,6 +150,7 @@
         </Compile>
         <Compile Include="UI\Controls\ExpElements.cs"/>
         <Compile Include="UI\Controls\NotesElement.cs"/>
+        <Compile Include="UI\Controls\PartContextMenu.cs"/>
         <Compile Include="UI\Controls\PartElements.cs"/>
         <Page Include="App.xaml">
             <Generator>MSBuild:Compile</Generator>
@@ -181,6 +182,9 @@
         <Compile Include="UI\Dialogs\BeatTempoSetupDialog.xaml.cs">
             <DependentUpon>BeatTempoSetupDialog.xaml</DependentUpon>
         </Compile>
+        <Compile Include="UI\Dialogs\InputDialog.xaml.cs">
+            <DependentUpon>InputDialog.xaml</DependentUpon>
+        </Compile>
         <Compile Include="UI\Dialogs\PreferencesDialog.xaml.cs">
             <DependentUpon>PreferencesDialog.xaml</DependentUpon>
         </Compile>
@@ -197,13 +201,14 @@
         <Compile Include="UI\Models\MidiViewHitTest.cs"/>
         <Compile Include="UI\Models\MidiViewModel.cs"/>
         <Compile Include="UI\Colors\ThemeManager.cs"/>
-        <Compile Include="UI\Models\ProgressViewModel.cs"/>
+        <Compile Include="UI\Models\ProgressModel.cs"/>
         <Compile Include="UI\Models\TracksViewModel.cs"/>
         <Compile Include="UI\SplashScreen.xaml.cs">
             <DependentUpon>SplashScreen.xaml</DependentUpon>
         </Compile>
         <Compile Include="UI\UIConstants.cs"/>
         <Page Include="UI\Dialogs\BeatTempoSetupDialog.xaml"/>
+        <Page Include="UI\Dialogs\InputDialog.xaml"/>
         <Page Include="UI\SplashScreen.xaml"/>
         <Page Include="UI\Strings.xaml">
             <SubType>Designer</SubType>

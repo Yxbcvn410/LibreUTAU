@@ -19,14 +19,13 @@ Current status: Unstable
 
 ## Development plan
 #### Known bugs and issues
-* Sound control
-    * Volume/pan track controls do not work
 * Wacky playback controls
-    * Go to beginning/Go to end/Seek do not work at all
-    * Different buttons for Play and Pause
+    * Go to beginning/Go to end buttons do not work at all
 * Misc UI bugs
     * Expression controls are not properly updated sometimes
     * Horizontal scrolling in track viewer/midi viewer do not work
+* Other
+    * The same resampler is used both for preview and export
     
 #### Plan for the nearest release
 * Fix all bugs

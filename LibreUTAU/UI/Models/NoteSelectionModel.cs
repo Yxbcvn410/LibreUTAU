@@ -25,6 +25,8 @@ namespace LibreUtau.UI.Models {
             }
         }
 
+        public int Count => Notes.Count;
+
         public void AddNote(UNote note) {
             Notes.Add(note);
             if (EarliestNote == null || note.PosTick < EarliestNote.PosTick) EarliestNote = note;
@@ -47,9 +49,7 @@ namespace LibreUtau.UI.Models {
 
         public bool Contains(UNote note) => Notes.Contains(note);
 
-        public int Count => Notes.Count;
-        
-        public SelectionConstraints GetSelectionConstraints() => new SelectionConstraints() {
+        public SelectionConstraints GetSelectionConstraints() => new SelectionConstraints {
             TopNoteNum = TopNote.NoteNum,
             BottomNoteNum = BottomNote.NoteNum,
             EarliestNoteStart = EarliestNote.PosTick,

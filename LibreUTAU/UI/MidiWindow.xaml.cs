@@ -44,16 +44,16 @@ namespace LibreUtau.UI {
             viewScaler.Value = UIConstants.NoteDefaultHeight;
             viewScaler.ViewScaled += viewScaler_ViewScaled;
 
-            midiVM = (MidiViewModel)this.Resources["midiVM"];
+            midiVM = this.Resources["midiVM"] as MidiViewModel;
             midiVM.TimelineCanvas = this.timelineCanvas;
             midiVM.MidiCanvas = this.notesCanvas;
             midiVM.PhonemeCanvas = this.phonemeCanvas;
             midiVM.ExpCanvas = this.expCanvas;
-            midiVM.SubscribeTo(CommandDispatcher.Inst);
+            CommandDispatcher.Inst.AddSubscriber(midiVM);
 
             midiHT = new MidiViewHitTest(midiVM);
 
-            pitchCxtMenu = (ContextMenu)this.Resources["pitchCxtMenu"];
+            pitchCxtMenu = this.Resources["pitchCxtMenu"] as ContextMenu;
 
             List<ExpComboBoxViewModel> comboVMs = new List<ExpComboBoxViewModel> {
                 new ExpComboBoxViewModel {Index = 0},
@@ -226,7 +226,7 @@ namespace LibreUtau.UI {
         }
 
         private void mainButton_Click(object sender, RoutedEventArgs e) {
-            CommandDispatcher.Inst.ExecuteCmd(new ShowPitchExpNotification());
+            new PartContextMenu(midiVM.Part).Show(sender as UIElement);
         }
 
         class PitchPointHitTestResultContainer {
@@ -298,8 +298,8 @@ namespace LibreUtau.UI {
             var pitHit = pitHitContainer.Result;
             if (pitHit.OnPoint)
                 ((MenuItem)o).Header = pitHit.Note.PitchBend.SnapFirst
-                    ? (string)FindResource("contextmenu.unsnappoint")
-                    : (string)FindResource("contextmenu.snappoint");
+                    ? (string)FindResource("pitchcontextmenu.unsnappoint")
+                    : (string)FindResource("pitchcontextmenu.snappoint");
             ((MenuItem)o).Visibility = pitHit.OnPoint && pitHit.Index == 0
                 ? Visibility.Visible
                 : Visibility.Collapsed;
@@ -323,7 +323,7 @@ namespace LibreUtau.UI {
         private void LyricBox_KeyUp(object sender, KeyEventArgs e) {
             if (e.Key == Key.Down && LyricBox.Visibility == Visibility.Visible) {
                 LyricVariants.Focus();
-                LyricVariants.SelectedIndex = 0;
+                LyricVariants.SelectedIndex = 1;
             }
         }
 

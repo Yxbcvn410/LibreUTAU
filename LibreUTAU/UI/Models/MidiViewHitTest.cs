@@ -19,6 +19,14 @@ namespace LibreUtau.UI.Models {
         public MidiViewHitTest(MidiViewModel midiVM) { this.midiVM = midiVM; }
         UProject Project { get { return CommandDispatcher.Inst.Project; } }
 
+        # region ICmdSubscriber
+
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
+            if (cmd is RedrawNotesNotification) { }
+        }
+
+        # endregion
+
         public UNote HitTestNoteX(double x) {
             int tick = (int)(midiVM.CanvasToQuarter(x) * Project.Resolution);
             foreach (UNote note in midiVM.Part.Notes)
@@ -102,17 +110,5 @@ namespace LibreUtau.UI.Models {
 
             return null;
         }
-
-        # region ICmdSubscriber
-
-        public void SubscribeTo(ICmdPublisher publisher) {
-            if (publisher != null) publisher.Subscribe(this);
-        }
-
-        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
-            if (cmd is RedrawNotesNotification) { }
-        }
-
-        # endregion
     }
 }

@@ -18,7 +18,7 @@ namespace LibreUtau.Core.Commands {
     public class ICmdPublisher {
         private readonly List<ICmdSubscriber> subscribers = new List<ICmdSubscriber>();
 
-        public void Subscribe(ICmdSubscriber subscriber) {
+        public void AddSubscriber(ICmdSubscriber subscriber) {
             if (!subscribers.Contains(subscriber)) subscribers.Add(subscriber);
         }
 
@@ -28,7 +28,6 @@ namespace LibreUtau.Core.Commands {
     }
 
     public interface ICmdSubscriber {
-        void SubscribeTo(ICmdPublisher publisher);
         void OnCommandExecuted(UCommand cmd, bool isUndo);
     }
 }

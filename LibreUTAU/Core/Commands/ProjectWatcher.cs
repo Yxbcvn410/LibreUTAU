@@ -8,13 +8,52 @@ namespace LibreUtau.Core.Commands {
         private UVoicePart Part;
 
         public ProjectWatcher() {
-            this.SubscribeTo(CommandDispatcher.Inst);
+            CommandDispatcher.Inst.AddSubscriber(this);
             this.Part = null;
         }
+
+        # region ICmdSubscriber
+
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
+            switch (cmd) {
+                case LoadProjectNotification command:
+                    OnProjectLoad(command);
+                    break;
+                case LoadPartNotification command:
+                    Part = command.part as UVoicePart;
+                    UpdatePart(Part);
+                    break;
+                case RemovePartCommand command:
+                    if (command.Part == Part)
+                        Part = null;
+                    break;
+                case NoteCommand _:
+                    UpdatePart(Part);
+                    break;
+                case ExpCommand _:
+                    UpdatePart(Part);
+                    break;
+                case TrackChangeSingerCommand command:
+                    foreach (var part in command.project.Parts.OfType<UVoicePart>()) UpdatePart(part);
+
+                    break;
+                case MovePartCommand command:
+                    if (command.Part is UVoicePart voicePart &&
+                        command.Project.Tracks[command.oldTrackNo].Singer !=
+                        command.Project.Tracks[command.newTrackNo].Singer) {
+                        UpdatePart(voicePart);
+                    }
+
+                    break;
+            }
+        }
+
+        # endregion
 
         public void UpdatePart(UVoicePart part) {
             if (part == null) return;
             lock (part) {
+                CommandDispatcher.Inst.Project.Built = false; // TODO Сделать нормально
                 CheckOverlappedNotes(part);
                 UpdatePhonemes(part);
                 UpdateEnvelope(part);
@@ -142,48 +181,6 @@ namespace LibreUtau.Core.Commands {
                     UpdatePart((UVoicePart)part);
             NoteCacheProvider.SetCacheDir(PathManager.Inst.GetCachePath(cmd.project));
             NoteCacheProvider.CleanupCache(true);
-        }
-
-        # endregion
-
-        # region ICmdSubscriber
-
-        public void SubscribeTo(ICmdPublisher publisher) {
-            publisher?.Subscribe(this);
-        }
-
-        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
-            switch (cmd) {
-                case LoadProjectNotification command:
-                    OnProjectLoad(command);
-                    break;
-                case LoadPartNotification command:
-                    Part = command.part as UVoicePart;
-                    UpdatePart(Part);
-                    break;
-                case RemovePartCommand command:
-                    if (command.part == Part)
-                        Part = null;
-                    break;
-                case NoteCommand _:
-                    UpdatePart(Part);
-                    break;
-                case ExpCommand _:
-                    UpdatePart(Part);
-                    break;
-                case TrackChangeSingerCommand command:
-                    foreach (var part in command.project.Parts.OfType<UVoicePart>()) UpdatePart(part);
-
-                    break;
-                case MovePartCommand command:
-                    if (command.part is UVoicePart voicePart &&
-                        command.project.Tracks[command.oldTrackNo].Singer !=
-                        command.project.Tracks[command.newTrackNo].Singer) {
-                        UpdatePart(voicePart);
-                    }
-
-                    break;
-            }
         }
 
         # endregion

@@ -15,7 +15,7 @@ namespace LibreUtau.UI.Models {
 
         public int Index;
 
-        public ExpComboBoxViewModel() { this.SubscribeTo(CommandDispatcher.Inst); }
+        public ExpComboBoxViewModel() { CommandDispatcher.Inst.AddSubscriber(this); }
 
         public int SelectedIndex {
             set {
@@ -62,6 +62,17 @@ namespace LibreUtau.UI.Models {
             }
         }
 
+        # region ICmdSubscriber
+
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
+            if (cmd is ChangeExpressionListNotification || cmd is LoadProjectNotification) OnListChange();
+            else if (cmd is LoadPartNotification) {
+                if (Keys.Count == 0) OnListChange();
+            } else if (cmd is SelectExpressionNotification) OnSelectExp((SelectExpressionNotification)cmd);
+        }
+
+        # endregion
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string name) {
@@ -97,21 +108,6 @@ namespace LibreUtau.UI.Models {
                 CommandDispatcher.Inst.ExecuteCmd(new SelectExpressionNotification(Keys[SelectedIndex], this.Index,
                     false));
         }
-
-        # region ICmdSubscriber
-
-        public void SubscribeTo(ICmdPublisher publisher) {
-            if (publisher != null) publisher.Subscribe(this);
-        }
-
-        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
-            if (cmd is ChangeExpressionListNotification || cmd is LoadProjectNotification) OnListChange();
-            else if (cmd is LoadPartNotification) {
-                if (Keys.Count == 0) OnListChange();
-            } else if (cmd is SelectExpressionNotification) OnSelectExp((SelectExpressionNotification)cmd);
-        }
-
-        # endregion
 
         # region Cmd Handling
 

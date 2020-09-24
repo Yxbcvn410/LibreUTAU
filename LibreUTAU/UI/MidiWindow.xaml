@@ -15,24 +15,25 @@
     <Window.Resources>
         <localvm:MidiViewModel x:Key="midiVM" />
         <ContextMenu x:Key="pitchCxtMenu">
-            <MenuItem x:Name="PitchCxtMenuItem_SetIn" Header="{StaticResource contextmenu.easein}"
+            <MenuItem x:Name="PitchCxtMenuItem_SetIn" Header="{StaticResource pitchcontextmenu.easein}"
                       Click="PitchCxtMenuItem_SetIn_Click" />
-            <MenuItem x:Name="PitchCxtMenuItem_SetOut" Header="{StaticResource contextmenu.easeout}"
+            <MenuItem x:Name="PitchCxtMenuItem_SetOut" Header="{StaticResource pitchcontextmenu.easeout}"
                       Click="PitchCxtMenuItem_SetOut_Click" />
-            <MenuItem x:Name="PitchCxtMenuItem_SetInOut" Header="{StaticResource contextmenu.easeinout}"
+            <MenuItem x:Name="PitchCxtMenuItem_SetInOut" Header="{StaticResource pitchcontextmenu.easeinout}"
                       Click="PitchCxtMenuItem_SetInOut_Click" />
-            <MenuItem x:Name="PitchCxtMenuItem_SetLinear" Header="{StaticResource contextmenu.linear}"
+            <MenuItem x:Name="PitchCxtMenuItem_SetLinear" Header="{StaticResource pitchcontextmenu.linear}"
                       Click="PitchCxtMenuItem_SetLinear_Click" />
-            <MenuItem x:Name="PitchCxtMenuItem_AddPoint" Header="{StaticResource contextmenu.addpitchpoint}"
+            <MenuItem x:Name="PitchCxtMenuItem_AddPoint" Header="{StaticResource pitchcontextmenu.addpitchpoint}"
                       Click="PitchCxtMenuItem_AddPoint_Click" Loaded="PitchCxtMenuItem_AddPoint_Update" />
-            <MenuItem x:Name="PitchCxtMenuItem_DeletePoint" Header="{StaticResource contextmenu.delpitchpoint}"
+            <MenuItem x:Name="PitchCxtMenuItem_DeletePoint" Header="{StaticResource pitchcontextmenu.delpitchpoint}"
                       Click="PitchCxtMenuItem_DeletePoint_Click" Loaded="PitchCxtMenuItem_DelPoint_Update" />
-            <MenuItem x:Name="PitchCxtMenuItem_SnapPoint" Header="{StaticResource contextmenu.snappoint}"
+            <MenuItem x:Name="PitchCxtMenuItem_SnapPoint" Header="{StaticResource pitchcontextmenu.snappoint}"
                       Click="PitchCxtMenuItem_SnapPoint_Click" Loaded="PitchCxtMenuItem_SnapPoint_Update" />
         </ContextMenu>
     </Window.Resources>
     <local:BorderlessWindow.MenuContent>
         <Grid Width="60" Height="20">
+            <TextBox x:Name="partNameTextBox" Visibility="Hidden" />
             <ToggleButton x:Name="showPitchToggle" Style="{StaticResource ShowPitchToggleButtonStyle}"
                           Width="20" Margin="0,0,0,0" HorizontalAlignment="Left" Focusable="False"
                           IsChecked="{Binding ShowPitch, Source={StaticResource midiVM}}" ToolTip="Toggle pitch (I)">
@@ -87,7 +88,7 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="20" />
         </Grid.ColumnDefinitions>
-        <Button x:Name="mainButton" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"
+        <Button Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"
                 Style="{StaticResource MidiWindowMainButton}"
                 HorizontalAlignment="Center" VerticalAlignment="Center" Height="21" Width="21"
                 Click="mainButton_Click" />

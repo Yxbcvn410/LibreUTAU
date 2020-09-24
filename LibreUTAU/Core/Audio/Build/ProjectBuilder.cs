@@ -1,55 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using LibreUtau.Core.Audio.Build.NAudio;
+using LibreUtau.Core.Audio.NAudio;
 using LibreUtau.Core.Audio.Render;
 using LibreUtau.Core.ResamplerDriver;
 using LibreUtau.Core.USTx;
-using LibreUtau.Core.Util;
+using LibreUtau.UI.Models;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using Serilog;
 
 namespace LibreUtau.Core.Audio.Build {
-    public class ProjectBuilder : ProgressNotifyingTask {
+    public class ProjectBuilder : BackgroundWorker {
         private readonly UProject _project;
 
         public ProjectBuilder(UProject project) {
             _project = project;
         }
 
-        protected override string TaskInfo { get => Application.Current.Resources["tasks.build"] as string; }
-
-        public void StartBuilding(bool force, Action<List<TrackSampleProvider>> FinishCallback) {
+        public void StartBuilding(bool force, Action<List<SampleToWaveStream>> finishCallback) {
             if (this.IsBusy)
                 return;
+            ProgressModel.Inst.AssignTask(this);
+            ProgressModel.Inst.Info = Application.Current.Resources["tasks.build"] as string;
             this.DoWork += (s, e) => {
                 e.Result = BuildAudio(_project, force);
             };
             this.RunWorkerCompleted += (s, e) => {
+                if (e.Error != null)
+                    return;
                 if (e.Result == null)
                     return;
-                FinishCallback(e.Result as List<TrackSampleProvider>);
+                finishCallback(e.Result as List<SampleToWaveStream>);
             };
             this.RunWorkerAsync();
         }
 
 
-        private List<TrackSampleProvider> BuildAudio(UProject project, bool force) {
-            var trackSources = project.Tracks.Select(track => new TrackSampleProvider
-                {Volume = MusicMath.DecibelToVolume(track.Volume)}).ToList();
+        private List<SampleToWaveStream> BuildAudio(UProject project, bool force) {
+            var trackSources = project.Tracks.Select(
+                track => new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2))
+            ).ToList();
 
             double maxProgress =
                     project.Parts.Sum(part => part is UVoicePart voicePart ? voicePart.Notes.Count : 0),
                 currentProgress = 0;
+            if (!File.Exists(PathManager.Inst.GetPreviewEnginePath()))
+                throw new BackgroundTaskException("tasks.build.noresampler");
             FileInfo resamplerFile =
                 new FileInfo(PathManager.Inst.GetPreviewEnginePath());
             IResamplerDriver engine =
                 ResamplerDriver.ResamplerDriver.LoadEngine(resamplerFile.FullName);
 
-            Log.Debug("Audio build start");
+            Log.Debug("Audio build started");
 
             foreach (UPart part in project.Parts) {
                 switch (part) {
@@ -61,7 +68,7 @@ namespace LibreUtau.Core.Audio.Build {
 
                             foreach (var note in voicePart.Notes) {
                                 if (this.CancellationPending)
-                                    return new List<TrackSampleProvider>();
+                                    return new List<SampleToWaveStream>();
 
                                 if (note.Phoneme.PhonemeError) {
                                     Log.Warning($"Phoneme error in note {note}");
@@ -86,21 +93,33 @@ namespace LibreUtau.Core.Audio.Build {
                             }
                         }
 
-                        var sequence =
+                        ISampleProvider sequence =
                             new SequencingSampleProvider(renderItems.Select(renderItem =>
                                 new RenderItemSampleProvider(renderItem)));
-                        trackSources[part.TrackNo].AddSource(sequence);
+                        if (sequence.WaveFormat.Channels == 1)
+                            sequence = new MonoToStereoSampleProvider(sequence);
+                        trackSources[part.TrackNo].AddMixerInput(sequence);
+
                         break;
                     case UWavePart wavePart:
+                        ISampleProvider wave = new AudioFileReader(wavePart.FilePath).ToSampleProvider();
+                        if (wave.WaveFormat.Channels == 1)
+                            wave = new MonoToStereoSampleProvider(wave);
                         trackSources[part.TrackNo]
-                            .AddSource(new WaveToSampleProvider(new AudioFileReader(wavePart.FilePath)));
+                            .AddMixerInput(wave);
                         break;
                 }
             }
 
             Log.Debug("Audio build done");
+            project.Built = true;
+            var tracks = trackSources.Select(input => new SampleToWaveStream(input)).ToList();
+            for (int i = 0; i < tracks.Count; i++) {
+                tracks[i].Volume = MusicMath.DecibelToVolume(project.Tracks[i].Volume);
+                tracks[i].Pan = MusicMath.PanToFloat(project.Tracks[i].Pan);
+            }
 
-            return trackSources;
+            return tracks;
         }
     }
 }

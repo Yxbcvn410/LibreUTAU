@@ -35,14 +35,19 @@
     <system:String x:Key="menu.updateavail">Update Available</system:String>
 
     <!-- Context Menu -->
-    <system:String x:Key="contextmenu.easein">Ease In</system:String>
-    <system:String x:Key="contextmenu.easeout">Ease Out</system:String>
-    <system:String x:Key="contextmenu.easeinout">Ease In/Out</system:String>
-    <system:String x:Key="contextmenu.linear">Linear</system:String>
-    <system:String x:Key="contextmenu.addpitchpoint">Add Point</system:String>
-    <system:String x:Key="contextmenu.delpitchpoint">Remove Point</system:String>
-    <system:String x:Key="contextmenu.snappoint">Snap to Previous Note</system:String>
-    <system:String x:Key="contextmenu.unsnappoint">Unsnap from Previous Note</system:String>
+    <system:String x:Key="pitchcontextmenu.easein">Ease In</system:String>
+    <system:String x:Key="pitchcontextmenu.easeout">Ease Out</system:String>
+    <system:String x:Key="pitchcontextmenu.easeinout">Ease In/Out</system:String>
+    <system:String x:Key="pitchcontextmenu.linear">Linear</system:String>
+    <system:String x:Key="pitchcontextmenu.addpitchpoint">Add Point</system:String>
+    <system:String x:Key="pitchcontextmenu.delpitchpoint">Remove Point</system:String>
+    <system:String x:Key="pitchcontextmenu.snappoint">Snap to Previous Note</system:String>
+    <system:String x:Key="pitchcontextmenu.unsnappoint">Unsnap from Previous Note</system:String>
+
+    <system:String x:Key="midicontextmenu.rename">Rename</system:String>
+    <system:String x:Key="midicontextmenu.exportas">Export as...</system:String>
+    <system:String x:Key="midicontextmenu.export.ust">Export as UST</system:String>
+    <system:String x:Key="midicontextmenu.export.midi">Export as MIDI</system:String>
 
 
     <!-- Preferences -->
@@ -65,11 +70,11 @@
     <!-- Dialogs -->
     <system:String x:Key="dialogs.ok">OK</system:String>
     <system:String x:Key="dialogs.cancel">Cancel</system:String>
+    <system:String x:Key="dialogs.enter.partname">Enter part name:</system:String>
+
     <system:String x:Key="dialogs.singers.title">Singers</system:String>
     <system:String x:Key="dialogs.tempobeat.title">Tempo and Beat</system:String>
     <system:String x:Key="dialogs.tempobeat.tap">Tap tempo</system:String>
-    <system:String x:Key="dialogs.noresampler.caption">No resampler</system:String>
-    <system:String x:Key="dialogs.noresampler.message">No resampler! Put your favourite resampler exe or dll in the Resamplers folder!</system:String>
     <system:String x:Key="dialogs.about.caption">About LibreUTAU</system:String>
     <system:String x:Key="dialogs.about.message">
         LibreUTAU aims to be an open source editing environment for UTAU community, with a modern user experience and intelligent phonological support. Based on OpenUtau.
@@ -77,5 +82,9 @@
 
     <!-- Tasks -->
     <system:String x:Key="tasks.build">Building audio...</system:String>
+    <system:String x:Key="tasks.build.noresampler.caption">No resampler</system:String>
+    <system:String x:Key="tasks.build.noresampler.message">No resampler! Put your favourite resampler exe or dll in the Resamplers folder!</system:String>
+    <system:String x:Key="tasks.error.caption">Error</system:String>
+    <system:String x:Key="tasks.error.message">An error occured while running task</system:String>
 
 </ResourceDictionary>

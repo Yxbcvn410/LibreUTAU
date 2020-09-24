@@ -70,8 +70,8 @@ namespace LibreUtau.Core.Commands {
 
     // Notification for UI to move PlayPosMarker
     public class SetPlayPosTickNotification : UNotification {
-        public int playPosTick;
-        public SetPlayPosTickNotification(int tick) { this.playPosTick = tick; }
+        public long playPosTick;
+        public SetPlayPosTickNotification(long tick) { this.playPosTick = tick; }
         public override string ToString() { return "Set play position to tick " + playPosTick; }
     }
 
@@ -118,5 +118,17 @@ namespace LibreUtau.Core.Commands {
         }
 
         public override string ToString() { return $"Set track {TrackNo} volume to {Volume}"; }
+    }
+
+    public class PanChangeNotification : UNotification {
+        public double Pan;
+        public int TrackNo;
+
+        public PanChangeNotification(int trackNo, double pan) {
+            this.TrackNo = trackNo;
+            this.Pan = pan;
+        }
+
+        public override string ToString() { return $"Set track {TrackNo} pan to {Pan}"; }
     }
 }

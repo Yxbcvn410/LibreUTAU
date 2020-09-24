@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using LibreUtau.Core;
 using LibreUtau.Core.Commands;
 using LibreUtau.Core.Formats;
 using LibreUtau.Core.USTx;
@@ -23,6 +24,9 @@ namespace LibreUtau.UI.Controls {
 
         public TrackHeader() {
             InitializeComponent();
+
+            panSlider.Minimum = MusicMath.minPan;
+            panSlider.Maximum = MusicMath.maxPan;
         }
 
         public UTrack Track {
@@ -43,7 +47,7 @@ namespace LibreUtau.UI.Controls {
         private void faderSlider_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
             var slider = sender as Slider;
             int thumbWidth = slider == this.faderSlider ? 33 : 11;
-            if (e.ChangedButton == MouseButton.Right) {
+            if (e.ChangedButton == MouseButton.Right || (e.ChangedButton == MouseButton.Left && e.ClickCount == 2)) {
                 slider.Value = 0;
             } else if (e.ChangedButton == MouseButton.Left) {
                 double x = (slider.Value - slider.Minimum) / (slider.Maximum - slider.Minimum) *
@@ -135,6 +139,10 @@ namespace LibreUtau.UI.Controls {
 
         private void faderSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
             CommandDispatcher.Inst.ExecuteCmd(new VolumeChangeNotification(this.Track.TrackNo, ((Slider)sender).Value));
+        }
+
+        private void panSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
+            CommandDispatcher.Inst.ExecuteCmd(new PanChangeNotification(this.Track.TrackNo, ((Slider)sender).Value));
         }
     }
 }

@@ -8,6 +8,7 @@ namespace LibreUtau.Core.USTx {
         public int BeatPerBar = 4;
         public int BeatUnit = 4;
         public double BPM = 120;
+        public bool Built = false;
         public string CacheDir = "UCache";
         public string Comment = string.Empty;
         public string FilePath;

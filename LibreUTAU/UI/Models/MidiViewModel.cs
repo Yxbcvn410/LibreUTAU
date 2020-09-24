@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using LibreUtau.Core;
+using LibreUtau.Core.Audio;
 using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 using LibreUtau.UI.Controls;
@@ -16,6 +17,39 @@ namespace LibreUtau.UI.Models {
         public NotesElement notesElement;
         public PhonemesElement phonemesElement;
         public FloatExpElement visibleExpElement, shadowExpElement;
+
+        # region ICmdSubscriber
+
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
+            if (cmd is NoteCommand) {
+                notesElement.MarkUpdate();
+                phonemesElement.MarkUpdate();
+            } else if (cmd is PartCommand) {
+                var _cmd = cmd as PartCommand;
+                if (_cmd.Part != this.Part) return;
+                if (_cmd is RemovePartCommand) UnloadPart();
+                else if (_cmd is ResizePartCommand) OnPartModified();
+                else if (_cmd is MovePartCommand) OnPartModified();
+            } else if (cmd is ExpCommand) {
+                var _cmd = cmd as ExpCommand;
+                if (_cmd is SetIntExpCommand) expElements[_cmd.Key].MarkUpdate();
+                else if (_cmd is PitchExpCommand) OnPitchModified();
+            } else if (cmd is UNotification) {
+                var _cmd = cmd as UNotification;
+                if (_cmd is LoadPartNotification) LoadPart(_cmd.part, _cmd.project);
+                else if (_cmd is LoadProjectNotification) UnloadPart();
+                else if (_cmd is SelectExpressionNotification) OnSelectExpression(_cmd);
+                else if (_cmd is ShowPitchExpNotification) { } else if (_cmd is HidePitchExpNotification) { } else if (
+                    _cmd is RedrawNotesNotification) {
+                    if (notesElement != null) notesElement.MarkUpdate();
+                    if (phonemesElement != null) phonemesElement.MarkUpdate();
+                } else if (_cmd is SetPlayPosTickNotification) {
+                    OnPlayPosSet(((SetPlayPosTickNotification)_cmd).playPosTick);
+                }
+            }
+        }
+
+        # endregion
 
         public void RedrawIfUpdated() {
             if (_updated) {
@@ -271,12 +305,12 @@ namespace LibreUtau.UI.Models {
 
         # region PlayPosMarker
 
-        public int playPosTick;
+        public long playPosTick;
         Path playPosMarker;
         Rectangle playPosMarkerHighlight;
 
         private void initPlayPosMarker() {
-            playPosTick = CommandDispatcher.Inst.playPosTick;
+            playPosTick = PlaybackManager.Inst.PlaybackPosTick;
             if (playPosMarker == null) {
                 playPosMarker = new Path {
                     Fill = ThemeManager.TickLineBrushDark,
@@ -400,7 +434,7 @@ namespace LibreUtau.UI.Models {
         }
 
         public int CanvasToSnappedTick(double X) { return (int)(CanvasToSnappedQuarter(X) * Project.Resolution); }
-        public double TickToCanvas(int tick) { return (int)(QuarterToCanvas((double)tick / Project.Resolution)); }
+        public double TickToCanvas(long tick) { return (long)(QuarterToCanvas((double)tick / Project.Resolution)); }
 
         public int CanvasToNoteNum(double Y) { return UIConstants.MaxNoteNum - 1 - (int)((Y + OffsetY) / TrackHeight); }
         public double CanvasToPitch(double Y) { return UIConstants.MaxNoteNum - 1 - (Y + OffsetY) / TrackHeight + 0.5; }
@@ -504,7 +538,7 @@ namespace LibreUtau.UI.Models {
             visibleExpElement.DisplayMode = ExpDisMode.Visible;
         }
 
-        private void OnPlayPosSet(int playPosTick) {
+        private void OnPlayPosSet(long playPosTick) {
             this.playPosTick = playPosTick;
             double playPosPix = TickToCanvas(playPosTick);
             if (playPosPix > MidiCanvas.ActualWidth * UIConstants.PlayPosMarkerMargin)
@@ -515,43 +549,6 @@ namespace LibreUtau.UI.Models {
         private void OnPitchModified() {
             MarkUpdate();
             notesElement.MarkUpdate();
-        }
-
-        # endregion
-
-        # region ICmdSubscriber
-
-        public void SubscribeTo(ICmdPublisher publisher) {
-            if (publisher != null) publisher.Subscribe(this);
-        }
-
-        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
-            if (cmd is NoteCommand) {
-                notesElement.MarkUpdate();
-                phonemesElement.MarkUpdate();
-            } else if (cmd is PartCommand) {
-                var _cmd = cmd as PartCommand;
-                if (_cmd.part != this.Part) return;
-                if (_cmd is RemovePartCommand) UnloadPart();
-                else if (_cmd is ResizePartCommand) OnPartModified();
-                else if (_cmd is MovePartCommand) OnPartModified();
-            } else if (cmd is ExpCommand) {
-                var _cmd = cmd as ExpCommand;
-                if (_cmd is SetIntExpCommand) expElements[_cmd.Key].MarkUpdate();
-                else if (_cmd is PitchExpCommand) OnPitchModified();
-            } else if (cmd is UNotification) {
-                var _cmd = cmd as UNotification;
-                if (_cmd is LoadPartNotification) LoadPart(_cmd.part, _cmd.project);
-                else if (_cmd is LoadProjectNotification) UnloadPart();
-                else if (_cmd is SelectExpressionNotification) OnSelectExpression(_cmd);
-                else if (_cmd is ShowPitchExpNotification) { } else if (_cmd is HidePitchExpNotification) { } else if (
-                    _cmd is RedrawNotesNotification) {
-                    if (notesElement != null) notesElement.MarkUpdate();
-                    if (phonemesElement != null) phonemesElement.MarkUpdate();
-                } else if (_cmd is SetPlayPosTickNotification) {
-                    OnPlayPosSet(((SetPlayPosTickNotification)_cmd).playPosTick);
-                }
-            }
         }
 
         # endregion

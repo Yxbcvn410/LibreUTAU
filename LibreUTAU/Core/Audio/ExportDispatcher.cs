@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LibreUtau.Core.Audio.Build.NAudio;
+using LibreUtau.Core.Audio.NAudio;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace LibreUtau.Core.Audio.Export {
+namespace LibreUtau.Core.Audio {
     public static class ExportFormatDispatcher {
         private static readonly Dictionary<ExportFormat, string> FormatsMap = new Dictionary<ExportFormat, string> {
             {ExportFormat.WAV, "WAV|*.wav"},
@@ -15,7 +15,7 @@ namespace LibreUtau.Core.Audio.Export {
         };
 
         public static string GetFilter() => String.Join("|",
-            Enum.GetValues(typeof(ExportFormat)).Cast<ExportFormat>().ToList().Select(format => FormatsMap[format]));
+            Enum.GetValues(typeof(ExportFormat)).Cast<ExportFormat>().Select(format => FormatsMap[format]));
 
         internal enum ExportFormat {
             WAV = 0,
@@ -26,9 +26,9 @@ namespace LibreUtau.Core.Audio.Export {
     }
 
     static class ExportDispatcher {
-        public static void ExportSound(string outputFile, List<TrackSampleProvider> tracks,
+        public static void ExportSound(string outputFile, List<SampleToWaveStream> tracks,
             ExportFormatDispatcher.ExportFormat format) {
-            MixingSampleProvider master = new MixingSampleProvider(tracks);
+            MixingSampleProvider master = new MixingSampleProvider(tracks.Select(track => track.ToSampleProvider()));
             var masterFinal = master.FollowedBy(new SilenceProvider(master.WaveFormat).ToSampleProvider()
                 .Take(TimeSpan.FromSeconds(0.5)));
             switch (format) {

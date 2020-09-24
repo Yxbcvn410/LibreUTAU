@@ -117,7 +117,7 @@ namespace LibreUtau.Core {
             2, 4, 8, 16
         };
 
-        public static readonly int MinTempo = 10, MaxTempo = 250;
+        public static readonly int MinTempo = 10, MaxTempo = 250, minPan = -90, maxPan = 90;
 
         public static double[] zoomRatios = {4.0, 2.0, 1.0, 1.0 / 2, 1.0 / 4, 1.0 / 8, 1.0 / 16, 1.0 / 32, 1.0 / 64};
 
@@ -222,5 +222,7 @@ namespace LibreUtau.Core {
                 : (float)((db < -16) ? DecibelToLinear(db * 2 + 16) : DecibelToLinear(db));
             //TODO Что за костыль?
         }
+
+        public static float PanToFloat(double pan) => (float)(pan / Math.Max(Math.Abs(minPan), Math.Abs(maxPan)));
     }
 }

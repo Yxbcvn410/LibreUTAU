@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using LibreUtau.Core;
-using LibreUtau.Core.Audio.Playback;
+using LibreUtau.Core.Audio;
 using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 using LibreUtau.UI.Controls;
@@ -15,6 +15,69 @@ namespace LibreUtau.UI.Models {
     class TracksViewModel : INotifyPropertyChanged, ICmdSubscriber {
         readonly List<PartElement> PartElements = new List<PartElement>();
         readonly List<TrackHeader> TrackHeaders = new List<TrackHeader>();
+
+        # region ICmdSubscriber
+
+        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
+            switch (cmd) {
+                case NoteCommand command: {
+                    GetPartElement(command.Part).Modified = true;
+                    break;
+                }
+                case PartCommand command: {
+                    switch (command) {
+                        case AddPartCommand _ when !isUndo:
+                            OnPartAdded(command.Part);
+                            break;
+                        case AddPartCommand _:
+                            OnPartRemoved(command.Part);
+                            break;
+                        case RemovePartCommand _ when !isUndo:
+                            OnPartRemoved(command.Part);
+                            break;
+                        case RemovePartCommand _:
+                            OnPartAdded(command.Part);
+                            break;
+                        case RenamePartCommand _:
+                            GetPartElement(command.Part).Modified = true;
+                            MarkUpdate();
+                            break;
+                        case ResizePartCommand _:
+                        case MovePartCommand _:
+                            MarkUpdate();
+                            break;
+                    }
+
+                    break;
+                }
+                case TrackCommand command: {
+                    if (command is AddTrackCommand) {
+                        if (!isUndo) OnTrackAdded(command.track);
+                        else OnTrackRemoved(command.track);
+                    } else if (command is RemoveTrackCommand) {
+                        if (!isUndo) OnTrackRemoved(command.track, ((RemoveTrackCommand)command).removedParts);
+                        else OnTrackAdded(command.track, ((RemoveTrackCommand)command).removedParts);
+                    } else if (command is TrackChangeSingerCommand) {
+                        foreach (var trackHeader in TrackHeaders) trackHeader.UpdateSingerName();
+                    }
+
+                    break;
+                }
+                case LoadProjectNotification notification:
+                    OnProjectLoad(notification.project);
+                    break;
+                case SetPlayPosTickNotification notification: {
+                    OnPlayPosSet(notification.playPosTick);
+                    break;
+                }
+                case UserMessageNotification notification: {
+                    MessageBox.Show(notification.message);
+                    break;
+                }
+            }
+        }
+
+        # endregion
 
         public PartElement GetPartElement(UPart part) {
             foreach (PartElement partEl in PartElements) {
@@ -52,7 +115,7 @@ namespace LibreUtau.UI.Models {
             }
 
             _updated = false;
-            PlaybackManager.Inst.UpdatePlayPos();
+            CommandDispatcher.Inst.ExecuteCmd(new SetPlayPosTickNotification(PlaybackManager.Inst.PlaybackPosTick));
         }
 
         public void UpdateViewSize() {
@@ -341,7 +404,7 @@ namespace LibreUtau.UI.Models {
 
         # region PlayPosMarker
 
-        public int playPosTick;
+        public long playPosTick;
         Path playPosMarker;
         Rectangle playPosMarkerHighlight;
 
@@ -482,7 +545,7 @@ namespace LibreUtau.UI.Models {
             TrackHeaders.Clear();
         }
 
-        private void OnPlayPosSet(int playPosTick) {
+        private void OnPlayPosSet(long playPosTick) {
             this.playPosTick = playPosTick;
             double playPosPix = QuarterToCanvas((double)playPosTick / Project.Resolution);
             if (playPosPix > TrackCanvas.ActualWidth * UIConstants.PlayPosMarkerMargin)
@@ -490,50 +553,6 @@ namespace LibreUtau.UI.Models {
             MarkUpdate();
             OnPropertyChanged("PlayPosTime");
             OnPropertyChanged("PlayPosBar");
-        }
-
-        # endregion
-
-        # region ICmdSubscriber
-
-        public void SubscribeTo(ICmdPublisher publisher) {
-            if (publisher != null) publisher.Subscribe(this);
-        }
-
-        public void OnCommandExecuted(UCommand cmd, bool isUndo) {
-            if (cmd is NoteCommand) {
-                var _cmd = cmd as NoteCommand;
-                GetPartElement(_cmd.Part).Modified = true;
-            } else if (cmd is PartCommand) {
-                var _cmd = cmd as PartCommand;
-                if (_cmd is AddPartCommand) {
-                    if (!isUndo) OnPartAdded(_cmd.part);
-                    else OnPartRemoved(_cmd.part);
-                } else if (_cmd is RemovePartCommand) {
-                    if (!isUndo) OnPartRemoved(_cmd.part);
-                    else OnPartAdded(_cmd.part);
-                } else if (_cmd is ResizePartCommand) MarkUpdate();
-                else if (_cmd is MovePartCommand) MarkUpdate();
-            } else if (cmd is TrackCommand) {
-                var _cmd = cmd as TrackCommand;
-                if (_cmd is AddTrackCommand) {
-                    if (!isUndo) OnTrackAdded(_cmd.track);
-                    else OnTrackRemoved(_cmd.track);
-                } else if (_cmd is RemoveTrackCommand) {
-                    if (!isUndo) OnTrackRemoved(_cmd.track, ((RemoveTrackCommand)_cmd).removedParts);
-                    else OnTrackAdded(_cmd.track, ((RemoveTrackCommand)_cmd).removedParts);
-                } else if (_cmd is TrackChangeSingerCommand) {
-                    foreach (var trackHeader in TrackHeaders) trackHeader.UpdateSingerName();
-                }
-            } else if (cmd is LoadProjectNotification) {
-                OnProjectLoad(((LoadProjectNotification)cmd).project);
-            } else if (cmd is SetPlayPosTickNotification) {
-                var _cmd = cmd as SetPlayPosTickNotification;
-                OnPlayPosSet(_cmd.playPosTick);
-            } else if (cmd is UserMessageNotification) {
-                var _cmd = cmd as UserMessageNotification;
-                MessageBox.Show(_cmd.message);
-            }
         }
 
         # endregion
