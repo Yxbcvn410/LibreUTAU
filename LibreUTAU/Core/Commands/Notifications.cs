@@ -6,7 +6,7 @@ namespace LibreUtau.Core.Commands {
         public UProject project;
         public override void Execute() { }
         public override void Rollback() { }
-        public override string ToString() { return "Notification"; }
+        public override string ToString() => "Notification";
     }
 
     /// <summary>
@@ -15,7 +15,7 @@ namespace LibreUtau.Core.Commands {
     public class UserMessageNotification : UNotification {
         public string message;
         public UserMessageNotification(string message) { this.message = message; }
-        public override string ToString() { return "User message: " + message; }
+        public override string ToString() => "User message: " + message;
     }
 
     public class LoadPartNotification : UNotification {
@@ -24,26 +24,31 @@ namespace LibreUtau.Core.Commands {
             this.project = project;
         }
 
-        public override string ToString() { return "Load part"; }
+        public override string ToString() => "Load part";
     }
 
     public class LoadProjectNotification : UNotification {
         public LoadProjectNotification(UProject project) { this.project = project; }
-        public override string ToString() { return "Load project"; }
+
+        public override string ToString() => "Load project";
     }
 
     public class SaveProjectNotification : UNotification {
         public string Path;
         public SaveProjectNotification(string path) { Path = path; }
-        public override string ToString() { return "Save project"; }
+        public override string ToString() => "Save project";
     }
 
     public class RedrawNotesNotification : UNotification {
-        public override string ToString() { return "Redraw Notes"; }
+        public override string ToString() => "Redraw Notes";
+    }
+
+    public class RecalculateNotesNotification : UNotification {
+        public override string ToString() => "Recalculate notes";
     }
 
     public class ChangeExpressionListNotification : UNotification {
-        public override string ToString() { return "Change expression list"; }
+        public override string ToString() => "Change expression list";
     }
 
     public class SelectExpressionNotification : UNotification {
@@ -57,29 +62,29 @@ namespace LibreUtau.Core.Commands {
             UpdateShadow = updateShadow;
         }
 
-        public override string ToString() { return "Select expression " + ExpKey; }
+        public override string ToString() => "Select expression " + ExpKey;
     }
 
     public class ShowPitchExpNotification : UNotification {
-        public override string ToString() { return "Show pitch expression list"; }
+        public override string ToString() => "Show pitch expression list";
     }
 
     public class HidePitchExpNotification : UNotification {
-        public override string ToString() { return "Hide pitch expression list"; }
+        public override string ToString() => "Hide pitch expression list";
     }
 
     // Notification for UI to move PlayPosMarker
     public class SetPlayPosTickNotification : UNotification {
         public long playPosTick;
         public SetPlayPosTickNotification(long tick) { this.playPosTick = tick; }
-        public override string ToString() { return "Set play position to tick " + playPosTick; }
+        public override string ToString() => "Set play position to tick " + playPosTick;
     }
 
     // Notification for playback manager to change play position
     public class SeekPlayPosTickNotification : UNotification {
         public int playPosTick;
         public SeekPlayPosTickNotification(int tick) { this.playPosTick = tick; }
-        public override string ToString() { return "Seek play position to tick " + playPosTick; }
+        public override string ToString() => "Seek play position to tick " + playPosTick;
     }
 
     public class ProgressIndicatorUpdateNotification : UNotification {
@@ -104,10 +109,6 @@ namespace LibreUtau.Core.Commands {
         public override string ToString() => $"Set progressbar visibility {Visible}";
     }
 
-    public class ProgressIndicatorCancelNotification : UNotification {
-        public override string ToString() => "Cancel background task";
-    }
-
     public class VolumeChangeNotification : UNotification {
         public int TrackNo;
         public double Volume;
@@ -117,7 +118,7 @@ namespace LibreUtau.Core.Commands {
             this.Volume = volume;
         }
 
-        public override string ToString() { return $"Set track {TrackNo} volume to {Volume}"; }
+        public override string ToString() => $"Set track {TrackNo} volume to {Volume}";
     }
 
     public class PanChangeNotification : UNotification {
@@ -129,6 +130,6 @@ namespace LibreUtau.Core.Commands {
             this.Pan = pan;
         }
 
-        public override string ToString() { return $"Set track {TrackNo} pan to {Pan}"; }
+        public override string ToString() => $"Set track {TrackNo} pan to {Pan}";
     }
 }

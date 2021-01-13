@@ -18,8 +18,8 @@ namespace LibreUtau.Core.Audio.NAudio {
         public float Pan { get => Reader.Pan; set => Reader.Pan = value; }
         public float Volume { get => Reader.Volume; set => Reader.Volume = value; }
 
-        public long BytesPerSecond {
-            get => Reader.WaveFormat.SampleRate * Reader.WaveFormat.BitsPerSample * Reader.WaveFormat.Channels / 8;
+        public long BytesPerMs {
+            get => Reader.WaveFormat.SampleRate * Reader.WaveFormat.BitsPerSample * Reader.WaveFormat.Channels / 8000;
         }
 
         public override long Position {

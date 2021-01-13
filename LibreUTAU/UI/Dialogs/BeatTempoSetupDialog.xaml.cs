@@ -32,6 +32,8 @@ namespace LibreUtau.UI.Dialogs {
             CommandDispatcher.Inst.Project.BPM = Double.Parse(TempoTextBox.Text);
             CommandDispatcher.Inst.Project.BeatPerBar = int.Parse(BeatPerBarTextBox.Text);
             CommandDispatcher.Inst.Project.BeatUnit = (int)BeatUnitComboBox.SelectedItem;
+            CommandDispatcher.Inst.ExecuteCmd(new RecalculateNotesNotification
+                {project = CommandDispatcher.Inst.Project});
             Hide();
         }
 

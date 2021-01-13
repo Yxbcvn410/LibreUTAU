@@ -67,7 +67,6 @@
 
 #endregion
 
-using System.IO;
 using System.Runtime.InteropServices;
 using LibreUtau.Core.Audio.Render;
 
@@ -130,17 +129,6 @@ namespace LibreUtau.Core.ResamplerDriver {
             public double Tempo; //13
             public int nPitchBend; //13
             public int[] pitchBend; //13
-
-            public string GetUUID() {
-                double hash = Velocity;
-                foreach (double value in new[]
-                    {Offset, RequiredLength, Consonant, Cutoff, Volume, Modulation, Tempo, nPitchBend})
-                    hash = hash * 31 + value * 23;
-                long integerHash = (long)hash;
-                foreach (int value in pitchBend) integerHash = integerHash * 31 + value * 23;
-                return
-                    $"{inputWaveFile.Replace(Path.DirectorySeparatorChar, '_')}_{NoteString}_{StrFlags}_{integerHash}";
-            }
         }
 
         /// <summary>
@@ -170,8 +158,8 @@ namespace LibreUtau.Core.ResamplerDriver {
         ///     从RenderItem初始化过程
         /// </summary>
         /// <returns></returns>
-        internal static EngineInput CreateInputModel(RenderItem renderItem, double Modulation) {
-            EngineInput Ret = new EngineInput {
+        internal static EngineInput CreateInputModel(RenderItem renderItem, double Modulation) =>
+            new EngineInput {
                 inputWaveFile = renderItem.SourceFile,
                 NoteString = MusicMath.GetPianoKey(renderItem.NoteNum).ToString(),
                 Velocity = renderItem.Velocity,
@@ -186,8 +174,6 @@ namespace LibreUtau.Core.ResamplerDriver {
                 nPitchBend = renderItem.PitchData.Count,
                 Tempo = renderItem.Tempo
             };
-            return Ret;
-        }
 
         #endregion
     }

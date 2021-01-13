@@ -43,7 +43,9 @@ namespace LibreUtau.Core.Audio.Render {
             SourceFile = Path.Combine(singer.Path, phoneme.Oto.File);
 
             var strechRatio = Math.Pow(2, 1.0 - (double)(int)phoneme.Parent.Expressions["velocity"].Data / 100);
-            var length = phoneme.Oto.Preutter * strechRatio + phoneme.Envelope.Points[4].X;
+            var length = phoneme.Oto.Preutter * strechRatio +
+                         CommandDispatcher.Inst.Project.TickToMillisecond(phoneme.DurTick) - phoneme.TailIntrude +
+                         phoneme.TailOverlap;
             var requiredLength = Math.Ceiling(length / 50 + 1) * 50;
             var lengthAdjustment = phoneme.TailIntrude == 0
                 ? phoneme.PreUtter

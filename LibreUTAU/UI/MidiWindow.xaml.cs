@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using LibreUtau.Core.Audio;
 using LibreUtau.Core.Commands;
 using LibreUtau.Core.USTx;
 using LibreUtau.UI.Controls;
@@ -186,7 +187,7 @@ namespace LibreUtau.UI {
         }
 
         private void expCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-            ((Canvas)sender).CaptureMouse();
+            ((UIElement)sender).CaptureMouse();
             CommandDispatcher.Inst.StartUndoGroup();
             Point mousePos = e.GetPosition((UIElement)sender);
             expCanvas_SetExpHelper(mousePos);
@@ -194,7 +195,7 @@ namespace LibreUtau.UI {
 
         private void expCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
             CommandDispatcher.Inst.EndUndoGroup();
-            ((Canvas)sender).ReleaseMouseCapture();
+            ((UIElement)sender).ReleaseMouseCapture();
         }
 
         private void expCanvas_MouseMove(object sender, MouseEventArgs e) {
@@ -405,7 +406,7 @@ namespace LibreUtau.UI {
                 return;
             }
 
-            Point mousePos = e.GetPosition((Canvas)sender);
+            Point mousePos = e.GetPosition((UIElement)sender);
 
             var hit = VisualTreeHelper.HitTest(notesCanvas, mousePos).VisualHit;
             Debug.WriteLine("Mouse hit " + hit);
@@ -414,7 +415,7 @@ namespace LibreUtau.UI {
             var noteHit = midiHT.HitTestNote(mousePos);
 
             if (pitchPointHit != null) {
-                // Start moving pitchpoint
+                // Play moving pitchpoint
                 if (pitchPointHit.OnPoint) {
                     CurrentState = EditorState.MOVE_PITCHPOINT;
                     _pitHit = pitchPointHit.Note.PitchBend.Points[pitchPointHit.Index];
@@ -428,7 +429,7 @@ namespace LibreUtau.UI {
                     // Toggle note selection
                     midiVM.ToggleSelection(noteHit);
                 } else {
-                    // Start selection
+                    // Play selection
                     selectionStart = new Point(midiVM.CanvasToQuarter(mousePos.X), midiVM.CanvasToNoteNum(mousePos.Y));
 
                     if (Keyboard.IsKeyUp(Key.LeftShift) && Keyboard.IsKeyUp(Key.RightShift)) midiVM.DeselectAll();
@@ -522,12 +523,12 @@ namespace LibreUtau.UI {
                 selectionBox.Visibility = Visibility.Hidden;
             }
 
-            ((Canvas)sender).ReleaseMouseCapture();
+            ((UIElement)sender).ReleaseMouseCapture();
             Mouse.OverrideCursor = null;
         }
 
         private void notesCanvas_MouseMove(object sender, MouseEventArgs e) {
-            Point mousePos = e.GetPosition((Canvas)sender);
+            Point mousePos = e.GetPosition((UIElement)sender);
             notesCanvas_MouseMove_Helper(mousePos);
         }
 
@@ -642,7 +643,7 @@ namespace LibreUtau.UI {
                 return;
             }
 
-            Point mousePos = e.GetPosition((Canvas)sender);
+            Point mousePos = e.GetPosition((UIElement)sender);
 
             var pitchPointHit = midiHT.HitTestPitchPoint(mousePos);
             if (pitchPointHit != null) {
@@ -706,8 +707,8 @@ namespace LibreUtau.UI {
             if (midiVM.Part == null) return;
             Point mousePos = e.GetPosition((UIElement)sender);
             int tick = (int)(midiVM.CanvasToSnappedQuarter(mousePos.X) * midiVM.Project.Resolution);
-            CommandDispatcher.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Math.Max(0, tick) + midiVM.Part.PosTick));
-            ((Canvas)sender).CaptureMouse();
+            PlaybackManager.Inst.PlaybackPosTick = Math.Max(0, tick) + midiVM.Part.PosTick;
+            ((UIElement)sender).CaptureMouse();
         }
 
         private void timelineCanvas_MouseMove(object sender, MouseEventArgs e) {
@@ -716,14 +717,12 @@ namespace LibreUtau.UI {
         private void timelineCanvas_MouseMove_Helper(Point mousePos) {
             if (Mouse.LeftButton == MouseButtonState.Pressed && Mouse.Captured == timelineCanvas) {
                 int tick = (int)(midiVM.CanvasToSnappedQuarter(mousePos.X) * midiVM.Project.Resolution);
-                if (midiVM.playPosTick != tick + midiVM.Part.PosTick)
-                    CommandDispatcher.Inst.ExecuteCmd(
-                        new SeekPlayPosTickNotification(Math.Max(0, tick) + midiVM.Part.PosTick));
+                PlaybackManager.Inst.PlaybackPosTick = Math.Max(0, tick) + midiVM.Part.PosTick;
             }
         }
 
         private void timelineCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
-            ((Canvas)sender).ReleaseMouseCapture();
+            ((UIElement)sender).ReleaseMouseCapture();
         }
 
         # endregion

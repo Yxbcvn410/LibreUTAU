@@ -16,7 +16,7 @@
     <Window.Resources>
         <localvm:TracksViewModel x:Key="tracksVM" />
         <x:Static Member="localvm:ProgressModel.Inst" x:Key="progressModel" />
-        <x:Static Member="audio:PlaybackManager.Inst" x:Key="playbackManager" />
+        <localvm:PlaybackStateViewModel x:Key="playbackVM" />
     </Window.Resources>
     <local:BorderlessWindow.MenuContent>
         <Menu x:Name="mainMenu" IsMainMenu="True" VerticalAlignment="Top" HorizontalAlignment="Left" Background="White"
@@ -102,12 +102,13 @@
                     <Button x:Name="seekHomeButton" Style="{StaticResource SeekHomeButtonStyle}" Grid.Column="0"
                             HorizontalAlignment="Left" VerticalAlignment="Center" />
                     <Button x:Name="playPauseButton"
-                            Style="{Binding Path=PlayPauseButtonStyle, Source={StaticResource playbackManager}}"
+                            Style="{Binding Path=PlayPauseButtonStyle, Source={StaticResource playbackVM}}"
                             Grid.Column="1"
                             HorizontalAlignment="Left" VerticalAlignment="Center"
                             Click="PlayPauseButton_Click" />
                     <Button x:Name="stopButton" Style="{StaticResource StopButtonStyle}" Grid.Column="2"
-                            HorizontalAlignment="Left" VerticalAlignment="Center" />
+                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Click="StopButton_Click" />
                     <Button x:Name="seekEndButton" Style="{StaticResource SeekEndButtonStyle}" Grid.Column="3"
                             HorizontalAlignment="Left" VerticalAlignment="Center" />
                     <Border CornerRadius="4" BorderThickness="1" BorderBrush="LightGray" Grid.ColumnSpan="4" />

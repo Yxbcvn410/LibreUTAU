@@ -119,7 +119,7 @@ namespace LibreUtau.Core {
 
         public static readonly int MinTempo = 10, MaxTempo = 250, minPan = -90, maxPan = 90;
 
-        public static double[] zoomRatios = {4.0, 2.0, 1.0, 1.0 / 2, 1.0 / 4, 1.0 / 8, 1.0 / 16, 1.0 / 32, 1.0 / 64};
+        public static double[] zoomRatios = {4.0, 2.0, 1.0, 1.0 / 2, 1.0 / 4, 1.0 / 8, 1.0 / 16, 1.0 / 32, 1.0 / 96};
 
         public static PianoKey GetPianoKey(int noteNum) =>
             new PianoKey(KeysInOctave[noteNum % 12]) {OctaveNo = noteNum / 12};

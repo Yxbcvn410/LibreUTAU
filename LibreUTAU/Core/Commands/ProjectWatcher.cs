@@ -35,7 +35,6 @@ namespace LibreUtau.Core.Commands {
                     break;
                 case TrackChangeSingerCommand command:
                     foreach (var part in command.project.Parts.OfType<UVoicePart>()) UpdatePart(part);
-
                     break;
                 case MovePartCommand command:
                     if (command.Part is UVoicePart voicePart &&
@@ -45,6 +44,12 @@ namespace LibreUtau.Core.Commands {
                     }
 
                     break;
+                case RecalculateNotesNotification notification:
+                    notification.project.Parts.ForEach(part => {
+                        if (part is UVoicePart _voicePart)
+                            UpdatePart(_voicePart);
+                    });
+                    break;
             }
         }
 
@@ -53,7 +58,6 @@ namespace LibreUtau.Core.Commands {
         public void UpdatePart(UVoicePart part) {
             if (part == null) return;
             lock (part) {
-                CommandDispatcher.Inst.Project.Built = false; // TODO Сделать нормально
                 CheckOverlappedNotes(part);
                 UpdatePhonemes(part);
                 UpdateEnvelope(part);
@@ -177,8 +181,8 @@ namespace LibreUtau.Core.Commands {
 
         private void OnProjectLoad(UNotification cmd) {
             foreach (UPart part in cmd.project.Parts)
-                if (part is UVoicePart)
-                    UpdatePart((UVoicePart)part);
+                if (part is UVoicePart voicePart)
+                    UpdatePart(voicePart);
             NoteCacheProvider.SetCacheDir(PathManager.Inst.GetCachePath(cmd.project));
             NoteCacheProvider.CleanupCache(true);
         }

@@ -290,6 +290,7 @@ namespace LibreUtau.UI.Models {
             set {
                 Project.BPM = value > MusicMath.MaxTempo ? MusicMath.MaxTempo :
                     value < MusicMath.MinTempo ? MusicMath.MinTempo : value;
+                // TODO Update project
                 OnPropertyChanged("BPM");
             }
         }
@@ -297,6 +298,7 @@ namespace LibreUtau.UI.Models {
         public int BeatPerBar {
             set {
                 _beatPerBar = value;
+                // TODO Update project
                 HorizontalPropertiesChanged();
             }
             get { return _beatPerBar; }

@@ -148,6 +148,27 @@ namespace LibreUtau.UI {
             ProgressModel.Inst.Cancel();
         }
 
+        # region Playback controls
+
+        private void PlayPauseButton_Click(object sender, RoutedEventArgs e) {
+            if (PlaybackManager.Inst.PlaybackState == PlaybackState.Playing) {
+                PlaybackManager.Inst.Pause();
+                return;
+            }
+
+            ProjectBuilder builder = new ProjectBuilder(CommandDispatcher.Inst.Project);
+            builder.StartBuilding(false, tracks => {
+                PlaybackManager.Inst.Load(tracks);
+                PlaybackManager.Inst.Play();
+            });
+        }
+
+        #endregion
+
+        private void StopButton_Click(object sender, RoutedEventArgs e) {
+            PlaybackManager.Inst.Stop();
+        }
+
         # region Timeline Canvas
 
         private void timelineCanvas_MouseWheel(object sender, MouseWheelEventArgs e) {
@@ -163,8 +184,8 @@ namespace LibreUtau.UI {
         private void timelineCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             Point mousePos = e.GetPosition((UIElement)sender);
             int tick = (int)(trackVM.CanvasToSnappedQuarter(mousePos.X) * trackVM.Project.Resolution);
-            CommandDispatcher.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Math.Max(0, tick)));
-            ((Canvas)sender).CaptureMouse();
+            PlaybackManager.Inst.PlaybackPosTick = Math.Max(0, tick);
+            ((UIElement)sender).CaptureMouse();
         }
 
         private void timelineCanvas_MouseMove(object sender, MouseEventArgs e) {
@@ -173,15 +194,14 @@ namespace LibreUtau.UI {
         }
 
         private void timelineCanvas_MouseMove_Helper(Point mousePos) {
-            if (Mouse.LeftButton == MouseButtonState.Pressed && Mouse.Captured == timelineCanvas) {
+            if (Mouse.LeftButton == MouseButtonState.Pressed && Mouse.Captured == timelineBackground) {
                 int tick = (int)(trackVM.CanvasToSnappedQuarter(mousePos.X) * trackVM.Project.Resolution);
-                if (trackVM.playPosTick != tick)
-                    CommandDispatcher.Inst.ExecuteCmd(new SeekPlayPosTickNotification(Math.Max(0, tick)));
+                PlaybackManager.Inst.PlaybackPosTick = Math.Max(0, tick);
             }
         }
 
         private void timelineCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
-            ((Canvas)sender).ReleaseMouseCapture();
+            ((UIElement)sender).ReleaseMouseCapture();
         }
 
         # endregion
@@ -403,7 +423,7 @@ namespace LibreUtau.UI {
                 if (result == null) return;
                 var hit = result.VisualHit;
                 if (hit is DrawingVisual) {
-                    PartElement partEl = ((DrawingVisual)hit).Parent as PartElement;
+                    PartElement partEl = (hit as DrawingVisual).Parent as PartElement;
                     if (mousePos.X > partEl.X + partEl.VisualWidth - UIConstants.ResizeMargin &&
                         partEl is VoicePartElement) Mouse.OverrideCursor = Cursors.SizeWE;
                     else Mouse.OverrideCursor = null;
@@ -430,7 +450,7 @@ namespace LibreUtau.UI {
                 trackVM.DeselectAll();
             }
 
-            (sender as UIElement).CaptureMouse();
+            (sender as UIElement)?.CaptureMouse();
             Mouse.OverrideCursor = Cursors.No;
         }
 
@@ -574,31 +594,6 @@ namespace LibreUtau.UI {
 
         # endregion
 
-        # region Playback controls
-
-        private void PlayPauseButton_Click(object sender, RoutedEventArgs e) {
-            if (PlaybackManager.Inst.PlaybackState == PlaybackState.Playing) {
-                PlaybackManager.Inst.OnClickPause();
-                return;
-            }
-
-            if (CommandDispatcher.Inst.Project.Built) {
-                PlaybackManager.Inst.OnClickPlay();
-            } else {
-                ProjectBuilder builder = new ProjectBuilder(CommandDispatcher.Inst.Project);
-                builder.StartBuilding(false, tracks => {
-                    PlaybackManager.Inst.Load(tracks);
-                    PlaybackManager.Inst.OnClickPlay();
-                });
-            }
-        }
-
-        private void pauseButton_Click(object sender, RoutedEventArgs e) {
-            PlaybackManager.Inst.OnClickPause();
-        }
-
-        #endregion
-
         #region BPM & beat Controls
 
         private bool BPMScrolling;
@@ -647,6 +642,8 @@ namespace LibreUtau.UI {
             UIElement el = (UIElement)sender;
             var currentPt = e.GetPosition(el);
             trackVM.BPM -= scrollSpeed * (currentPt.Y - ClickPt.Y);
+            CommandDispatcher.Inst.ExecuteCmd(new RecalculateNotesNotification
+                {project = CommandDispatcher.Inst.Project}); // TODO Need separate view model
             SetCursorPos(el.TransformToAncestor(this).Transform(ClickPt));
         }
 

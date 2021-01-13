@@ -13,13 +13,26 @@ namespace LibreUtau.Core.Audio.Build {
 
         public static void setCacheLimit(int limit) => maxCachedNotes = limit;
 
+        private static string UUID(DriverModels.EngineInput input) {
+            double hash = input.Velocity;
+            foreach (double value in new[] {
+                input.Offset, input.RequiredLength, input.Consonant, input.Cutoff, input.Volume, input.Modulation,
+                input.Tempo, input.nPitchBend
+            })
+                hash = hash * 31 + value * 23;
+            long integerHash = (long)hash;
+            foreach (int value in input.pitchBend) integerHash = integerHash * 31 + value * 23;
+            return
+                $"{input.inputWaveFile.Replace(Path.DirectorySeparatorChar, '_')}_{input.NoteString}_{input.StrFlags}_{integerHash}";
+        }
+
         public static Stream IntelligentResample(DriverModels.EngineInput input, IResamplerDriver driver,
             bool force = false) {
             if (!Directory.Exists(UCacheDir))
                 return driver.DoResampler(input);
 
             var cacheFilename =
-                driver.GetInfo().Name + input.GetUUID();
+                driver.GetInfo().Name + UUID(input);
             var cachedNotePath = Path.Combine(UCacheDir, cacheFilename);
 
             return File.Exists(cachedNotePath) && !force
@@ -29,7 +42,7 @@ namespace LibreUtau.Core.Audio.Build {
 
         public static Stream ForceResample(DriverModels.EngineInput input, IResamplerDriver driver) {
             var cacheFilename =
-                driver.GetInfo().Name + input.GetUUID();
+                driver.GetInfo().Name + UUID(input);
             var cachedNotePath = Path.Combine(UCacheDir, cacheFilename);
             // Render note and save it to cache
             var stream = driver.DoResampler(input);

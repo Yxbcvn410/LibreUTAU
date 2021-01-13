@@ -112,7 +112,6 @@ namespace LibreUtau.Core.Audio.Build {
             }
 
             Log.Debug("Audio build done");
-            project.Built = true;
             var tracks = trackSources.Select(input => new SampleToWaveStream(input)).ToList();
             for (int i = 0; i < tracks.Count; i++) {
                 tracks[i].Volume = MusicMath.DecibelToVolume(project.Tracks[i].Volume);

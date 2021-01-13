@@ -50,8 +50,6 @@ namespace LibreUtau.Core.Commands {
                         savedPoint = null;
                         this.Project = loadNotification.project;
                         break;
-                    case SetPlayPosTickNotification setPlayPosNotification:
-                        break;
                 }
 
                 Publish(cmd);

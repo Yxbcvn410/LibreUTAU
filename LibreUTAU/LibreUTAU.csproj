@@ -129,7 +129,6 @@
         <Compile Include="Core\ResamplerDriver\Factories\SharpDriver.cs"/>
         <Compile Include="Core\USTx\UExpression.cs"/>
         <Compile Include="Core\Commands\NoteCommands.cs"/>
-        <Compile Include="Properties\Annotations.cs"/>
         <Compile Include="ThirdParty\Deque.cs"/>
         <Compile Include="Core\Commands\CommandDispatcher.cs"/>
         <Compile Include="Core\Commands\Notifications.cs"/>
@@ -197,6 +196,7 @@
         <Compile Include="UI\Controls\SizeObserver.cs"/>
         <Compile Include="UI\Models\ExpComboBoxViewModel.cs"/>
         <Compile Include="UI\Models\NoteSelectionModel.cs"/>
+        <Compile Include="UI\Models\PlaybackStateViewModel.cs"/>
         <Compile Include="UI\Models\TrackHeaderConverters.cs"/>
         <Compile Include="UI\Models\MidiViewHitTest.cs"/>
         <Compile Include="UI\Models\MidiViewModel.cs"/>

@@ -146,7 +146,7 @@
                         <Rectangle x:Name="rect" Fill="White" Width="20" Height="20" />
                         <Path x:Name="path" Fill="{TemplateBinding Foreground}" VerticalAlignment="Center"
                               HorizontalAlignment="Center"
-                              Data="M 0 0 L 7 6.5 L 0 13 Z" />
+                              Data="M 0 0 L 7 5 L 0 10 Z" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
